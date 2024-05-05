@@ -26,8 +26,8 @@ public struct Address {
 /// ConnectionInformation defines the representation for the "c=" field
 /// containing connection data.
 public struct ConnectionInformation {
-    var network_type: String
-    var address_type: String
+    var networkType: String
+    var addressType: String
     var address: Address?
 }
 
@@ -35,7 +35,7 @@ public struct ConnectionInformation {
 /// to be used by the session or media.
 public struct Bandwidth {
     var experimental: Bool
-    var bandwidth_type: String
+    var bandwidthType: String
     var bandwidth: UInt64
 }
 
