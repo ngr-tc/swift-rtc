@@ -14,7 +14,7 @@
 
 /// Attribute describes the "a=" field which represents the primary means for
 /// extending SDP.
-public struct Attribute {
+public class Attribute {
     var key: String
     var value: String?
 
