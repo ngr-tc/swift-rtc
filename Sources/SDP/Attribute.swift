@@ -12,9 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+public let attributeKey: String = "a="
+
 /// Attribute describes the "a=" field which represents the primary means for
 /// extending SDP.
-public class Attribute {
+public struct Attribute: Equatable {
     var key: String
     var value: String?
 

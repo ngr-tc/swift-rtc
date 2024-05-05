@@ -106,7 +106,7 @@ func parseFmtp(fmtp: String) throws -> Codec {
 
 func parseRtcpFb(rtcpFb: String) throws -> Codec {
     // a=ftcp-fb:<payload type> <RTCP feedback type> [<RTCP feedback parameter>]
-    let components = rtcpFb.split(separator: " ", maxSplits: 2, omittingEmptySubsequences: true)
+    let components = rtcpFb.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
     if components.count != 2 {
         throw SDPError.missingWhitespace
     }

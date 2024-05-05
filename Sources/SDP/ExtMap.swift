@@ -30,7 +30,7 @@ public let audioLevelUri: String = "urn:ietf:params:rtp-hdrext:ssrc-audio-level"
 public let videoOrientationUri: String = "urn:3gpp:video-orientation"
 
 /// ExtMap represents the activation of a single RTP header extension
-public class ExtMap: CustomStringConvertible {
+public struct ExtMap: CustomStringConvertible, Equatable {
     var value: Int
     var direction: Direction?
     var uri: String?
@@ -71,8 +71,8 @@ public class ExtMap: CustomStringConvertible {
     }
 
     /// unmarshal creates an Extmap from a string
-    public func unmarshal(line: String) throws -> ExtMap {
-        let parts = line.trimmingWhitespace().split(separator: ":", maxSplits: 2)
+    public static func unmarshal(line: String) throws -> ExtMap {
+        let parts = line.trimmingWhitespace().split(separator: ":", maxSplits: 1)
         if parts.count != 2 {
             throw SDPError.parseExtMap(line)
         }

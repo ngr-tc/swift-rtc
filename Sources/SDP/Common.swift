@@ -17,7 +17,7 @@
 public typealias Information = String
 
 /// Address describes a structured address token from within the "c=" field.
-public struct Address {
+public struct Address: Equatable {
     var address: String
     var ttl: Int?
     var range: Int?
@@ -25,7 +25,7 @@ public struct Address {
 
 /// ConnectionInformation defines the representation for the "c=" field
 /// containing connection data.
-public struct ConnectionInformation {
+public struct ConnectionInformation: Equatable {
     var networkType: String
     var addressType: String
     var address: Address?
@@ -33,7 +33,7 @@ public struct ConnectionInformation {
 
 /// Bandwidth describes an optional field which denotes the proposed bandwidth
 /// to be used by the session or media.
-public struct Bandwidth {
+public struct Bandwidth: Equatable {
     var experimental: Bool
     var bandwidthType: String
     var bandwidth: UInt64
@@ -43,11 +43,11 @@ public struct Bandwidth {
 public typealias EncryptionKey = String
 
 /// ConnectionRole indicates which of the end points should initiate the connection establishment
-public enum ConnectionRole: String {
+public enum ConnectionRole: String, Equatable {
     case active, passive, actpass, holdconn
 }
 
 /// Direction is a marker for transmission direction of an endpoint
-public enum Direction: String {
+public enum Direction: String, Equatable {
     case sendrecv, sendonly, recvonly, inactive
 }
