@@ -11,43 +11,39 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
-enum Result<T, E: Error> {
-    case Ok(T)
-    case Err(E)
-}
 
 enum SDPError: Error, CustomStringConvertible {
-    case CodecNotFound
-    case MissingWhitespace
-    case MissingColon
-    case PayloadTypeNotFound
-    case SdpInvalidSyntax(String)
-    case SdpInvalidValue(String)
-    case SdpEmptyTimeDescription
-    case ParseExtMap(String)
-    case SyntaxError(String, Int)
-    
+    case codecNotFound
+    case missingWhitespace
+    case missingColon
+    case payloadTypeNotFound
+    case sdpInvalidSyntax(String)
+    case sdpInvalidValue(String)
+    case sdpEmptyTimeDescription
+    case parseExtMap(String)
+    case syntaxError(String, Int)
+
     var description: String {
         switch self {
-        case .CodecNotFound:
+        case .codecNotFound:
             return "codec not found"
-        case .MissingWhitespace:
+        case .missingWhitespace:
             return "missing whitespace"
-        case .MissingColon:
+        case .missingColon:
             return "missing colon"
-        case .PayloadTypeNotFound:
+        case .payloadTypeNotFound:
             return "payload type not found"
-        case .SdpInvalidSyntax(let syntax):
+        case .sdpInvalidSyntax(let syntax):
             return "SdpInvalidSyntax: \(syntax)"
-        case .SdpInvalidValue(let value):
+        case .sdpInvalidValue(let value):
             return "SdpInvalidValue: \(value)"
-        case .SdpEmptyTimeDescription:
+        case .sdpEmptyTimeDescription:
             return "empty time descriptions"
-        case .ParseExtMap(let extMap):
+        case .parseExtMap(let extMap):
             return "parse extmap: \(extMap)"
-        case .SyntaxError(let s, let p):
-            let startIndex = s.index(s.startIndex, offsetBy: p);
-            let endIndex = s.index(startIndex, offsetBy: 1);
+        case .syntaxError(let s, let p):
+            let startIndex = s.index(s.startIndex, offsetBy: p)
+            let endIndex = s.index(startIndex, offsetBy: 1)
             return "\(s[..<startIndex]) --> \(s[startIndex..<endIndex]) <-- \(s[endIndex...])"
         }
     }
