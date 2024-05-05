@@ -13,10 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 /// Default ext values
-public let defaultExtMapValueAbsSendTime: UInt = 1
-public let defaultExtMapValueTransportCc: UInt = 2
-public let defaultExtMapValueSdesMid: UInt = 3
-public let defaultExtMapValueSdesRtpStreamId: UInt = 4
+public let defaultExtMapValueAbsSendTime: Int = 1
+public let defaultExtMapValueTransportCc: Int = 2
+public let defaultExtMapValueSdesMid: Int = 3
+public let defaultExtMapValueSdesRtpStreamId: Int = 4
 
 public let absSendTimeUri: String = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
 public let transportCcUri: String =
@@ -106,5 +106,9 @@ public struct ExtMap: Equatable, CustomStringConvertible {
             direction: direction,
             uri: uri,
             extAttr: extAttr)
+    }
+
+    static func transportCcExtMapUri() -> [Int: String] {
+        return [defaultExtMapValueTransportCc: transportCcUri]
     }
 }

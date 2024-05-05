@@ -32,6 +32,20 @@ public struct MediaName: Equatable {
     var port: RangedPort
     var protos: [String]
     var formats: [String]
+
+    init() {
+        self.media = ""
+        self.port = RangedPort(value: 0)
+        self.protos = []
+        self.formats = []
+    }
+
+    init(media: String, port: RangedPort, protos: [String], formats: [String]) {
+        self.media = media
+        self.port = port
+        self.protos = protos
+        self.formats = formats
+    }
 }
 
 /// MediaDescription represents a media type.
@@ -81,6 +95,15 @@ public struct MediaDescription: Equatable {
         return (false, nil)
     }
 
+    init() {
+        self.mediaName = MediaName()
+        self.mediaTitle = nil
+        self.connectionInformation = nil
+        self.bandwidth = []
+        self.encryptionKey = nil
+        self.attributes = []
+    }
+
     /// creates a new MediaName with
     /// some settings that are required by the JSEP spec.
     init(codecType: String, _codecPrefs: [String]) {
@@ -106,5 +129,85 @@ public struct MediaDescription: Equatable {
         self.bandwidth = []
         self.encryptionKey = nil
         self.attributes = []
+    }
+
+    /// adds a property attribute 'a=key' to the media description
+    public mutating func withPropertyAttribute(key: String) -> MediaDescription {
+        self.attributes.append(Attribute(key: key))
+        return self
+    }
+
+    /// adds a value attribute 'a=key:value' to the media description
+    public mutating func withValueAttribute(key: String, value: String) -> MediaDescription {
+        self.attributes.append(Attribute(key: key, value: value))
+        return self
+    }
+
+    /// adds a fingerprint to the media description
+    public mutating func withFingerprint(algorithm: String, value: String) -> MediaDescription {
+        return self.withValueAttribute(key: "fingerprint", value: algorithm + " " + value)
+    }
+
+    /// adds ICE credentials to the media description
+    public mutating func withIceCredentials(username: String, password: String) -> MediaDescription
+    {
+        self = self.withValueAttribute(key: "ice-ufrag", value: username)
+        return self.withValueAttribute(key: "ice-pwd", value: password)
+    }
+
+    /// adds codec information to the media description
+    public mutating func withCodec(
+        payloadType: UInt8,
+        name: String,
+        clockrate: UInt32,
+        channels: UInt16,
+        fmtp: String
+    ) -> MediaDescription {
+        self.mediaName.formats.append(String(payloadType))
+        var rtpmap = "\(payloadType) \(name)/\(clockrate)"
+        if channels > 0 {
+            rtpmap += "/\(channels)"
+        }
+
+        if !fmtp.isEmpty {
+            self = self.withValueAttribute(key: "rtpmap", value: rtpmap)
+            return self.withValueAttribute(key: "fmtp", value: "\(payloadType) \(fmtp)")
+        } else {
+            return self.withValueAttribute(key: "rtpmap", value: rtpmap)
+        }
+    }
+
+    /// adds media source information to the media description
+    public mutating func withMediaSource(
+        ssrc: UInt32,
+        cname: String,
+        streamLabel: String,
+        label: String
+    ) -> MediaDescription {
+        self = self.withValueAttribute(key: "ssrc", value: "\(ssrc) cname:\(cname)")
+        self = self.withValueAttribute(key: "ssrc", value: "\(ssrc) msid:\(streamLabel) \(label)")
+        self = self.withValueAttribute(key: "ssrc", value: "\(ssrc) mslabel:\(streamLabel)")
+        return self.withValueAttribute(key: "ssrc", value: "\(ssrc) label:\(label)")
+    }
+
+    /// adds an ICE candidate to the media description
+    /// Deprecated: use WithICECandidate instead
+    public mutating func withCandidate(value: String) -> MediaDescription {
+        return self.withValueAttribute(key: "candidate", value: value)
+    }
+
+    public mutating func withExtMap(extmap: ExtMap) -> MediaDescription {
+        return self.withPropertyAttribute(key: extmap.marshal())
+    }
+
+    /// adds an extmap to the media description
+    public mutating func withTransportCcExtMap() -> MediaDescription {
+        let extmap = ExtMap(
+            value: defaultExtMapValueTransportCc,
+            direction: nil,
+            uri: transportCcUri,
+            extAttr: nil)
+
+        return self.withExtMap(extmap: extmap)
     }
 }
