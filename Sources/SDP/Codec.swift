@@ -13,6 +13,10 @@
 //===----------------------------------------------------------------------===//
 import Utils
 
+/// Codec represents a codec parsed from
+/// a=rtpmap:<payload type> <encoding name>/<clock rate>[/<encoding parameters>]
+/// a=fmtp:<format> <format specific parameters>
+/// a=ftcp-fb:<payload type> <RTCP feedback type> [<RTCP feedback parameter>]
 public class Codec {
     var payloadType: UInt8
     var name: String
