@@ -17,37 +17,68 @@
 public typealias Information = String
 
 /// Address describes a structured address token from within the "c=" field.
-public struct Address: Equatable {
+public struct Address: Equatable, CustomStringConvertible {
     var address: String
     var ttl: Int?
     var range: Int?
+
+    public var description: String {
+        var output = self.address
+        if let ttl = self.ttl {
+            output += "/\(ttl)"
+        }
+        if let range = self.range {
+            output += "/\(range)"
+        }
+        return output
+    }
 }
 
 /// ConnectionInformation defines the representation for the "c=" field
 /// containing connection data.
-public struct ConnectionInformation: Equatable {
+public struct ConnectionInformation: Equatable, CustomStringConvertible {
     var networkType: String
     var addressType: String
     var address: Address?
+
+    public var description: String {
+        if let address = self.address {
+            return "\(self.networkType) \(self.addressType) \(address)"
+        } else {
+            return "\(self.networkType) \(self.addressType)"
+        }
+    }
 }
 
 /// Bandwidth describes an optional field which denotes the proposed bandwidth
 /// to be used by the session or media.
-public struct Bandwidth: Equatable {
+public struct Bandwidth: Equatable, CustomStringConvertible {
     var experimental: Bool
     var bandwidthType: String
     var bandwidth: UInt64
+
+    public var description: String {
+        var output = self.experimental ? "X-" : ""
+        return "\(output)\(self.bandwidthType):\(self.bandwidth)"
+    }
 }
 
 /// EncryptionKey describes the "k=" which conveys encryption key information.
 public typealias EncryptionKey = String
 
 /// ConnectionRole indicates which of the end points should initiate the connection establishment
-public enum ConnectionRole: String, Equatable {
+public enum ConnectionRole: String, Equatable, CustomStringConvertible {
     case active, passive, actpass, holdconn
+
+    public var description: String {
+        self.rawValue
+    }
 }
 
 /// Direction is a marker for transmission direction of an endpoint
-public enum Direction: String, Equatable {
+public enum Direction: String, Equatable, CustomStringConvertible {
     case sendrecv, sendonly, recvonly, inactive
+    public var description: String {
+        self.rawValue
+    }
 }

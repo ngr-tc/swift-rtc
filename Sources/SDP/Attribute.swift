@@ -16,9 +16,17 @@ public let attributeKey: String = "a="
 
 /// Attribute describes the "a=" field which represents the primary means for
 /// extending SDP.
-public struct Attribute: Equatable {
+public struct Attribute: Equatable, CustomStringConvertible {
     var key: String
     var value: String?
+
+    public var description: String {
+        if let value = self.value {
+            return "\(self.key):\(value)"
+        } else {
+            return "\(self.key)"
+        }
+    }
 
     /// init constructs a new attribute
     init(key: String, value: String? = nil) {

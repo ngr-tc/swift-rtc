@@ -30,7 +30,7 @@ public let audioLevelUri: String = "urn:ietf:params:rtp-hdrext:ssrc-audio-level"
 public let videoOrientationUri: String = "urn:3gpp:video-orientation"
 
 /// ExtMap represents the activation of a single RTP header extension
-public struct ExtMap: CustomStringConvertible, Equatable {
+public struct ExtMap: Equatable, CustomStringConvertible {
     var value: Int
     var direction: Direction?
     var uri: String?

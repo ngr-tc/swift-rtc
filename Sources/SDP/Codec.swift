@@ -17,13 +17,18 @@ import Utils
 /// a=rtpmap:<payload type> <encoding name>/<clock rate>[/<encoding parameters>]
 /// a=fmtp:<format> <format specific parameters>
 /// a=ftcp-fb:<payload type> <RTCP feedback type> [<RTCP feedback parameter>]
-public struct Codec: Equatable {
+public struct Codec: Equatable, CustomStringConvertible {
     var payloadType: UInt8
     var name: String
     var clockRate: UInt32
     var encodingParameters: String
     var fmtp: String
     var rtcpFeedbacks: [String]
+
+    public var description: String {
+        return
+            "\(self.payloadType) \(self.name)/\(self.clockRate)/\(self.encodingParameters) (\(self.fmtp)) [\(self.rtcpFeedbacks.joined(separator: ", "))]"
+    }
 
     // Initialize the Codec object with default values for its properties
     init(
