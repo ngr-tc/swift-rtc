@@ -17,7 +17,7 @@ import Utils
 /// a=rtpmap:<payload type> <encoding name>/<clock rate>[/<encoding parameters>]
 /// a=fmtp:<format> <format specific parameters>
 /// a=ftcp-fb:<payload type> <RTCP feedback type> [<RTCP feedback parameter>]
-public class Codec {
+public struct Codec: Equatable {
     var payloadType: UInt8
     var name: String
     var clockRate: UInt32
@@ -130,22 +130,26 @@ func parseRtcpFb(rtcpFb: String) throws -> Codec {
 
 func mergeCodecs(codec: Codec, codecs: inout [UInt8: Codec]) {
     if let savedCodec = codecs[codec.payloadType] {
-        if savedCodec.payloadType == 0 {
-            savedCodec.payloadType = codec.payloadType
-        }
-        if savedCodec.name.isEmpty {
-            savedCodec.name = codec.name
-        }
-        if savedCodec.clockRate == 0 {
-            savedCodec.clockRate = codec.clockRate
-        }
-        if savedCodec.encodingParameters.isEmpty {
-            savedCodec.encodingParameters = codec.encodingParameters
-        }
-        if savedCodec.fmtp.isEmpty {
-            savedCodec.fmtp = codec.fmtp
-        }
-        savedCodec.rtcpFeedbacks.append(contentsOf: codec.rtcpFeedbacks)
+        var rtcpFeedbacks = savedCodec.rtcpFeedbacks
+        rtcpFeedbacks.append(contentsOf: codec.rtcpFeedbacks)
+
+        codecs[codec.payloadType] = Codec(
+            payloadType: savedCodec.payloadType == 0
+                ? codec.payloadType
+                : savedCodec.payloadType,
+            name: savedCodec.name.isEmpty
+                ? codec.name
+                : savedCodec.name,
+            clockRate: savedCodec.clockRate == 0
+                ? codec.clockRate
+                : savedCodec.clockRate,
+            encodingParameters: savedCodec.encodingParameters.isEmpty
+                ? codec.encodingParameters
+                : savedCodec.encodingParameters,
+            fmtp: savedCodec.fmtp.isEmpty
+                ? codec.fmtp
+                : savedCodec.fmtp,
+            rtcpFeedbacks: rtcpFeedbacks)
     } else {
         codecs[codec.payloadType] = codec
     }
