@@ -11,7 +11,7 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
-import Foundation
+import Utils
 
 public class Codec {
     var payloadType: UInt8
@@ -155,8 +155,8 @@ func equivalentFmtp(want: String, got: String) -> Bool {
         return false
     }
 
-    let trimmedWant = wantSplit.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-    let trimmedGot = gotSplit.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    let trimmedWant = wantSplit.map { $0.trimmingWhitespace() }
+    let trimmedGot = gotSplit.map { $0.trimmingWhitespace() }
 
     let sortedWant = trimmedWant.sorted()
     let sortedGot = trimmedGot.sorted()

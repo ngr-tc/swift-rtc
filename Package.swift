@@ -26,6 +26,7 @@ let package = Package(
         .library(name: "SDP", targets: ["SDP"]),
         .library(name: "SRTP", targets: ["SRTP"]),
         .library(name: "STUN", targets: ["STUN"]),
+        .library(name: "Utils", targets: ["Utils"]),
     ],
     targets: [
         // MARK: - Targets
@@ -34,9 +35,10 @@ let package = Package(
         .target(name: "RTCP"),
         .target(name: "RTP"),
         .target(name: "SCTP"),
-        .target(name: "SDP"),
+        .target(name: "SDP", dependencies: ["Utils"]),
         .target(name: "SRTP"),
         .target(name: "STUN"),
+        .target(name: "Utils"),
 
         // MARK: - Tests
         .testTarget(name: "DataChannelTests", dependencies: ["DataChannel"]),
@@ -47,6 +49,7 @@ let package = Package(
         .testTarget(name: "SDPTests", dependencies: ["SDP"]),
         .testTarget(name: "SRTPTests", dependencies: ["SRTP"]),
         .testTarget(name: "STUNTests", dependencies: ["STUN"]),
+        .testTarget(name: "UtilsTests", dependencies: ["Utils"]),
 
         // MARK: - Examples
     ]
