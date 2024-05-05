@@ -12,10 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 import XCTest
-@testable import rtc
 
-final class rtcTests: XCTestCase {
-    func testExample() throws {
+@testable import SDP
+
+final class SDPTests: XCTestCase {
+    func testSDP() throws {
         // XCTest Documentation
         // https://developer.apple.com/documentation/xctest
 

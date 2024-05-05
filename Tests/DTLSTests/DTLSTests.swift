@@ -12,10 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 import XCTest
-@testable import sdp
 
-final class sdpTests: XCTestCase {
-    func testExample() throws {
+@testable import DTLS
+
+final class DTLSTests: XCTestCase {
+    func testDTLS() throws {
         // XCTest Documentation
         // https://developer.apple.com/documentation/xctest
 
