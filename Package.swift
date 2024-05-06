@@ -28,6 +28,9 @@ let package = Package(
         .library(name: "STUN", targets: ["STUN"]),
         .library(name: "Utils", targets: ["Utils"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0")
+    ],
     targets: [
         // MARK: - Targets
         .target(name: "DataChannel"),
@@ -35,7 +38,12 @@ let package = Package(
         .target(name: "RTCP"),
         .target(name: "RTP"),
         .target(name: "SCTP"),
-        .target(name: "SDP", dependencies: ["Utils"]),
+        .target(
+            name: "SDP",
+            dependencies: [
+                "Utils",
+                .product(name: "NIOCore", package: "swift-nio")
+            ]),
         .target(name: "SRTP"),
         .target(name: "STUN"),
         .target(name: "Utils"),

@@ -58,7 +58,7 @@ public struct Bandwidth: Equatable, CustomStringConvertible {
     var bandwidth: UInt64
 
     public var description: String {
-        var output = self.experimental ? "X-" : ""
+        let output = self.experimental ? "X-" : ""
         return "\(output)\(self.bandwidthType):\(self.bandwidth)"
     }
 }
