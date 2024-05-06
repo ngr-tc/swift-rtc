@@ -143,6 +143,14 @@ func newSessionId() -> UInt64 {
     return UInt64.random(in: UInt64.min...UInt64.max) & c
 }
 
+func keyValueBuild(key: String, value: String?) -> String {
+    if let val = value {
+        return "\(key)\(val)\(endLine)"
+    } else {
+        return ""
+    }
+}
+
 /// SessionDescription is a a well-defined format for conveying sufficient
 /// information to discover and participate in a multimedia session.
 public struct SessionDescription: Equatable, CustomStringConvertible {
@@ -219,6 +227,38 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
 
     public var description: String {
         return self.marshal()
+    }
+
+    init() {
+        self.version = 0
+        self.origin = Origin(
+            username: "",
+            sessionId: 0,
+            sessionVersion: 0,
+            networkType: "",
+            addressType: "",
+            unicastAddress: ""
+        )
+        self.sessionName = ""
+        self.sessionInformation = nil
+        self.uri = nil
+        self.emailAddress = nil
+        self.phoneNumber = nil
+        self.connectionInformation = nil
+        self.bandwidth = []
+        self.timeDescriptions = [
+            TimeDescription(
+                timing: Timing(
+                    startTime: 0,
+                    stopTime: 0
+                ),
+                repeatTimes: []
+            )
+        ]
+        self.timeZones = []
+        self.encryptionKey = nil
+        self.attributes = []
+        self.mediaDescriptions = []
     }
 
     init(identity: Bool) {
@@ -417,4 +457,267 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
 
         return result
     }
+
+    /// Unmarshal is the primary function that deserializes the session description
+    /// message and stores it inside of a structured SessionDescription object.
+    ///
+    /// The States Transition Table describes the computation flow between functions
+    /// (namely s1, s2, s3, ...) for a parsing procedure that complies with the
+    /// specifications laid out by the rfc4566#section-5 as well as by JavaScript
+    /// Session Establishment Protocol draft. Links:
+    ///     <https://tools.ietf.org/html/rfc4566#section-5>
+    ///     <https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24>
+    ///
+    /// <https://tools.ietf.org/html/rfc4566#section-5>
+    ///
+    /// Session description
+    ///    v=  (protocol version)
+    ///    o=  (originator and session identifier)
+    ///    s=  (session name)
+    ///    i=* (session information)
+    ///    u=* (URI of description)
+    ///    e=* (email address)
+    ///    p=* (phone number)
+    ///    c=* (connection information -- not required if included in
+    ///         all media)
+    ///    b=* (zero or more bandwidth information lines)
+    ///    One or more time descriptions ("t=" and "r=" lines; see below)
+    ///    z=* (time zone adjustments)
+    ///    k=* (encryption key)
+    ///    a=* (zero or more session attribute lines)
+    ///    Zero or more media descriptions
+    ///
+    /// Time description
+    ///    t=  (time the session is active)
+    ///    r=* (zero or more repeat times)
+    ///
+    /// Media description, if present
+    ///    m=  (media name and transport address)
+    ///    i=* (media title)
+    ///    c=* (connection information -- optional if included at
+    ///         session level)
+    ///    b=* (zero or more bandwidth information lines)
+    ///    k=* (encryption key)
+    ///    a=* (zero or more media attribute lines)
+    ///
+    /// In order to generate the following state table and draw subsequent
+    /// deterministic finite-state automota ("DFA") the following regex was used to
+    /// derive the DFA:
+    ///    vosi?u?e?p?c?b*(tr*)+z?k?a*(mi?c?b*k?a*)*
+    /// possible place and state to exit:
+    ///                    **   * * *  ** * * * *
+    ///                    99   1 1 1  11 1 1 1 1
+    ///                         3 1 1  26 5 5 4 4
+    ///
+    /// Please pay close attention to the `k`, and `a` parsing states. In the table
+    /// below in order to distinguish between the states belonging to the media
+    /// description as opposed to the session description, the states are marked
+    /// with an asterisk ("a*", "k*").
+    ///
+    /// ```text
+    /// +--------+----+-------+----+-----+----+-----+---+----+----+---+---+-----+---+---+----+---+----+
+    /// | STATES | a* | a*,k* | a  | a,k | b  | b,c | e | i  | m  | o | p | r,t | s | t | u  | v | z  |
+    /// +--------+----+-------+----+-----+----+-----+---+----+----+---+---+-----+---+---+----+---+----+
+    /// |   s1   |    |       |    |     |    |     |   |    |    |   |   |     |   |   |    | 2 |    |
+    /// |   s2   |    |       |    |     |    |     |   |    |    | 3 |   |     |   |   |    |   |    |
+    /// |   s3   |    |       |    |     |    |     |   |    |    |   |   |     | 4 |   |    |   |    |
+    /// |   s4   |    |       |    |     |    |   5 | 6 |  7 |    |   | 8 |     |   | 9 | 10 |   |    |
+    /// |   s5   |    |       |    |     |  5 |     |   |    |    |   |   |     |   | 9 |    |   |    |
+    /// |   s6   |    |       |    |     |    |   5 |   |    |    |   | 8 |     |   | 9 |    |   |    |
+    /// |   s7   |    |       |    |     |    |   5 | 6 |    |    |   | 8 |     |   | 9 | 10 |   |    |
+    /// |   s8   |    |       |    |     |    |   5 |   |    |    |   |   |     |   | 9 |    |   |    |
+    /// |   s9   |    |       |    |  11 |    |     |   |    | 12 |   |   |   9 |   |   |    |   | 13 |
+    /// |   s10  |    |       |    |     |    |   5 | 6 |    |    |   | 8 |     |   | 9 |    |   |    |
+    /// |   s11  |    |       | 11 |     |    |     |   |    | 12 |   |   |     |   |   |    |   |    |
+    /// |   s12  |    |    14 |    |     |    |  15 |   | 16 | 12 |   |   |     |   |   |    |   |    |
+    /// |   s13  |    |       |    |  11 |    |     |   |    | 12 |   |   |     |   |   |    |   |    |
+    /// |   s14  | 14 |       |    |     |    |     |   |    | 12 |   |   |     |   |   |    |   |    |
+    /// |   s15  |    |    14 |    |     | 15 |     |   |    | 12 |   |   |     |   |   |    |   |    |
+    /// |   s16  |    |    14 |    |     |    |  15 |   |    | 12 |   |   |     |   |   |    |   |    |
+    /// +--------+----+-------+----+-----+----+-----+---+----+----+---+---+-----+---+---+----+---+----+
+    /// ```
+    public static func unmarshal(input: String) throws -> SessionDescription {
+        let desc = SessionDescription()
+        let lexer = Lexer(desc: desc, input: input)
+        var state: StateFn? = StateFn(f: s1)
+        while let s = state {
+            state = try (s.f)(lexer)
+        }
+        return lexer.desc
+    }
+}
+
+func s1(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key != "v=" {
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+    return StateFn(f: unmarshalProtocolVersion)
+}
+
+func s2(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key != "o=" {
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+    return StateFn(f: unmarshalOrigin)
+}
+
+func s3(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key != "s=" {
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+    return StateFn(f: unmarshalSessionName)
+}
+
+func s4(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    switch key {
+    case "i=":
+        return StateFn(f: unmarshalSessionInformation)
+    /*case "u=":
+        return StateFn(f: unmarshalUri)
+    case "e=":
+        return StateFn(f: unmarshalEmail)
+    case "p=":
+        return StateFn(f: unmarshalPhone)
+    case "c=":
+        return StateFn(f: unmarshalSessionConnectionInformation)
+    case "b=":
+        return StateFn(f: unmarshalSessionBandwidth)
+    case "t=":
+        return StateFn(f: unmarshalTiming)*/
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func unmarshalProtocolVersion(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+
+    guard let version = UInt32(value) else {
+        throw SDPError.parseInt(value)
+    }
+
+    // As off the latest draft of the rfc this value is required to be 0.
+    // https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-5.8.1
+    if version != 0 {
+        throw SDPError.sdpInvalidSyntax(value)
+    }
+
+    return StateFn(f: s2)
+}
+
+func unmarshalOrigin(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+
+    let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
+    if fields.count != 6 {
+        throw SDPError.sdpInvalidSyntax("`o=\(value)`")
+    }
+
+    guard let sessionId = UInt64(fields[1]) else {
+        throw SDPError.parseInt(fields[1])
+    }
+    guard let sessionVersion = UInt64(fields[2]) else {
+        throw SDPError.parseInt(fields[2])
+    }
+
+    // Set according to currently registered with IANA
+    // https://tools.ietf.org/html/rfc4566#section-8.2.6
+    if indexOf(element: fields[3], dataSet: ["IN"]) == nil {
+        throw SDPError.sdpInvalidValue(fields[3])
+    }
+
+    // Set according to currently registered with IANA
+    // https://tools.ietf.org/html/rfc4566#section-8.2.7
+    if indexOf(element: fields[4], dataSet: ["IP4", "IP6"]) == nil {
+        throw SDPError.sdpInvalidValue(fields[4])
+    }
+
+    // TODO validated UnicastAddress
+
+    lexer.desc.origin = Origin(
+        username: fields[0],
+        sessionId: sessionId,
+        sessionVersion: sessionVersion,
+        networkType: fields[3],
+        addressType: fields[4],
+        unicastAddress: fields[5]
+    )
+
+    return StateFn(f: s3)
+}
+
+func unmarshalSessionName(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+    lexer.desc.sessionName = value
+    return StateFn(f: s4)
+}
+
+func unmarshalSessionInformation(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+    lexer.desc.sessionInformation = value
+    return nil  //TODO: StateFn(f: s7)
+}
+
+func unmarshalUri(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+    lexer.desc.uri = value
+    return nil  //TODO: StateFn(f: s10)
+}
+
+func unmarshalEmail(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+    lexer.desc.emailAddress = value
+    return nil  //TODO: StateFn { f: s6 }))
+}
+
+func unmarshalPhone(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+    lexer.desc.phoneNumber = value
+    return nil  //TODO: StateFn { f: s8 }))
+}
+
+func unmarshalSessionConnectionInformation(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+    lexer.desc.connectionInformation = try unmarshalConnectionInformation(value: value)
+    return nil  //TODO: StateFn { f: s5 }))
+}
+
+func unmarshalConnectionInformation(value: String) throws -> ConnectionInformation? {
+    let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
+    if fields.count < 2 {
+        throw SDPError.sdpInvalidSyntax("`c=\(value)`")
+    }
+
+    // Set according to currently registered with IANA
+    // https://tools.ietf.org/html/rfc4566#section-8.2.6
+    if indexOf(element: fields[0], dataSet: ["IN"]) == nil {
+        throw SDPError.sdpInvalidValue(fields[0])
+    }
+
+    // Set according to currently registered with IANA
+    // https://tools.ietf.org/html/rfc4566#section-8.2.7
+    if indexOf(element: fields[1], dataSet: ["IP4", "IP6"]) == nil {
+        throw SDPError.sdpInvalidValue(fields[1])
+    }
+
+    let address: Address? =
+        if fields.count > 2 {
+            Address(
+                address: fields[2],
+                ttl: nil,
+                range: nil
+            )
+        } else {
+            nil
+        }
+
+    return ConnectionInformation(
+        networkType: fields[0],
+        addressType: fields[1],
+        address: address
+    )
 }
