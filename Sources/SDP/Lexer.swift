@@ -13,3 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 public let endLine: String = "\r\n"
+
+func keyValueBuild(key: String, value: String?) -> String {
+    if let val = value {
+        return "\(key)\(val)\(endLine)"
+    } else {
+        return ""
+    }
+}

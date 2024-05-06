@@ -114,7 +114,7 @@ public struct RepeatTime: Equatable, CustomStringConvertible {
 /// TimeDescription describes "t=", "r=" fields of the session description
 /// which are used to specify the start and stop times for a session as well as
 /// repeat intervals and durations for the scheduled session.
-public struct TimeDescription: Equatable {
+public struct TimeDescription: Equatable, CustomStringConvertible {
     /// `t=<start-time> <stop-time>`
     ///
     /// <https://tools.ietf.org/html/rfc4566#section-5.9>
@@ -124,6 +124,14 @@ public struct TimeDescription: Equatable {
     ///
     /// <https://tools.ietf.org/html/rfc4566#section-5.10>
     var repeatTimes: [RepeatTime]
+
+    public var description: String {
+        var result = keyValueBuild(key: "t=", value: self.timing.description)
+        for repeatTime in self.repeatTimes {
+            result += keyValueBuild(key: "r=", value: repeatTime.description)
+        }
+        return result
+    }
 }
 
 /// https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-26#section-5.2.1
@@ -137,7 +145,7 @@ func newSessionId() -> UInt64 {
 
 /// SessionDescription is a a well-defined format for conveying sufficient
 /// information to discover and participate in a multimedia session.
-public struct SessionDescription: Equatable {
+public struct SessionDescription: Equatable, CustomStringConvertible {
     /// `v=0`
     ///
     /// <https://tools.ietf.org/html/rfc4566#section-5.1>
@@ -208,6 +216,10 @@ public struct SessionDescription: Equatable {
 
     /// <https://tools.ietf.org/html/rfc4566#section-5.14>
     var mediaDescriptions: [MediaDescription]
+
+    public var description: String {
+        return self.marshal()
+    }
 
     init(identity: Bool) {
         self.version = 0
@@ -317,5 +329,92 @@ public struct SessionDescription: Equatable {
             }
         }
         return (false, nil)
+    }
+
+    /// Marshal takes a SDP struct to text
+    ///
+    /// <https://tools.ietf.org/html/rfc4566#section-5>
+    ///
+    /// Session description
+    ///    v=  (protocol version)
+    ///    o=  (originator and session identifier)
+    ///    s=  (session name)
+    ///    i=* (session information)
+    ///    u=* (URI of description)
+    ///    e=* (email address)
+    ///    p=* (phone number)
+    ///    c=* (connection information -- not required if included in
+    ///         all media)
+    ///    b=* (zero or more bandwidth information lines)
+    ///    One or more time descriptions ("t=" and "r=" lines; see below)
+    ///    z=* (time zone adjustments)
+    ///    k=* (encryption key)
+    ///    a=* (zero or more session attribute lines)
+    ///    Zero or more media descriptions
+    ///
+    /// Time description
+    ///    t=  (time the session is active)
+    ///    r=* (zero or more repeat times)
+    ///
+    /// Media description, if present
+    ///    m=  (media name and transport address)
+    ///    i=* (media title)
+    ///    c=* (connection information -- optional if included at
+    ///         session level)
+    ///    b=* (zero or more bandwidth information lines)
+    ///    k=* (encryption key)
+    ///    a=* (zero or more media attribute lines)
+    public func marshal() -> String {
+        var result = ""
+
+        result += keyValueBuild(key: "v=", value: String(self.version))
+        result += keyValueBuild(key: "o=", value: self.origin.description)
+        result += keyValueBuild(key: "s=", value: self.sessionName)
+
+        result += keyValueBuild(key: "i=", value: self.sessionInformation)
+
+        if let uri = self.uri {
+            result += keyValueBuild(key: "u=", value: uri)
+        }
+        result += keyValueBuild(key: "e=", value: self.emailAddress)
+        result += keyValueBuild(key: "p=", value: self.phoneNumber)
+        if let connectionInformation = self.connectionInformation {
+            result += keyValueBuild(key: "c=", value: connectionInformation.description)
+        }
+
+        for bandwidth in self.bandwidth {
+            result += keyValueBuild(key: "b=", value: bandwidth.description)
+        }
+        for timeDescription in self.timeDescriptions {
+            result += keyValueBuild(key: "t=", value: timeDescription.timing.description)
+            for repeatTime in timeDescription.repeatTimes {
+                result += keyValueBuild(key: "r=", value: repeatTime.description)
+            }
+        }
+        if !self.timeZones.isEmpty {
+            result += keyValueBuild(
+                key: "z=", value: self.timeZones.map { $0.description }.joined(separator: " "))
+        }
+        result += keyValueBuild(key: "k=", value: self.encryptionKey)
+        for attribute in self.attributes {
+            result += keyValueBuild(key: "a=", value: attribute.description)
+        }
+
+        for mediaDescription in self.mediaDescriptions {
+            result += keyValueBuild(key: "m=", value: mediaDescription.mediaName.description)
+            result += keyValueBuild(key: "i=", value: mediaDescription.mediaTitle)
+            if let connectionInformation = mediaDescription.connectionInformation {
+                result += keyValueBuild(key: "c=", value: connectionInformation.description)
+            }
+            for bandwidth in mediaDescription.bandwidth {
+                result += keyValueBuild(key: "b=", value: bandwidth.description)
+            }
+            result += keyValueBuild(key: "k=", value: mediaDescription.encryptionKey)
+            for attribute in mediaDescription.attributes {
+                result += keyValueBuild(key: "a=", value: attribute.description)
+            }
+        }
+
+        return result
     }
 }
