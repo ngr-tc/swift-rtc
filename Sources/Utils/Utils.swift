@@ -11,18 +11,43 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
-extension StringProtocol {
-    public func trimmingWhitespace() -> SubSequence {
-        var start = startIndex
-        while start < endIndex && self[start].isWhitespace {
-            formIndex(after: &start)
+
+extension UTF8.CodeUnit {
+    var isASCIIWhitespace: Bool {
+        switch self {
+        case UInt8(ascii: " "),
+            UInt8(ascii: "\t"):
+            return true
+
+        default:
+            return false
+        }
+    }
+}
+
+extension String {
+    public func trimmingWhitespace() -> Substring {
+        return Substring(self).trimmingWhitespace()
+    }
+
+    public func trimmingPrefix(_ prefix: String) -> String {
+        var result = self
+        while result.hasPrefix(prefix) {
+            result = String(result.dropFirst(prefix.count))
+        }
+        return result
+    }
+}
+
+extension Substring {
+    public func trimmingWhitespace() -> Substring {
+        guard let firstNonWhitespace = self.utf8.firstIndex(where: { !$0.isASCIIWhitespace }) else {
+            // The whole substring is ASCII whitespace.
+            return Substring()
         }
 
-        var end = endIndex
-        while end > start && self[index(before: end)].isWhitespace {
-            formIndex(before: &end)
-        }
-
-        return self[start..<end]
+        // There must be at least one non-ascii whitespace character, so banging here is safe.
+        let lastNonWhitespace = self.utf8.lastIndex(where: { !$0.isASCIIWhitespace })!
+        return Substring(self.utf8[firstNonWhitespace...lastNonWhitespace])
     }
 }

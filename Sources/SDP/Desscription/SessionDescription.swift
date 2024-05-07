@@ -721,3 +721,325 @@ func unmarshalConnectionInformation(value: String) throws -> ConnectionInformati
         address: address
     )
 }
+
+func unmarshalSessionBandwidth(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+    lexer.desc.bandwidth.append(try unmarshalBandwidth(value: value))
+    return nil  //TODO: StateFn { f: s5 }))
+}
+
+func unmarshalBandwidth(value: String) throws -> Bandwidth {
+    let parts = value.split(separator: ":").map { String($0) }
+    if parts.count != 2 {
+        throw SDPError.sdpInvalidSyntax("`b=\(value)`")
+    }
+
+    var bandwidthType = parts[0]
+    let experimental = bandwidthType.starts(with: "X-")
+    if experimental {
+        bandwidthType = bandwidthType.trimmingPrefix("X-")
+    } else {
+        // Set according to currently registered with IANA
+        // https://tools.ietf.org/html/rfc4566#section-5.8
+        if indexOf(element: bandwidthType, dataSet: ["CT", "AS"]) == nil {
+            throw SDPError.sdpInvalidValue(bandwidthType)
+        }
+    }
+
+    guard let bandwidth = UInt64(parts[1]) else {
+        throw SDPError.parseInt(parts[1])
+    }
+
+    return Bandwidth(
+        experimental: experimental,
+        bandwidthType: bandwidthType,
+        bandwidth: bandwidth)
+}
+
+func unmarshalTiming(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+
+    let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
+    if fields.count < 2 {
+        throw SDPError.sdpInvalidSyntax("`t=\(value)`")
+    }
+
+    guard let startTime = UInt64(fields[0]) else {
+        throw SDPError.parseInt(fields[0])
+    }
+    guard let stopTime = UInt64(fields[1]) else {
+        throw SDPError.parseInt(fields[1])
+    }
+
+    lexer.desc.timeDescriptions.append(
+        TimeDescription(
+            timing: Timing(startTime: startTime, stopTime: stopTime),
+            repeatTimes: []))
+
+    return nil  //TODO: StateFn { f: s9 }))
+}
+
+func unmarshalRepeatTimes(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+
+    let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
+    if fields.count < 3 {
+        throw SDPError.sdpInvalidSyntax("`r=\(value)`")
+    }
+
+    if lexer.desc.timeDescriptions.isEmpty {
+        throw SDPError.sdpEmptyTimeDescription
+    }
+
+    let interval = try parseTimeUnits(value: fields[0])
+    let duration = try parseTimeUnits(value: fields[1])
+    var offsets: [Int64] = []
+    for i in 2..<fields.count {
+        let offset = try parseTimeUnits(value: fields[i])
+        offsets.append(offset)
+    }
+    lexer.desc.timeDescriptions[lexer.desc.timeDescriptions.count - 1].repeatTimes.append(
+        RepeatTime(
+            interval: interval,
+            duration: duration,
+            offsets: offsets))
+
+    return nil  //TODO: StateFn { f: s9 }))
+}
+
+func unmarshalTimeZones(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+
+    // These fields are transimitted in pairs
+    // z=<adjustment time> <offset> <adjustment time> <offset> ....
+    // so we are making sure that there are actually multiple of 2 total.
+    let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
+    if fields.count % 2 != 0 {
+        throw SDPError.sdpInvalidSyntax("`t=\(value)`")
+    }
+
+    for i in stride(from: 0, to: fields.count, by: 2) {
+        guard let adjustmentTime = UInt64(fields[i]) else {
+            throw SDPError.parseInt(fields[i])
+        }
+        let offset = try parseTimeUnits(value: fields[i + 1])
+
+        lexer.desc.timeZones.append(
+            TimeZone(
+                adjustmentTime: adjustmentTime,
+                offset: offset))
+    }
+
+    return nil  //TODO: StateFn { f: s13 }))
+}
+
+func unmarshalSessionEncryptionKey(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+    lexer.desc.encryptionKey = value
+    return nil  //TODO: StateFn { f: s11 }))
+}
+
+func unmarshalSessionAttribute(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+
+    let fields = value.split(separator: ":", maxSplits: 1).map { String($0) }
+    let attribute =
+        if fields.count == 2 {
+            Attribute(
+                key: fields[0],
+                value: fields[1]
+            )
+        } else {
+            Attribute(
+                key: fields[0])
+        }
+    lexer.desc.attributes.append(attribute)
+
+    return nil  //TODO:StateFn { f: s11 }))
+}
+/*
+ fn unmarshal_media_description<'a, R: io::BufRead + io::Seek>(
+     lexer: &mut Lexer<'a, R>,
+ ) -> Result<Option<StateFn<'a, R>>> {
+     let (value, _) = read_value(lexer.reader)?;
+
+     let fields: Vec<&str> = value.split_whitespace().collect();
+     if fields.len() < 4 {
+         return Err(Error::SdpInvalidSyntax(format!("`m={value}`")));
+     }
+
+     // <media>
+     // Set according to currently registered with IANA
+     // https://tools.ietf.org/html/rfc4566#section-5.14
+     let i = index_of(
+         fields[0],
+         &["audio", "video", "text", "application", "message"],
+     );
+     if i == -1 {
+         return Err(Error::SdpInvalidValue(fields[0].to_owned()));
+     }
+
+     // <port>
+     let parts: Vec<&str> = fields[1].split('/').collect();
+     let port_value = parts[0].parse::<u16>()? as isize;
+     let port_range = if parts.len() > 1 {
+         Some(parts[1].parse::<i32>()? as isize)
+     } else {
+         None
+     };
+
+     // <proto>
+     // Set according to currently registered with IANA
+     // https://tools.ietf.org/html/rfc4566#section-5.14
+     let mut protos = vec![];
+     for proto in fields[2].split('/').collect::<Vec<&str>>() {
+         let i = index_of(
+             proto,
+             &[
+                 "UDP", "RTP", "AVP", "SAVP", "SAVPF", "TLS", "DTLS", "SCTP", "AVPF",
+             ],
+         );
+         if i == -1 {
+             return Err(Error::SdpInvalidValue(fields[2].to_owned()));
+         }
+         protos.push(proto.to_owned());
+     }
+
+     // <fmt>...
+     let mut formats = vec![];
+     for field in fields.iter().skip(3) {
+         formats.push(field.to_string());
+     }
+
+     lexer.desc.media_descriptions.push(MediaDescription {
+         media_name: MediaName {
+             media: fields[0].to_owned(),
+             port: RangedPort {
+                 value: port_value,
+                 range: port_range,
+             },
+             protos,
+             formats,
+         },
+         media_title: None,
+         connection_information: None,
+         bandwidth: vec![],
+         encryption_key: None,
+         attributes: vec![],
+     });
+
+     Ok(Some(StateFn { f: s12 }))
+ }
+
+ fn unmarshal_media_title<'a, R: io::BufRead + io::Seek>(
+     lexer: &mut Lexer<'a, R>,
+ ) -> Result<Option<StateFn<'a, R>>> {
+     let (value, _) = read_value(lexer.reader)?;
+
+     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
+         latest_media_desc.media_title = Some(value);
+         Ok(Some(StateFn { f: s16 }))
+     } else {
+         Err(Error::SdpEmptyTimeDescription)
+     }
+ }
+
+ fn unmarshal_media_connection_information<'a, R: io::BufRead + io::Seek>(
+     lexer: &mut Lexer<'a, R>,
+ ) -> Result<Option<StateFn<'a, R>>> {
+     let (value, _) = read_value(lexer.reader)?;
+
+     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
+         latest_media_desc.connection_information = unmarshal_connection_information(&value)?;
+         Ok(Some(StateFn { f: s15 }))
+     } else {
+         Err(Error::SdpEmptyTimeDescription)
+     }
+ }
+
+ fn unmarshal_media_bandwidth<'a, R: io::BufRead + io::Seek>(
+     lexer: &mut Lexer<'a, R>,
+ ) -> Result<Option<StateFn<'a, R>>> {
+     let (value, _) = read_value(lexer.reader)?;
+
+     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
+         let bandwidth = unmarshal_bandwidth(&value)?;
+         latest_media_desc.bandwidth.push(bandwidth);
+         Ok(Some(StateFn { f: s15 }))
+     } else {
+         Err(Error::SdpEmptyTimeDescription)
+     }
+ }
+
+ fn unmarshal_media_encryption_key<'a, R: io::BufRead + io::Seek>(
+     lexer: &mut Lexer<'a, R>,
+ ) -> Result<Option<StateFn<'a, R>>> {
+     let (value, _) = read_value(lexer.reader)?;
+
+     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
+         latest_media_desc.encryption_key = Some(value);
+         Ok(Some(StateFn { f: s14 }))
+     } else {
+         Err(Error::SdpEmptyTimeDescription)
+     }
+ }
+
+ fn unmarshal_media_attribute<'a, R: io::BufRead + io::Seek>(
+     lexer: &mut Lexer<'a, R>,
+ ) -> Result<Option<StateFn<'a, R>>> {
+     let (value, _) = read_value(lexer.reader)?;
+
+     let fields: Vec<&str> = value.splitn(2, ':').collect();
+     let attribute = if fields.len() == 2 {
+         Attribute {
+             key: fields[0].to_owned(),
+             value: Some(fields[1].to_owned()),
+         }
+     } else {
+         Attribute {
+             key: fields[0].to_owned(),
+             value: None,
+         }
+     };
+
+     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
+         latest_media_desc.attributes.push(attribute);
+         Ok(Some(StateFn { f: s14 }))
+     } else {
+         Err(Error::SdpEmptyTimeDescription)
+     }
+ }
+
+ */
+func parseTimeUnits(value: String) throws -> Int64 {
+    // Some time offsets in the protocol can be provided with a shorthand
+    // notation. This code ensures to convert it to NTP timestamp format.
+    let (num, factor) =
+        if let last = value.last {
+            switch last {
+            case "d":
+                (String(value.dropLast()), 86400)  // days
+            case "h":
+                (String(value.dropLast()), 3600)  // hours
+            case "m":
+                (String(value.dropLast()), 60)  // minutes
+            case "s":
+                (String(value.dropLast()), 1)  // seconds (allowed for completeness)
+            default:
+                (value, 1)
+            }
+        } else {
+            (value, 1)
+        }
+
+    guard let parsedNum = Int64(num) else {
+        throw SDPError.sdpInvalidValue(value)
+    }
+
+    let result = parsedNum.multipliedReportingOverflow(by: Int64(factor))
+    if result.overflow {
+        throw SDPError.sdpInvalidValue(value)
+    }
+
+    return result.partialValue
+}
