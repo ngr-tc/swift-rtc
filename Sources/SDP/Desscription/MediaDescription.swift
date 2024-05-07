@@ -122,6 +122,22 @@ public struct MediaDescription: Equatable {
         self.attributes = []
     }
 
+    init(
+        mediaName: MediaName,
+        mediaTitle: Information? = nil,
+        connectionInformation: ConnectionInformation? = nil,
+        bandwidth: [Bandwidth],
+        encryptionKey: EncryptionKey? = nil,
+        attributes: [Attribute]
+    ) {
+        self.mediaName = mediaName
+        self.mediaTitle = mediaTitle
+        self.connectionInformation = connectionInformation
+        self.bandwidth = bandwidth
+        self.encryptionKey = encryptionKey
+        self.attributes = []
+    }
+
     /// creates a new MediaName with
     /// some settings that are required by the JSEP spec.
     init(codecType: String, _codecPrefs: [String]) {

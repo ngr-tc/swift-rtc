@@ -576,7 +576,7 @@ func s4(lexer: Lexer) throws -> StateFn? {
     switch key {
     case "i=":
         return StateFn(f: unmarshalSessionInformation)
-    /*case "u=":
+    case "u=":
         return StateFn(f: unmarshalUri)
     case "e=":
         return StateFn(f: unmarshalEmail)
@@ -587,7 +587,7 @@ func s4(lexer: Lexer) throws -> StateFn? {
     case "b=":
         return StateFn(f: unmarshalSessionBandwidth)
     case "t=":
-        return StateFn(f: unmarshalTiming)*/
+        return StateFn(f: unmarshalTiming)
     default:
         throw SDPError.sdpInvalidSyntax(key)
     }
@@ -857,160 +857,151 @@ func unmarshalSessionAttribute(lexer: Lexer) throws -> StateFn? {
 
     return nil  //TODO:StateFn { f: s11 }))
 }
-/*
- fn unmarshal_media_description<'a, R: io::BufRead + io::Seek>(
-     lexer: &mut Lexer<'a, R>,
- ) -> Result<Option<StateFn<'a, R>>> {
-     let (value, _) = read_value(lexer.reader)?;
 
-     let fields: Vec<&str> = value.split_whitespace().collect();
-     if fields.len() < 4 {
-         return Err(Error::SdpInvalidSyntax(format!("`m={value}`")));
-     }
+func unmarshalMediaDescription(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
 
-     // <media>
-     // Set according to currently registered with IANA
-     // https://tools.ietf.org/html/rfc4566#section-5.14
-     let i = index_of(
-         fields[0],
-         &["audio", "video", "text", "application", "message"],
-     );
-     if i == -1 {
-         return Err(Error::SdpInvalidValue(fields[0].to_owned()));
-     }
+    let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
+    if fields.count < 4 {
+        throw SDPError.sdpInvalidSyntax("`m=\(value)`")
+    }
 
-     // <port>
-     let parts: Vec<&str> = fields[1].split('/').collect();
-     let port_value = parts[0].parse::<u16>()? as isize;
-     let port_range = if parts.len() > 1 {
-         Some(parts[1].parse::<i32>()? as isize)
-     } else {
-         None
-     };
+    // <media>
+    // Set according to currently registered with IANA
+    // https://tools.ietf.org/html/rfc4566#section-5.14
+    if indexOf(
+        element: fields[0],
+        dataSet: ["audio", "video", "text", "application", "message"]) == nil
+    {
+        throw SDPError.sdpInvalidValue(fields[0])
+    }
 
-     // <proto>
-     // Set according to currently registered with IANA
-     // https://tools.ietf.org/html/rfc4566#section-5.14
-     let mut protos = vec![];
-     for proto in fields[2].split('/').collect::<Vec<&str>>() {
-         let i = index_of(
-             proto,
-             &[
-                 "UDP", "RTP", "AVP", "SAVP", "SAVPF", "TLS", "DTLS", "SCTP", "AVPF",
-             ],
-         );
-         if i == -1 {
-             return Err(Error::SdpInvalidValue(fields[2].to_owned()));
-         }
-         protos.push(proto.to_owned());
-     }
+    // <port>
+    let parts = fields[1].split(separator: "/").map { String($0) }
+    guard let portValue = Int(parts[0]) else {
+        throw SDPError.parseInt(parts[0])
+    }
+    var portRange: Int? = nil
+    if parts.count > 1 {
+        guard let range = Int(parts[1]) else {
+            throw SDPError.parseInt(parts[1])
+        }
+        portRange = range
+    }
 
-     // <fmt>...
-     let mut formats = vec![];
-     for field in fields.iter().skip(3) {
-         formats.push(field.to_string());
-     }
+    // <proto>
+    // Set according to currently registered with IANA
+    // https://tools.ietf.org/html/rfc4566#section-5.14
+    var protos: [String] = []
+    for proto in fields[2].split(separator: "/").map { String($0) } {
+        if indexOf(
+            element: proto,
+            dataSet: [
+                "UDP", "RTP", "AVP", "SAVP", "SAVPF", "TLS", "DTLS", "SCTP", "AVPF",
+            ]) == nil
+        {
+            throw SDPError.sdpInvalidValue(fields[2])
+        }
+        protos.append(proto)
+    }
 
-     lexer.desc.media_descriptions.push(MediaDescription {
-         media_name: MediaName {
-             media: fields[0].to_owned(),
-             port: RangedPort {
-                 value: port_value,
-                 range: port_range,
-             },
-             protos,
-             formats,
-         },
-         media_title: None,
-         connection_information: None,
-         bandwidth: vec![],
-         encryption_key: None,
-         attributes: vec![],
-     });
+    // <fmt>...
+    var formats: [String] = []
+    for i in 3..<fields.count {
+        formats.append(fields[i])
+    }
 
-     Ok(Some(StateFn { f: s12 }))
- }
+    lexer.desc.mediaDescriptions.append(
+        MediaDescription(
+            mediaName: MediaName(
+                media: fields[0],
+                port: RangedPort(
+                    value: portValue,
+                    range: portRange),
+                protos: protos,
+                formats: formats),
+            mediaTitle: nil,
+            connectionInformation: nil,
+            bandwidth: [],
+            encryptionKey: nil,
+            attributes: []
+        ))
 
- fn unmarshal_media_title<'a, R: io::BufRead + io::Seek>(
-     lexer: &mut Lexer<'a, R>,
- ) -> Result<Option<StateFn<'a, R>>> {
-     let (value, _) = read_value(lexer.reader)?;
+    return nil  //TODO:StateFn { f: s12 }))
+}
 
-     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
-         latest_media_desc.media_title = Some(value);
-         Ok(Some(StateFn { f: s16 }))
-     } else {
-         Err(Error::SdpEmptyTimeDescription)
-     }
- }
+func unmarshalMediaTitle(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
 
- fn unmarshal_media_connection_information<'a, R: io::BufRead + io::Seek>(
-     lexer: &mut Lexer<'a, R>,
- ) -> Result<Option<StateFn<'a, R>>> {
-     let (value, _) = read_value(lexer.reader)?;
+    if lexer.desc.mediaDescriptions.isEmpty {
+        throw SDPError.sdpEmptyTimeDescription
+    }
 
-     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
-         latest_media_desc.connection_information = unmarshal_connection_information(&value)?;
-         Ok(Some(StateFn { f: s15 }))
-     } else {
-         Err(Error::SdpEmptyTimeDescription)
-     }
- }
+    lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].mediaTitle = value
+    return nil  //TODO:StateFn { f: s16 }))
+}
 
- fn unmarshal_media_bandwidth<'a, R: io::BufRead + io::Seek>(
-     lexer: &mut Lexer<'a, R>,
- ) -> Result<Option<StateFn<'a, R>>> {
-     let (value, _) = read_value(lexer.reader)?;
+func unmarshalMediaConnectionInformation(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
 
-     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
-         let bandwidth = unmarshal_bandwidth(&value)?;
-         latest_media_desc.bandwidth.push(bandwidth);
-         Ok(Some(StateFn { f: s15 }))
-     } else {
-         Err(Error::SdpEmptyTimeDescription)
-     }
- }
+    if lexer.desc.mediaDescriptions.isEmpty {
+        throw SDPError.sdpEmptyTimeDescription
+    }
 
- fn unmarshal_media_encryption_key<'a, R: io::BufRead + io::Seek>(
-     lexer: &mut Lexer<'a, R>,
- ) -> Result<Option<StateFn<'a, R>>> {
-     let (value, _) = read_value(lexer.reader)?;
+    lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].connectionInformation =
+        try unmarshalConnectionInformation(value: value)
 
-     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
-         latest_media_desc.encryption_key = Some(value);
-         Ok(Some(StateFn { f: s14 }))
-     } else {
-         Err(Error::SdpEmptyTimeDescription)
-     }
- }
+    return nil  //TODO:StateFn { f: s15 }))
+}
 
- fn unmarshal_media_attribute<'a, R: io::BufRead + io::Seek>(
-     lexer: &mut Lexer<'a, R>,
- ) -> Result<Option<StateFn<'a, R>>> {
-     let (value, _) = read_value(lexer.reader)?;
+func unmarshalMediaBandwidth(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
 
-     let fields: Vec<&str> = value.splitn(2, ':').collect();
-     let attribute = if fields.len() == 2 {
-         Attribute {
-             key: fields[0].to_owned(),
-             value: Some(fields[1].to_owned()),
-         }
-     } else {
-         Attribute {
-             key: fields[0].to_owned(),
-             value: None,
-         }
-     };
+    if lexer.desc.mediaDescriptions.isEmpty {
+        throw SDPError.sdpEmptyTimeDescription
+    }
 
-     if let Some(latest_media_desc) = lexer.desc.media_descriptions.last_mut() {
-         latest_media_desc.attributes.push(attribute);
-         Ok(Some(StateFn { f: s14 }))
-     } else {
-         Err(Error::SdpEmptyTimeDescription)
-     }
- }
+    let bandwidth = try unmarshalBandwidth(value: value)
+    lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].bandwidth.append(bandwidth)
 
- */
+    return nil  //TODO:StateFn { f: s15 }))
+}
+
+func unmarshalMediaEncryptionKey(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+
+    if lexer.desc.mediaDescriptions.isEmpty {
+        throw SDPError.sdpEmptyTimeDescription
+    }
+
+    lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].encryptionKey = value
+    return nil  //TODO:StateFn { f: s14 }))
+}
+
+func unmarshalMediaAttribute(lexer: Lexer) throws -> StateFn? {
+    let value = try lexer.readValue()
+
+    let fields = value.split(separator: ":", maxSplits: 1).map { String($0) }
+    let attribute =
+        if fields.count == 2 {
+            Attribute(
+                key: fields[0],
+                value: fields[1])
+        } else {
+            Attribute(
+                key: fields[0])
+        }
+
+    if lexer.desc.mediaDescriptions.isEmpty {
+        throw SDPError.sdpEmptyTimeDescription
+    }
+
+    lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].attributes.append(
+        attribute)
+
+    return nil  //TODO:StateFn { f: s14 }))
+}
+
 func parseTimeUnits(value: String) throws -> Int64 {
     // Some time offsets in the protocol can be provided with a shorthand
     // notation. This code ensures to convert it to NTP timestamp format.
