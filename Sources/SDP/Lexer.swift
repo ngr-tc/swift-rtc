@@ -59,7 +59,7 @@ class Lexer {
 
     func readKey() throws -> String {
         while let char = peek() {
-            if char == "\n" || char == "\r" {
+            if char == "\n" || char == "\r" || char == "\r\n"{
                 consume()
                 continue
             }
