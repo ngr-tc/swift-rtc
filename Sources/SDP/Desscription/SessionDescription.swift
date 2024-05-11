@@ -284,6 +284,36 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
         self.attributes = identity ? [Attribute(key: attrKeyIdentity)] : []
         self.mediaDescriptions = []
     }
+    
+    init(version: Version,
+        origin: Origin,
+        sessionName: SessionName,
+        sessionInformation: Information? = nil,
+        uri: String? = nil,
+        emailAddress: EmailAddress? = nil,
+        phoneNumber: PhoneNumber? = nil,
+        connectionInformation: ConnectionInformation? = nil,
+        bandwidth: [Bandwidth] = [],
+        timeDescriptions: [TimeDescription] = [],
+        timeZones: [TimeZone] = [],
+        encryptionKey: EncryptionKey? = nil,
+        attributes: [Attribute] = [],
+         mediaDescriptions: [MediaDescription] = []) {
+        self.version = version
+        self.origin = origin
+        self.sessionName = sessionName
+        self.sessionInformation = sessionInformation
+        self.uri = uri
+        self.emailAddress = emailAddress
+        self.phoneNumber = phoneNumber
+        self.connectionInformation = connectionInformation
+        self.bandwidth = bandwidth
+        self.timeDescriptions = timeDescriptions
+        self.timeZones = timeZones
+        self.encryptionKey = encryptionKey
+        self.attributes = attributes
+        self.mediaDescriptions = mediaDescriptions
+    }
 
     /// adds a property attribute 'a=key' to the session description
     public mutating func withPropertyAttribute(key: String) -> SessionDescription {

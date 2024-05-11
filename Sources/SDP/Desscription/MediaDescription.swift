@@ -128,14 +128,14 @@ public struct MediaDescription: Equatable {
         connectionInformation: ConnectionInformation? = nil,
         bandwidth: [Bandwidth],
         encryptionKey: EncryptionKey? = nil,
-        attributes: [Attribute]
+        attributes: [Attribute] = []
     ) {
         self.mediaName = mediaName
         self.mediaTitle = mediaTitle
         self.connectionInformation = connectionInformation
         self.bandwidth = bandwidth
         self.encryptionKey = encryptionKey
-        self.attributes = []
+        self.attributes = attributes
     }
 
     /// creates a new MediaName with
