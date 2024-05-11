@@ -22,7 +22,7 @@ enum SDPError: Error, CustomStringConvertible {
     case sdpEmptyTimeDescription
     case parseExtMap(String)
     case syntaxError(String, Int)
-    case parseInt(String)
+    case parseInt(String, String)
 
     var description: String {
         switch self {
@@ -46,8 +46,8 @@ enum SDPError: Error, CustomStringConvertible {
             let startIndex = s.index(s.startIndex, offsetBy: p)
             let endIndex = s.index(startIndex, offsetBy: 1)
             return "\(s[..<startIndex]) --> \(s[startIndex..<endIndex]) <-- \(s[endIndex...])"
-        case .parseInt(let value):
-            return "parse Int: \(value)"
+        case .parseInt(let value, let s):
+            return "parse Int: \(value) in \(s)"
         }
     }
 }

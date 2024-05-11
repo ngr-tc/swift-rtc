@@ -56,7 +56,7 @@ func parseRtpMap(rtpMap: String) throws -> Codec {
         throw SDPError.missingColon
     }
     guard let payloadType = UInt8(ptSplit[1]) else {
-        throw SDPError.parseInt("invalid payload type")
+        throw SDPError.parseInt(String(ptSplit[1]), rtpMap)
     }
 
     let split = components[1].split(separator: "/")
@@ -64,7 +64,7 @@ func parseRtpMap(rtpMap: String) throws -> Codec {
     let clockRate: UInt32 = try {
         if split.count > 1 {
             guard let clockRate = UInt32(split[1]) else {
-                throw SDPError.parseInt("invalid clock rate")
+                throw SDPError.parseInt(String(split[1]), rtpMap)
             }
             return clockRate
         } else {
@@ -97,7 +97,7 @@ func parseFmtp(fmtp: String) throws -> Codec {
         throw SDPError.missingColon
     }
     guard let payloadType = UInt8(split[1]) else {
-        throw SDPError.parseInt("invalid payload type")
+        throw SDPError.parseInt(String(split[1]), fmtp)
     }
 
     return Codec(
@@ -121,7 +121,7 @@ func parseRtcpFb(rtcpFb: String) throws -> Codec {
         throw SDPError.missingColon
     }
     guard let payloadType = UInt8(ptSplit[1]) else {
-        throw SDPError.parseInt("invalid payload type")
+        throw SDPError.parseInt(String(ptSplit[1]), rtcpFb)
     }
 
     return Codec(

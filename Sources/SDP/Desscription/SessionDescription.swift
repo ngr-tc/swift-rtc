@@ -246,15 +246,7 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
         self.phoneNumber = nil
         self.connectionInformation = nil
         self.bandwidth = []
-        self.timeDescriptions = [
-            TimeDescription(
-                timing: Timing(
-                    startTime: 0,
-                    stopTime: 0
-                ),
-                repeatTimes: []
-            )
-        ]
+        self.timeDescriptions = []
         self.timeZones = []
         self.encryptionKey = nil
         self.attributes = []
@@ -837,7 +829,7 @@ func unmarshalProtocolVersion(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     guard let version = UInt32(value) else {
-        throw SDPError.parseInt(value)
+        throw SDPError.parseInt(value, "unmarshalProtocolVersion")
     }
 
     // As off the latest draft of the rfc this value is required to be 0.
@@ -858,10 +850,10 @@ func unmarshalOrigin(lexer: Lexer) throws -> StateFn? {
     }
 
     guard let sessionId = UInt64(fields[1]) else {
-        throw SDPError.parseInt(fields[1])
+        throw SDPError.parseInt(fields[1], "field 1 of unmarshalOrigin")
     }
     guard let sessionVersion = UInt64(fields[2]) else {
-        throw SDPError.parseInt(fields[2])
+        throw SDPError.parseInt(fields[2], "field 2 of unmarshalOrigin")
     }
 
     // Set according to currently registered with IANA
@@ -987,7 +979,7 @@ func unmarshalBandwidth(value: String) throws -> Bandwidth {
     }
 
     guard let bandwidth = UInt64(parts[1]) else {
-        throw SDPError.parseInt(parts[1])
+        throw SDPError.parseInt(parts[1], "\(value) of unmarshalBandwidth")
     }
 
     return Bandwidth(
@@ -1005,10 +997,10 @@ func unmarshalTiming(lexer: Lexer) throws -> StateFn? {
     }
 
     guard let startTime = UInt64(fields[0]) else {
-        throw SDPError.parseInt(fields[0])
+        throw SDPError.parseInt(fields[0], "field 0 of unmarshalTiming")
     }
     guard let stopTime = UInt64(fields[1]) else {
-        throw SDPError.parseInt(fields[1])
+        throw SDPError.parseInt(fields[1], "field 1 of unmarshalTiming")
     }
 
     lexer.desc.timeDescriptions.append(
@@ -1060,7 +1052,7 @@ func unmarshalTimeZones(lexer: Lexer) throws -> StateFn? {
 
     for i in stride(from: 0, to: fields.count, by: 2) {
         guard let adjustmentTime = UInt64(fields[i]) else {
-            throw SDPError.parseInt(fields[i])
+            throw SDPError.parseInt(fields[i], "fileds[\(i)] of unmarshalTimeZones")
         }
         let offset = try parseTimeUnits(value: fields[i + 1])
 
@@ -1119,12 +1111,12 @@ func unmarshalMediaDescription(lexer: Lexer) throws -> StateFn? {
     // <port>
     let parts = fields[1].split(separator: "/").map { String($0) }
     guard let portValue = Int(parts[0]) else {
-        throw SDPError.parseInt(parts[0])
+        throw SDPError.parseInt(parts[0], "parts[0] of unmarshalMediaDescription")
     }
     var portRange: Int? = nil
     if parts.count > 1 {
         guard let range = Int(parts[1]) else {
-            throw SDPError.parseInt(parts[1])
+            throw SDPError.parseInt(parts[1], "parts[1] of unmarshalMediaDescription")
         }
         portRange = range
     }

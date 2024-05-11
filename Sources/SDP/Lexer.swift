@@ -25,9 +25,9 @@ class Lexer {
         self.index = input.startIndex
     }
 
-    private func nextToken() -> String? {
+    private func nextToken() -> Character? {
         guard index < input.endIndex else { return nil }
-        let token = String(input[index])
+        let token = input[index]
         index = input.index(after: index)
         return token
     }
@@ -48,7 +48,7 @@ class Lexer {
         index = input.index(after: index)
     }
 
-    private func readUntil(delim: String) -> String {
+    private func readUntil(delim: Character) -> String {
         var string = ""
         while let char = nextToken() {
             string.append(char)
@@ -71,9 +71,18 @@ class Lexer {
         }
         return ""
     }
+    
+    private func readLine() -> String {
+        var string = ""
+        while let char = nextToken() {
+            if char == "\n" || char == "\r\n" { break }
+            string.append(char)
+        }
+        return String(string.trimmingNewline())
+    }
 
     func readValue() throws -> String {
-        return readUntil(delim: "\n")
+        return readLine()
     }
 }
 
