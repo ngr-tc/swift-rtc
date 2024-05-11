@@ -186,13 +186,13 @@ final class SessionDescriptionTests: XCTestCase {
         XCTAssertEqual(canonicalMashalSdp, actual)
     }
 
-    let BASE_SDP: String = """
+    let baseSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n
         """
 
-    let SESSION_INFORMATION_SDP: String = """
+    let sessionInformationSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -203,7 +203,7 @@ final class SessionDescriptionTests: XCTestCase {
     // https://tools.ietf.org/html/rfc4566#section-5
     // Parsers SHOULD be tolerant and also accept records terminated
     // with a single newline character.
-    let SESSION_INFORMATION_SDPLFONLY: String = """
+    let sessionInformationSdpLfOnly: String = """
         v=0\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\n\
         s=SDP Seminar\n\
@@ -219,7 +219,7 @@ final class SessionDescriptionTests: XCTestCase {
 
     // Other SDP parsers (e.g. one in VLC media player) allow
     // empty lines.
-    let SESSION_INFORMATION_SDPEXTRA_CRLF: String = """
+    let sessionInformationSdpExtraCrLf: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         \r\n\
@@ -231,7 +231,7 @@ final class SessionDescriptionTests: XCTestCase {
         \r\n
         """
 
-    let URI_SDP: String = """
+    let uriSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -239,7 +239,7 @@ final class SessionDescriptionTests: XCTestCase {
         t=3034423619 3042462419\r\n
         """
 
-    let EMAIL_ADDRESS_SDP: String = """
+    let emailAddressSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -247,7 +247,7 @@ final class SessionDescriptionTests: XCTestCase {
         t=3034423619 3042462419\r\n
         """
 
-    let PHONE_NUMBER_SDP: String = """
+    let phoneNumberSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -255,7 +255,7 @@ final class SessionDescriptionTests: XCTestCase {
         t=3034423619 3042462419\r\n
         """
 
-    let SESSION_CONNECTION_INFORMATION_SDP: String = """
+    let sessionConnectionInformationSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -263,7 +263,7 @@ final class SessionDescriptionTests: XCTestCase {
         t=3034423619 3042462419\r\n
         """
 
-    let SESSION_BANDWIDTH_SDP: String = """
+    let sessionBandwithSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -272,7 +272,7 @@ final class SessionDescriptionTests: XCTestCase {
         t=3034423619 3042462419\r\n
         """
 
-    let TIMING_SDP: String = """
+    let timingSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -282,7 +282,7 @@ final class SessionDescriptionTests: XCTestCase {
     // Short hand time notation is converted into NTP timestamp format in
     // seconds. Because of that unittest comparisons will fail as the same time
     // will be expressed in different units.
-    let REPEAT_TIMES_SDP: String = """
+    let repeatTimesSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -291,7 +291,7 @@ final class SessionDescriptionTests: XCTestCase {
         r=3d 2h 0 21h\r\n
         """
 
-    let REPEAT_TIMES_SDPEXPECTED: String = """
+    let repeatTimesSdpExpected: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -300,7 +300,7 @@ final class SessionDescriptionTests: XCTestCase {
         r=259200 7200 0 75600\r\n
         """
 
-    let REPEAT_TIMES_OVERFLOW_SDP: String = """
+    let repeatTimesOverflowSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -309,7 +309,7 @@ final class SessionDescriptionTests: XCTestCase {
         r=106751991167301d 2h 0 21h\r\n
         """
 
-    let REPEAT_TIMES_SDPEXTRA_CRLF: String = """
+    let repeatTimesSdpExtraCrLf: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -321,7 +321,7 @@ final class SessionDescriptionTests: XCTestCase {
 
     // The expected value looks a bit different for the same reason as mentioned
     // above regarding RepeatTimes.
-    let TIME_ZONES_SDP: String = """
+    let timeZonesSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -329,7 +329,7 @@ final class SessionDescriptionTests: XCTestCase {
         r=2882844526 -1h 2898848070 0\r\n
         """
 
-    let TIME_ZONES_SDPEXPECTED: String = """
+    let timeZonesSdpExpected: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -337,7 +337,7 @@ final class SessionDescriptionTests: XCTestCase {
         r=2882844526 -3600 2898848070 0\r\n
         """
 
-    let TIME_ZONES_SDP2: String = """
+    let timeZonesSdp2: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -345,7 +345,7 @@ final class SessionDescriptionTests: XCTestCase {
         z=2882844526 -3600 2898848070 0\r\n
         """
 
-    let TIME_ZONES_SDP2EXTRA_CRLF: String = """
+    let timeZonesSdp2ExtraCrLf: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -354,7 +354,7 @@ final class SessionDescriptionTests: XCTestCase {
         \r\n
         """
 
-    let SESSION_ENCRYPTION_KEY_SDP: String = """
+    let sessionEncryptionKeySdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -362,7 +362,7 @@ final class SessionDescriptionTests: XCTestCase {
         k=prompt\r\n
         """
 
-    let SESSION_ENCRYPTION_KEY_SDPEXTRA_CRLF: String = """
+    let sessionEncryptionKeySdpExtraCrLf: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -371,7 +371,7 @@ final class SessionDescriptionTests: XCTestCase {
         \r\n
         """
 
-    let SESSION_ATTRIBUTES_SDP: String = """
+    let sessionAttributesSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -379,7 +379,7 @@ final class SessionDescriptionTests: XCTestCase {
         a=rtpmap:96 opus/48000\r\n
         """
 
-    let MEDIA_NAME_SDP: String = """
+    let mediaNameSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -388,7 +388,7 @@ final class SessionDescriptionTests: XCTestCase {
         m=audio 54400 RTP/SAVPF 0 96\r\n
         """
 
-    let MEDIA_NAME_SDPEXTRA_CRLF: String = """
+    let mediaNameSdpExtraCrLf: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -398,7 +398,7 @@ final class SessionDescriptionTests: XCTestCase {
         \r\n
         """
 
-    let MEDIA_TITLE_SDP: String = """
+    let mediaTitleSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -408,7 +408,7 @@ final class SessionDescriptionTests: XCTestCase {
         i=Vivamus a posuere nisl\r\n
         """
 
-    let MEDIA_CONNECTION_INFORMATION_SDP: String = """
+    let mediaConnectionInformationSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -418,7 +418,7 @@ final class SessionDescriptionTests: XCTestCase {
         c=IN IP4 203.0.113.1\r\n
         """
 
-    let MEDIA_CONNECTION_INFORMATION_SDPEXTRA_CRLF: String = """
+    let mediaConnectionInformationSdpExtraCrLf: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -429,7 +429,7 @@ final class SessionDescriptionTests: XCTestCase {
         \r\n
         """
 
-    let MEDIA_DESCRIPTION_OUT_OF_ORDER_SDP: String = """
+    let mediaDescriptionOutOfOrderSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -442,7 +442,7 @@ final class SessionDescriptionTests: XCTestCase {
         i=Vivamus a posuere nisl\r\n
         """
 
-    let MEDIA_DESCRIPTION_OUT_OF_ORDER_SDPACTUAL: String = """
+    let mediaDescriptionOutOfOrderSdpActual: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -455,7 +455,7 @@ final class SessionDescriptionTests: XCTestCase {
         a=candidate:0 1 UDP 2113667327 203.0.113.1 54400 typ host\r\n
         """
 
-    let MEDIA_BANDWIDTH_SDP: String = """
+    let mediaBandwidthSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -466,7 +466,7 @@ final class SessionDescriptionTests: XCTestCase {
         b=AS:12345\r\n
         """
 
-    let MEDIA_ENCRYPTION_KEY_SDP: String = """
+    let mediaEncryptionKeySdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -476,7 +476,7 @@ final class SessionDescriptionTests: XCTestCase {
         k=prompt\r\n
         """
 
-    let MEDIA_ENCRYPTION_KEY_SDPEXTRA_CRLF: String = """
+    let mediaEncryptionKeySdpExtraCrLf: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -487,7 +487,7 @@ final class SessionDescriptionTests: XCTestCase {
         \r\n
         """
 
-    let MEDIA_ATTRIBUTES_SDP: String = """
+    let mediaAttributesSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -501,7 +501,7 @@ final class SessionDescriptionTests: XCTestCase {
         a=rtcp-fb:97 nack pli\r\n
         """
 
-    let CANONICAL_UNMARSHAL_SDP: String = """
+    let canonicalUnmarshalSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\
         s=SDP Seminar\r\n\
@@ -533,72 +533,72 @@ final class SessionDescriptionTests: XCTestCase {
         let tests = [
             (
                 "SessionInformationSDPLFOnly",
-                SESSION_INFORMATION_SDPLFONLY,
-                SESSION_INFORMATION_SDP
+                sessionInformationSdpLfOnly,
+                sessionInformationSdp
             ),
             (
                 "SessionInformationSDPExtraCRLF",
-                SESSION_INFORMATION_SDPEXTRA_CRLF,
-                SESSION_INFORMATION_SDP
+                sessionInformationSdpExtraCrLf,
+                sessionInformationSdp
             ),
-            ("SessionInformation", SESSION_INFORMATION_SDP, nil),
-            ("URI", URI_SDP, nil),
-            ("EmailAddress", EMAIL_ADDRESS_SDP, nil),
-            ("PhoneNumber", PHONE_NUMBER_SDP, nil),
+            ("SessionInformation", sessionInformationSdp, nil),
+            ("URI", uriSdp, nil),
+            ("EmailAddress", emailAddressSdp, nil),
+            ("PhoneNumber", phoneNumberSdp, nil),
             (
                 "RepeatTimesSDPExtraCRLF",
-                REPEAT_TIMES_SDPEXTRA_CRLF,
-                REPEAT_TIMES_SDPEXPECTED
+                repeatTimesSdpExtraCrLf,
+                repeatTimesSdpExpected
             ),
             (
                 "SessionConnectionInformation",
-                SESSION_CONNECTION_INFORMATION_SDP,
+                sessionConnectionInformationSdp,
                 nil
             ),
-            ("SessionBandwidth", SESSION_BANDWIDTH_SDP, nil),
-            ("SessionEncryptionKey", SESSION_ENCRYPTION_KEY_SDP, nil),
+            ("SessionBandwidth", sessionBandwithSdp, nil),
+            ("SessionEncryptionKey", sessionEncryptionKeySdp, nil),
             (
                 "SessionEncryptionKeyExtraCRLF",
-                SESSION_ENCRYPTION_KEY_SDPEXTRA_CRLF,
-                SESSION_ENCRYPTION_KEY_SDP
+                sessionEncryptionKeySdpExtraCrLf,
+                sessionEncryptionKeySdp
             ),
-            ("SessionAttributes", SESSION_ATTRIBUTES_SDP, nil),
+            ("SessionAttributes", sessionAttributesSdp, nil),
             (
                 "TimeZonesSDP2ExtraCRLF",
-                TIME_ZONES_SDP2EXTRA_CRLF,
-                TIME_ZONES_SDP2
+                timeZonesSdp2ExtraCrLf,
+                timeZonesSdp2
             ),
-            ("MediaName", MEDIA_NAME_SDP, nil),
+            ("MediaName", mediaNameSdp, nil),
             (
                 "MediaNameExtraCRLF",
-                MEDIA_NAME_SDPEXTRA_CRLF,
-                MEDIA_NAME_SDP
+                mediaNameSdpExtraCrLf,
+                mediaNameSdp
             ),
-            ("MediaTitle", MEDIA_TITLE_SDP, nil),
+            ("MediaTitle", mediaTitleSdp, nil),
             (
                 "MediaConnectionInformation",
-                MEDIA_CONNECTION_INFORMATION_SDP,
+                mediaConnectionInformationSdp,
                 nil
             ),
             (
                 "MediaConnectionInformationExtraCRLF",
-                MEDIA_CONNECTION_INFORMATION_SDPEXTRA_CRLF,
-                MEDIA_CONNECTION_INFORMATION_SDP
+                mediaConnectionInformationSdpExtraCrLf,
+                mediaConnectionInformationSdp
             ),
             (
                 "MediaDescriptionOutOfOrder",
-                MEDIA_DESCRIPTION_OUT_OF_ORDER_SDP,
-                MEDIA_DESCRIPTION_OUT_OF_ORDER_SDPACTUAL
+                mediaDescriptionOutOfOrderSdp,
+                mediaDescriptionOutOfOrderSdpActual
             ),
-            ("MediaBandwidth", MEDIA_BANDWIDTH_SDP, nil),
-            ("MediaEncryptionKey", MEDIA_ENCRYPTION_KEY_SDP, nil),
+            ("MediaBandwidth", mediaBandwidthSdp, nil),
+            ("MediaEncryptionKey", mediaEncryptionKeySdp, nil),
             (
                 "MediaEncryptionKeyExtraCRLF",
-                MEDIA_ENCRYPTION_KEY_SDPEXTRA_CRLF,
-                MEDIA_ENCRYPTION_KEY_SDP
+                mediaEncryptionKeySdpExtraCrLf,
+                mediaEncryptionKeySdp
             ),
-            ("MediaAttributes", MEDIA_ATTRIBUTES_SDP, nil),
-            ("CanonicalUnmarshal", CANONICAL_UNMARSHAL_SDP, nil),
+            ("MediaAttributes", mediaAttributesSdp, nil),
+            ("CanonicalUnmarshal", canonicalUnmarshalSdp, nil),
         ]
 
         for (name, sdp_str, expected) in tests {
@@ -614,14 +614,14 @@ final class SessionDescriptionTests: XCTestCase {
     }
 
     func testUnmarshalRepeatTimes() throws {
-        let sdp = try SessionDescription.unmarshal(input: REPEAT_TIMES_SDP)
+        let sdp = try SessionDescription.unmarshal(input: repeatTimesSdp)
         let actual = sdp.marshal()
-        XCTAssertEqual(REPEAT_TIMES_SDPEXPECTED, actual)
+        XCTAssertEqual(repeatTimesSdpExpected, actual)
     }
 
     func testUnmarshalRepeatTimesOverflow() throws {
         do {
-            let _ = try SessionDescription.unmarshal(input: REPEAT_TIMES_OVERFLOW_SDP)
+            let _ = try SessionDescription.unmarshal(input: repeatTimesOverflowSdp)
             XCTAssertTrue(false, "unmarshal should be failed")
         } catch SDPError.sdpInvalidValue(let value) {
             XCTAssertEqual("106751991167301d", value)
@@ -631,9 +631,9 @@ final class SessionDescriptionTests: XCTestCase {
     }
 
     func testUnmarshalTimeZones() throws {
-        let sdp = try SessionDescription.unmarshal(input: TIME_ZONES_SDP)
+        let sdp = try SessionDescription.unmarshal(input: timeZonesSdp)
         let actual = sdp.marshal()
-        XCTAssertEqual(TIME_ZONES_SDPEXPECTED, actual)
+        XCTAssertEqual(timeZonesSdpExpected, actual)
     }
 
     func testUnmarshalNonNilAddress() throws {
