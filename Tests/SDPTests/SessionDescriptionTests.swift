@@ -643,4 +643,165 @@ final class SessionDescriptionTests: XCTestCase {
         let output = sdp?.marshal()
         XCTAssertEqual(input, output)
     }
+
+    func getTestSessionDescription() -> SessionDescription {
+        return SessionDescription(
+            version: 0,
+            origin: Origin(
+                username: "", sessionId: 0, sessionVersion: 0, networkType: "", addressType: "",
+                unicastAddress: ""),
+            sessionName: "",
+            mediaDescriptions: [
+                MediaDescription(
+                    mediaName: MediaName(
+                        media: "video",
+                        port: RangedPort(
+                            value: 51372,
+                            range: nil
+                        ),
+                        protos: ["RTP", "AVP"],
+                        formats: ["120", "121", "126", "97"]
+                    ),
+                    attributes: [
+                        Attribute(
+                            key:
+                                "fmtp:126 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1"
+                        ),
+                        Attribute(key: "fmtp:97 profile-level-id=42e01f;level-asymmetry-allowed=1"),
+                        Attribute(key: "fmtp:120 max-fs=12288;max-fr=60"),
+                        Attribute(key: "fmtp:121 max-fs=12288;max-fr=60"),
+                        Attribute(key: "rtpmap:120 VP8/90000"),
+                        Attribute(key: "rtpmap:121 VP9/90000"),
+                        Attribute(key: "rtpmap:126 H264/90000"),
+                        Attribute(key: "rtpmap:97 H264/90000"),
+                        Attribute(key: "rtcp-fb:97 ccm fir"),
+                        Attribute(key: "rtcp-fb:97 nack"),
+                        Attribute(key: "rtcp-fb:97 nack pli"),
+                    ]
+                )
+            ]
+        )
+    }
+
+    func testGetPayloadTypeForVp8() throws {
+        let tests = [
+            (
+                Codec(
+                    name: "VP8"
+                ),
+                UInt8(120)
+            ),
+            (
+                Codec(
+                    name: "VP9"
+                ),
+                121
+            ),
+            (
+                Codec(
+                    name: "H264",
+                    fmtp: "profile-level-id=42e01f;level-asymmetry-allowed=1"
+                ),
+                97
+            ),
+            (
+                Codec(
+                    name: "H264",
+                    fmtp: "level-asymmetry-allowed=1;profile-level-id=42e01f"
+                ),
+                97
+            ),
+            (
+                Codec(
+                    name: "H264",
+                    fmtp: "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1"
+                ),
+                126
+            ),
+        ]
+
+        for (codec, expected) in tests {
+            let sdp = getTestSessionDescription()
+            let actual = sdp.getPayloadTypeForCodec(wanted: codec)
+            XCTAssertNotNil(actual)
+            XCTAssertEqual(actual, expected)
+        }
+    }
+
+    func testGetCodecForPayloadType() throws {
+        let tests = [
+            (
+                UInt8(120),
+                Codec(
+                    payloadType: 120,
+                    name: "VP8",
+                    clockRate: 90000,
+                    fmtp: "max-fs=12288;max-fr=60"
+                )
+            ),
+            (
+                121,
+                Codec(
+                    payloadType: 121,
+                    name: "VP9",
+                    clockRate: 90000,
+                    fmtp: "max-fs=12288;max-fr=60"
+                )
+            ),
+            (
+                126,
+                Codec(
+                    payloadType: 126,
+                    name: "H264",
+                    clockRate: 90000,
+                    fmtp: "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1"
+                )
+            ),
+            (
+                97,
+                Codec(
+                    payloadType: 97,
+                    name: "H264",
+                    clockRate: 90000,
+                    fmtp: "profile-level-id=42e01f;level-asymmetry-allowed=1",
+                    rtcpFeedbacks: [
+                        "ccm fir",
+                        "nack",
+                        "nack pli",
+                    ]
+                )
+            ),
+        ]
+
+        for (payloadType, expected) in tests {
+            let sdp = getTestSessionDescription()
+            let actual = sdp.getCodecForPayloadType(payloadType: payloadType)
+            XCTAssertNotNil(actual)
+            XCTAssertEqual(expected, actual)
+        }
+    }
+
+    func testNewSessionId() throws {
+        var min = UInt64(0x7FFF_FFFF_FFFF_FFFF)
+        var max = UInt64(0)
+        for _ in 0..<10000 {
+            let r = newSessionId()
+
+            if r > (1 << 63) - 1 {
+                XCTAssertTrue(false, "Session ID must be less than 2**64-1, got \(r)")
+            }
+            if r < min {
+                min = r
+            }
+            if r > max {
+                max = r
+            }
+        }
+        if min > 0x1000_0000_0000_0000 {
+            XCTAssertTrue(false, "Value around lower boundary was not generated")
+        }
+        if max < 0x7000_0000_0000_0000 {
+            XCTAssertTrue(false, "Value around upper boundary was not generated")
+        }
+    }
 }

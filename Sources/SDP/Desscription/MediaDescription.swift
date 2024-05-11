@@ -126,7 +126,7 @@ public struct MediaDescription: Equatable {
         mediaName: MediaName,
         mediaTitle: Information? = nil,
         connectionInformation: ConnectionInformation? = nil,
-        bandwidth: [Bandwidth],
+        bandwidth: [Bandwidth] = [],
         encryptionKey: EncryptionKey? = nil,
         attributes: [Attribute] = []
     ) {
