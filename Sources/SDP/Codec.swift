@@ -31,7 +31,7 @@ public struct Codec: Equatable, CustomStringConvertible {
     }
 
     // Initialize the Codec object with default values for its properties
-    init(
+    public init(
         payloadType: UInt8 = 0, name: String = "", clockRate: UInt32 = 0,
         encodingParameters: String = "", fmtp: String = "", rtcpFeedbacks: [String] = []
     ) {

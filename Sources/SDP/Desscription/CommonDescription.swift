@@ -32,6 +32,12 @@ public struct Address: Equatable, CustomStringConvertible {
         }
         return output
     }
+    
+    public init(address: String, ttl: Int? = nil, range: Int? = nil) {
+        self.address = address
+        self.ttl = ttl
+        self.range = range
+    }
 }
 
 /// ConnectionInformation defines the representation for the "c=" field
@@ -48,6 +54,12 @@ public struct ConnectionInformation: Equatable, CustomStringConvertible {
             return "\(self.networkType) \(self.addressType)"
         }
     }
+    
+    public init(networkType: String, addressType: String, address: Address? = nil) {
+        self.networkType = networkType
+        self.addressType = addressType
+        self.address = address
+    }
 }
 
 /// Bandwidth describes an optional field which denotes the proposed bandwidth
@@ -60,6 +72,12 @@ public struct Bandwidth: Equatable, CustomStringConvertible {
     public var description: String {
         let output = self.experimental ? "X-" : ""
         return "\(output)\(self.bandwidthType):\(self.bandwidth)"
+    }
+    
+    public init(experimental: Bool, bandwidthType: String, bandwidth: UInt64) {
+        self.experimental = experimental
+        self.bandwidthType = bandwidthType
+        self.bandwidth = bandwidth
     }
 }
 
@@ -78,6 +96,7 @@ public enum ConnectionRole: String, Equatable, CustomStringConvertible {
 /// Direction is a marker for transmission direction of an endpoint
 public enum Direction: String, Equatable, CustomStringConvertible {
     case sendrecv, sendonly, recvonly, inactive
+    
     public var description: String {
         self.rawValue
     }

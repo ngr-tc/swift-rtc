@@ -29,7 +29,7 @@ public struct Attribute: Equatable, CustomStringConvertible {
     }
 
     /// init constructs a new attribute
-    init(key: String, value: String? = nil) {
+    public init(key: String, value: String? = nil) {
         self.key = key
         self.value = value
     }

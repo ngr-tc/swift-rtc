@@ -28,7 +28,7 @@ public struct RangedPort: Equatable, CustomStringConvertible {
         }
     }
 
-    init(value: Int, range: Int? = nil) {
+    public init(value: Int, range: Int? = nil) {
         self.value = value
         self.range = range
     }
@@ -51,14 +51,14 @@ public struct MediaName: Equatable, CustomStringConvertible {
         return s.joined(separator: " ")
     }
 
-    init() {
+    public init() {
         self.media = ""
         self.port = RangedPort(value: 0)
         self.protos = []
         self.formats = []
     }
 
-    init(media: String, port: RangedPort, protos: [String], formats: [String]) {
+    public init(media: String, port: RangedPort, protos: [String], formats: [String]) {
         self.media = media
         self.port = port
         self.protos = protos
@@ -113,7 +113,7 @@ public struct MediaDescription: Equatable {
         return (false, nil)
     }
 
-    init() {
+    public init() {
         self.mediaName = MediaName()
         self.mediaTitle = nil
         self.connectionInformation = nil
@@ -122,7 +122,7 @@ public struct MediaDescription: Equatable {
         self.attributes = []
     }
 
-    init(
+    public init(
         mediaName: MediaName,
         mediaTitle: Information? = nil,
         connectionInformation: ConnectionInformation? = nil,
@@ -140,7 +140,7 @@ public struct MediaDescription: Equatable {
 
     /// creates a new MediaName with
     /// some settings that are required by the JSEP spec.
-    init(codecType: String, _codecPrefs: [String]) {
+    public init(codecType: String, _codecPrefs: [String]) {
         self.mediaName = MediaName(
             media: codecType,
             port: RangedPort(value: 9),

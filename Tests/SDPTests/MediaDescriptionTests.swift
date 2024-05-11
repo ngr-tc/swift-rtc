@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 import XCTest
-
-@testable import SDP
+import SDP
 
 final class MediaDescriptionTests: XCTestCase {
     func testAttributeMissing() throws {

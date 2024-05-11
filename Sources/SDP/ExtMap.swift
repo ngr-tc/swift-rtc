@@ -53,7 +53,7 @@ public struct ExtMap: Equatable, CustomStringConvertible {
         return output
     }
 
-    init(value: Int, direction: Direction? = nil, uri: String? = nil, extAttr: String? = nil) {
+    public init(value: Int, direction: Direction? = nil, uri: String? = nil, extAttr: String? = nil) {
         self.value = value
         self.direction = direction
         self.uri = uri

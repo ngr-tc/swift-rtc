@@ -57,6 +57,15 @@ public struct Origin: Equatable, CustomStringConvertible {
         return
             "\(self.username) \(self.sessionId) \(self.sessionVersion) \(self.networkType) \(self.addressType) \(self.unicastAddress)"
     }
+    
+    public init(username: String, sessionId: UInt64, sessionVersion: UInt64, networkType: String, addressType: String, unicastAddress: String) {
+        self.username = username
+        self.sessionId = sessionId
+        self.sessionVersion = sessionVersion
+        self.networkType = networkType
+        self.addressType = addressType
+        self.unicastAddress = unicastAddress
+    }
 }
 
 /// SessionName describes a structured representations for the "s=" field
@@ -82,6 +91,11 @@ public struct TimeZone: Equatable, CustomStringConvertible {
     public var description: String {
         return "\(self.adjustmentTime) \(self.offset)"
     }
+    
+    public init(adjustmentTime: UInt64, offset: Int64) {
+        self.adjustmentTime = adjustmentTime
+        self.offset = offset
+    }
 }
 
 /// Timing defines the "t=" field's structured representation for the start and
@@ -92,6 +106,11 @@ public struct Timing: Equatable, CustomStringConvertible {
 
     public var description: String {
         return "\(self.startTime) \(self.stopTime)"
+    }
+    
+    public init(startTime: UInt64, stopTime: UInt64) {
+        self.startTime = startTime
+        self.stopTime = stopTime
     }
 }
 
@@ -108,6 +127,12 @@ public struct RepeatTime: Equatable, CustomStringConvertible {
             output += " " + offsets.map { String($0) }.joined(separator: " ")
         }
         return output
+    }
+    
+    public init(interval: Int64, duration: Int64, offsets: [Int64]) {
+        self.interval = interval
+        self.duration = duration
+        self.offsets = offsets
     }
 }
 
@@ -132,13 +157,18 @@ public struct TimeDescription: Equatable, CustomStringConvertible {
         }
         return result
     }
+    
+    public init(timing: Timing, repeatTimes: [RepeatTime]) {
+        self.timing = timing
+        self.repeatTimes = repeatTimes
+    }
 }
 
 /// https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-26#section-5.2.1
 /// Session ID is recommended to be constructed by generating a 64-bit
 /// quantity with the highest bit set to zero and the remaining 63-bits
 /// being cryptographically random.
-func newSessionId() -> UInt64 {
+public func newSessionId() -> UInt64 {
     let c = UInt64.max ^ (UInt64(1) << 63)
     return UInt64.random(in: UInt64.min...UInt64.max) & c
 }
@@ -229,7 +259,7 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
         return self.marshal()
     }
 
-    init() {
+    public init() {
         self.version = 0
         self.origin = Origin(
             username: "",
@@ -253,7 +283,7 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
         self.mediaDescriptions = []
     }
 
-    init(identity: Bool) {
+    public init(identity: Bool) {
         self.version = 0
         self.origin = Origin(
             username: "-",
@@ -285,7 +315,7 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
         self.mediaDescriptions = []
     }
     
-    init(version: Version,
+    public init(version: Version,
         origin: Origin,
         sessionName: SessionName,
         sessionInformation: Information? = nil,

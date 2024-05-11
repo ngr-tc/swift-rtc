@@ -19,7 +19,7 @@ class Lexer {
     let input: String
     var index: String.Index
 
-    init(desc: SessionDescription, input: String) {
+    public init(desc: SessionDescription, input: String) {
         self.desc = desc
         self.input = input
         self.index = input.startIndex

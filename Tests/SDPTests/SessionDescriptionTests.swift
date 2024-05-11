@@ -12,11 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 import XCTest
-
-@testable import SDP
+import SDP
 
 final class SessionDescriptionTests: XCTestCase {
-
     let canonicalMashalSdp: String = """
         v=0\r\n\
         o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5\r\n\

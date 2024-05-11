@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 import XCTest
-
-@testable import SDP
+import SDP
 
 final class ExtMapTests: XCTestCase {
     let exampleAttrExtMap1: String = "extmap:1 http://example.com/082005/ext.htm#ttime"

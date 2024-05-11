@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 import XCTest
-
-@testable import SDP
+import SDP
 
 final class DirectionTests: XCTestCase {
     func testNewDirection() throws {

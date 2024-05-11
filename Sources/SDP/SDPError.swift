@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-enum SDPError: Error, CustomStringConvertible {
+public enum SDPError: Error, CustomStringConvertible {
     case codecNotFound
     case missingWhitespace
     case missingColon
@@ -24,7 +24,7 @@ enum SDPError: Error, CustomStringConvertible {
     case syntaxError(String, Int)
     case parseInt(String, String)
 
-    var description: String {
+    public var description: String {
         switch self {
         case .codecNotFound:
             return "codec not found"
