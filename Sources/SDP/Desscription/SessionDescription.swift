@@ -593,6 +593,246 @@ func s4(lexer: Lexer) throws -> StateFn? {
     }
 }
 
+func s5(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    switch key {
+    case "b=":
+        return StateFn(f: unmarshalSessionBandwidth)
+    case "t=":
+        return StateFn(f: unmarshalTiming)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s6(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    switch key {
+    case "p=":
+        return StateFn(f: unmarshalPhone)
+    case "c=":
+        return StateFn(f: unmarshalSessionConnectionInformation)
+    case "b=":
+        return StateFn(f: unmarshalSessionBandwidth)
+    case "t=":
+        return StateFn(f: unmarshalTiming)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s7(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    switch key {
+    case "u=":
+        return StateFn(f: unmarshalUri)
+    case "e=":
+        return StateFn(f: unmarshalEmail)
+    case "p=":
+        return StateFn(f: unmarshalPhone)
+    case "c=":
+        return StateFn(f: unmarshalSessionConnectionInformation)
+    case "b=":
+        return StateFn(f: unmarshalSessionBandwidth)
+    case "t=":
+        return StateFn(f: unmarshalTiming)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s8(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    switch key {
+    case "c=":
+        return StateFn(f: unmarshalSessionConnectionInformation)
+    case "b=":
+        return StateFn(f: unmarshalSessionBandwidth)
+    case "t=":
+        return StateFn(f: unmarshalTiming)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s9(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key.isEmpty {
+        return nil
+    }
+
+    switch key {
+    case "z=":
+        return StateFn(f: unmarshalTimeZones)
+    case "k=":
+        return StateFn(f: unmarshalSessionEncryptionKey)
+    case "a=":
+        return StateFn(f: unmarshalSessionAttribute)
+    case "r=":
+        return StateFn(f: unmarshalRepeatTimes)
+    case "t=":
+        return StateFn(f: unmarshalTiming)
+    case "m=":
+        return StateFn(f: unmarshalMediaDescription)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s10(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    switch key {
+    case "e=":
+        return StateFn(f: unmarshalEmail)
+    case "p=":
+        return StateFn(f: unmarshalPhone)
+    case "c=":
+        return StateFn(f: unmarshalSessionConnectionInformation)
+    case "b=":
+        return StateFn(f: unmarshalSessionBandwidth)
+    case "t=":
+        return StateFn(f: unmarshalTiming)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s11(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key.isEmpty {
+        return nil
+    }
+
+    switch key {
+    case "a=":
+        return StateFn(f: unmarshalSessionAttribute)
+    case "m=":
+        return StateFn(f: unmarshalMediaDescription)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s12(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key.isEmpty {
+        return nil
+    }
+
+    switch key {
+    case "a=":
+        return StateFn(f: unmarshalMediaAttribute)
+    case "k=":
+        return StateFn(f: unmarshalMediaEncryptionKey)
+    case "b=":
+        return StateFn(f: unmarshalMediaBandwidth)
+    case "c=":
+        return StateFn(f: unmarshalMediaConnectionInformation)
+    case "i=":
+        return StateFn(f: unmarshalMediaTitle)
+    case "m=":
+        return StateFn(f: unmarshalMediaDescription)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s13(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key.isEmpty {
+        return nil
+    }
+
+    switch key {
+    case "a=":
+        return StateFn(f: unmarshalSessionAttribute)
+    case "k=":
+        return StateFn(f: unmarshalSessionEncryptionKey)
+    case "m=":
+        return StateFn(f: unmarshalMediaDescription)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s14(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key.isEmpty {
+        return nil
+    }
+
+    switch key {
+    case "a=":
+        return StateFn(f: unmarshalMediaAttribute)
+    // Non-spec ordering
+    case "k=":
+        return StateFn(f: unmarshalMediaEncryptionKey)
+    // Non-spec ordering
+    case "b=":
+        return StateFn(f: unmarshalMediaBandwidth)
+    // Non-spec ordering
+    case "c=":
+        return StateFn(f: unmarshalMediaConnectionInformation)
+    // Non-spec ordering
+    case "i=":
+        return StateFn(f: unmarshalMediaTitle)
+    case "m=":
+        return StateFn(f: unmarshalMediaDescription)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s15(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key.isEmpty {
+        return nil
+    }
+
+    switch key {
+    case "a=":
+        return StateFn(f: unmarshalMediaAttribute)
+    case "k=":
+        return StateFn(f: unmarshalMediaEncryptionKey)
+    case "b=":
+        return StateFn(f: unmarshalMediaBandwidth)
+    case "c=":
+        return StateFn(f: unmarshalMediaConnectionInformation)
+    // Non-spec ordering
+    case "i=":
+        return StateFn(f: unmarshalMediaTitle)
+    case "m=":
+        return StateFn(f: unmarshalMediaDescription)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
+func s16(lexer: Lexer) throws -> StateFn? {
+    let key = try lexer.readKey()
+    if key.isEmpty {
+        return nil
+    }
+
+    switch key {
+    case "a=":
+        return StateFn(f: unmarshalMediaAttribute)
+    case "k=":
+        return StateFn(f: unmarshalMediaEncryptionKey)
+    case "c=":
+        return StateFn(f: unmarshalMediaConnectionInformation)
+    case "b=":
+        return StateFn(f: unmarshalMediaBandwidth)
+    // Non-spec ordering
+    case "i=":
+        return StateFn(f: unmarshalMediaTitle)
+    case "m=":
+        return StateFn(f: unmarshalMediaDescription)
+    default:
+        throw SDPError.sdpInvalidSyntax(key)
+    }
+}
+
 func unmarshalProtocolVersion(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
@@ -659,31 +899,31 @@ func unmarshalSessionName(lexer: Lexer) throws -> StateFn? {
 func unmarshalSessionInformation(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.sessionInformation = value
-    return nil  //TODO: StateFn(f: s7)
+    return StateFn(f: s7)
 }
 
 func unmarshalUri(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.uri = value
-    return nil  //TODO: StateFn(f: s10)
+    return StateFn(f: s10)
 }
 
 func unmarshalEmail(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.emailAddress = value
-    return nil  //TODO: StateFn { f: s6 }))
+    return StateFn(f: s6)
 }
 
 func unmarshalPhone(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.phoneNumber = value
-    return nil  //TODO: StateFn { f: s8 }))
+    return StateFn(f: s8)
 }
 
 func unmarshalSessionConnectionInformation(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.connectionInformation = try unmarshalConnectionInformation(value: value)
-    return nil  //TODO: StateFn { f: s5 }))
+    return StateFn(f: s5)
 }
 
 func unmarshalConnectionInformation(value: String) throws -> ConnectionInformation? {
@@ -725,7 +965,7 @@ func unmarshalConnectionInformation(value: String) throws -> ConnectionInformati
 func unmarshalSessionBandwidth(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.bandwidth.append(try unmarshalBandwidth(value: value))
-    return nil  //TODO: StateFn { f: s5 }))
+    return StateFn(f: s5)
 }
 
 func unmarshalBandwidth(value: String) throws -> Bandwidth {
@@ -776,7 +1016,7 @@ func unmarshalTiming(lexer: Lexer) throws -> StateFn? {
             timing: Timing(startTime: startTime, stopTime: stopTime),
             repeatTimes: []))
 
-    return nil  //TODO: StateFn { f: s9 }))
+    return StateFn(f: s9)
 }
 
 func unmarshalRepeatTimes(lexer: Lexer) throws -> StateFn? {
@@ -804,7 +1044,7 @@ func unmarshalRepeatTimes(lexer: Lexer) throws -> StateFn? {
             duration: duration,
             offsets: offsets))
 
-    return nil  //TODO: StateFn { f: s9 }))
+    return StateFn(f: s9)
 }
 
 func unmarshalTimeZones(lexer: Lexer) throws -> StateFn? {
@@ -830,13 +1070,13 @@ func unmarshalTimeZones(lexer: Lexer) throws -> StateFn? {
                 offset: offset))
     }
 
-    return nil  //TODO: StateFn { f: s13 }))
+    return StateFn(f: s13)
 }
 
 func unmarshalSessionEncryptionKey(lexer: Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.encryptionKey = value
-    return nil  //TODO: StateFn { f: s11 }))
+    return StateFn(f: s11)
 }
 
 func unmarshalSessionAttribute(lexer: Lexer) throws -> StateFn? {
@@ -855,7 +1095,7 @@ func unmarshalSessionAttribute(lexer: Lexer) throws -> StateFn? {
         }
     lexer.desc.attributes.append(attribute)
 
-    return nil  //TODO:StateFn { f: s11 }))
+    return StateFn(f: s11)
 }
 
 func unmarshalMediaDescription(lexer: Lexer) throws -> StateFn? {
@@ -893,7 +1133,7 @@ func unmarshalMediaDescription(lexer: Lexer) throws -> StateFn? {
     // Set according to currently registered with IANA
     // https://tools.ietf.org/html/rfc4566#section-5.14
     var protos: [String] = []
-    for proto in fields[2].split(separator: "/").map { String($0) } {
+    for proto in fields[2].split(separator: "/").map({ String($0) }) {
         if indexOf(
             element: proto,
             dataSet: [
@@ -927,7 +1167,7 @@ func unmarshalMediaDescription(lexer: Lexer) throws -> StateFn? {
             attributes: []
         ))
 
-    return nil  //TODO:StateFn { f: s12 }))
+    return StateFn(f: s12)
 }
 
 func unmarshalMediaTitle(lexer: Lexer) throws -> StateFn? {
@@ -938,7 +1178,7 @@ func unmarshalMediaTitle(lexer: Lexer) throws -> StateFn? {
     }
 
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].mediaTitle = value
-    return nil  //TODO:StateFn { f: s16 }))
+    return StateFn(f: s16)
 }
 
 func unmarshalMediaConnectionInformation(lexer: Lexer) throws -> StateFn? {
@@ -951,7 +1191,7 @@ func unmarshalMediaConnectionInformation(lexer: Lexer) throws -> StateFn? {
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].connectionInformation =
         try unmarshalConnectionInformation(value: value)
 
-    return nil  //TODO:StateFn { f: s15 }))
+    return StateFn(f: s15)
 }
 
 func unmarshalMediaBandwidth(lexer: Lexer) throws -> StateFn? {
@@ -964,7 +1204,7 @@ func unmarshalMediaBandwidth(lexer: Lexer) throws -> StateFn? {
     let bandwidth = try unmarshalBandwidth(value: value)
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].bandwidth.append(bandwidth)
 
-    return nil  //TODO:StateFn { f: s15 }))
+    return StateFn(f: s15)
 }
 
 func unmarshalMediaEncryptionKey(lexer: Lexer) throws -> StateFn? {
@@ -975,7 +1215,7 @@ func unmarshalMediaEncryptionKey(lexer: Lexer) throws -> StateFn? {
     }
 
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].encryptionKey = value
-    return nil  //TODO:StateFn { f: s14 }))
+    return StateFn(f: s14)
 }
 
 func unmarshalMediaAttribute(lexer: Lexer) throws -> StateFn? {
@@ -999,7 +1239,7 @@ func unmarshalMediaAttribute(lexer: Lexer) throws -> StateFn? {
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].attributes.append(
         attribute)
 
-    return nil  //TODO:StateFn { f: s14 }))
+    return StateFn(f: s14)
 }
 
 func parseTimeUnits(value: String) throws -> Int64 {
