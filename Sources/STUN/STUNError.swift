@@ -39,7 +39,7 @@ public enum STUNError: Error, CustomStringConvertible {
     case errInvalidUrl
     case errSchemeType
     case errHost
-    
+
     public var description: String {
         switch self {
         case .errAttributeNotFound:

@@ -45,7 +45,10 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio")
             ]),
         .target(name: "SRTP"),
-        .target(name: "STUN"),
+        .target(name: "STUN",
+            dependencies: [
+                .product(name: "NIOCore", package: "swift-nio")
+            ]),
         .target(name: "Utils"),
 
         // MARK: - Tests
