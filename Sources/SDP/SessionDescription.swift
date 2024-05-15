@@ -57,8 +57,11 @@ public struct Origin: Equatable, CustomStringConvertible {
         return
             "\(self.username) \(self.sessionId) \(self.sessionVersion) \(self.networkType) \(self.addressType) \(self.unicastAddress)"
     }
-    
-    public init(username: String, sessionId: UInt64, sessionVersion: UInt64, networkType: String, addressType: String, unicastAddress: String) {
+
+    public init(
+        username: String, sessionId: UInt64, sessionVersion: UInt64, networkType: String,
+        addressType: String, unicastAddress: String
+    ) {
         self.username = username
         self.sessionId = sessionId
         self.sessionVersion = sessionVersion
@@ -91,7 +94,7 @@ public struct TimeZone: Equatable, CustomStringConvertible {
     public var description: String {
         return "\(self.adjustmentTime) \(self.offset)"
     }
-    
+
     public init(adjustmentTime: UInt64, offset: Int64) {
         self.adjustmentTime = adjustmentTime
         self.offset = offset
@@ -107,7 +110,7 @@ public struct Timing: Equatable, CustomStringConvertible {
     public var description: String {
         return "\(self.startTime) \(self.stopTime)"
     }
-    
+
     public init(startTime: UInt64, stopTime: UInt64) {
         self.startTime = startTime
         self.stopTime = stopTime
@@ -128,7 +131,7 @@ public struct RepeatTime: Equatable, CustomStringConvertible {
         }
         return output
     }
-    
+
     public init(interval: Int64, duration: Int64, offsets: [Int64]) {
         self.interval = interval
         self.duration = duration
@@ -157,7 +160,7 @@ public struct TimeDescription: Equatable, CustomStringConvertible {
         }
         return result
     }
-    
+
     public init(timing: Timing, repeatTimes: [RepeatTime]) {
         self.timing = timing
         self.repeatTimes = repeatTimes
@@ -314,8 +317,9 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
         self.attributes = identity ? [Attribute(key: attrKeyIdentity)] : []
         self.mediaDescriptions = []
     }
-    
-    public init(version: Version,
+
+    public init(
+        version: Version,
         origin: Origin,
         sessionName: SessionName,
         sessionInformation: Information? = nil,
@@ -328,7 +332,8 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
         timeZones: [TimeZone] = [],
         encryptionKey: EncryptionKey? = nil,
         attributes: [Attribute] = [],
-         mediaDescriptions: [MediaDescription] = []) {
+        mediaDescriptions: [MediaDescription] = []
+    ) {
         self.version = version
         self.origin = origin
         self.sessionName = sessionName

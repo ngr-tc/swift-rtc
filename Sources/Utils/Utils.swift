@@ -23,7 +23,7 @@ extension UTF8.CodeUnit {
             return false
         }
     }
-    
+
     var isASCIINewline: Bool {
         switch self {
         case UInt8(ascii: "\r"),
@@ -48,7 +48,7 @@ extension String {
         }
         return result
     }
-    
+
     public func trimmingNewline() -> Substring {
         return Substring(self).trimmingNewline()
     }
@@ -65,7 +65,7 @@ extension Substring {
         let lastNonWhitespace = self.utf8.lastIndex(where: { !$0.isASCIIWhitespace })!
         return Substring(self.utf8[firstNonWhitespace...lastNonWhitespace])
     }
-    
+
     public func trimmingNewline() -> Substring {
         // There must be at least one non-ascii newline character, so banging here is safe.
         let lastNonNewline = self.utf8.lastIndex(where: { !$0.isASCIINewline })!
