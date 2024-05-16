@@ -74,7 +74,8 @@ extension Substring {
 }
 
 extension UInt32 {
-    public static func fromBeBytes(byte1: UInt8, byte2: UInt8, byte3: UInt8, byte4: UInt8) -> UInt32 {
+    public static func fromBeBytes(byte1: UInt8, byte2: UInt8, byte3: UInt8, byte4: UInt8) -> UInt32
+    {
         return (UInt32(byte1) << 24) | (UInt32(byte2) << 16) | (UInt32(byte3) << 8) | UInt32(byte4)
     }
 }
