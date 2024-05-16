@@ -47,6 +47,7 @@ let package = Package(
         .target(name: "SRTP"),
         .target(name: "STUN",
             dependencies: [
+                "Utils",
                 .product(name: "NIOCore", package: "swift-nio")
             ]),
         .target(name: "Utils"),
