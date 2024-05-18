@@ -233,7 +233,7 @@ public let ATTR_ALTERNATE_DOMAIN: AttrType = AttrType(0x8003)
 /// don't understand, but cannot successfully process a message if it
 /// contains comprehension-required attributes that are not
 /// understood.
-public struct RawAttribute: CustomStringConvertible, Setter {
+public struct RawAttribute: CustomStringConvertible {
     var typ: AttrType
     var length: UInt16  // ignored while encoding
     var value: [UInt8]
@@ -253,7 +253,9 @@ public struct RawAttribute: CustomStringConvertible, Setter {
     public var description: String {
         return "\(self.typ): \(value)"
     }
+}
 
+extension RawAttribute: Setter {
     /// implements Setter, adding attribute as a.Type with a.Value and ignoring
     /// the Length field.
     public func addTo(m: inout Message) throws {

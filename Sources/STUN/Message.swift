@@ -44,7 +44,7 @@ let DEFAULT_RAW_CAPACITY: Int = 120
 // TRANSACTION_ID_SIZE is length of transaction id array (in bytes).
 public let TRANSACTION_ID_SIZE: Int = 12  // 96 bit
 
-public struct TransactionId: Equatable, Setter {
+public struct TransactionId: Equatable {
     public var rawValue: [UInt8]
 
     /// new returns new random transaction ID using crypto/rand
@@ -57,7 +57,9 @@ public struct TransactionId: Equatable, Setter {
     public static func == (lhs: TransactionId, rhs: TransactionId) -> Bool {
         return lhs.rawValue == rhs.rawValue
     }
+}
 
+extension TransactionId: Setter {
     public func addTo(m: inout Message) throws {
         m.transactionId = self
         m.writeTransactionId()
@@ -78,7 +80,7 @@ public func isMessage(b: inout [UInt8]) -> Bool {
 ///
 /// Message, its fields, results of m.Get or any attribute a.GetFrom
 /// are valid only until Message.Raw is not modified.
-public class Message: Equatable, Setter {
+public class Message: Equatable {
     var typ: MessageType
     var length: Int
     var transactionId: TransactionId
@@ -102,11 +104,6 @@ public class Message: Equatable, Setter {
             //TODO: lhs.typ == rhs.typ && &&
             // lhs.attributes == rhs.attributes &&
             lhs.transactionId == rhs.transactionId && lhs.length == rhs.length
-    }
-
-    public func addTo(m: inout Message) throws {
-        m.transactionId = self.transactionId
-        m.writeTransactionId()
     }
 
     // marshal_binary implements the encoding.BinaryMarshaler interface.
@@ -434,6 +431,13 @@ public class Message: Equatable, Setter {
      */
 }
 
+extension Message: Setter {
+    public func addTo(m: inout Message) throws {
+        m.transactionId = self.transactionId
+        m.writeTransactionId()
+    }
+}
+
 /// Possible values for message class in STUN Message Type.
 public let CLASS_REQUEST: MessageClass = MessageClass(0x00)
 public let CLASS_INDICATION: MessageClass = MessageClass(0x01)
@@ -550,7 +554,7 @@ let CLASS_C0SHIFT: UInt16 = 4
 let CLASS_C1SHIFT: UInt16 = 7
 
 // MessageType is STUN Message Type Field.
-public struct MessageType: CustomStringConvertible, Setter {
+public struct MessageType: CustomStringConvertible {
     var method: Method  // e.g. binding
     var messageClass: MessageClass  // e.g. request
 
@@ -561,11 +565,6 @@ public struct MessageType: CustomStringConvertible, Setter {
 
     public var description: String {
         return "\(self.method) \(messageClass)"
-    }
-
-    /// addTo sets m type to t.
-    public func addTo(m: inout Message) throws {
-        m.setType(self)
     }
 
     /// value returns bit representation of messageType.
@@ -617,5 +616,12 @@ public struct MessageType: CustomStringConvertible, Setter {
         let d = (value >> METHOD_DSHIFT) & METHOD_DBITS  // D(M7-M11)
         let m = a + b + d
         self.method = Method(m)
+    }
+}
+
+extension MessageType: Setter {
+    /// addTo sets m type to t.
+    public func addTo(m: inout Message) throws {
+        m.setType(self)
     }
 }
