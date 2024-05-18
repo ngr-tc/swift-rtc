@@ -16,17 +16,17 @@ import Utils
 /// Interfaces that are implemented by message attributes, shorthands for them,
 /// or helpers for message fields as type or transaction id.
 public protocol Setter {
-    func addTo(m: inout Message) throws
+    func addTo(m: Message) throws
 }
 
 /// Getter parses attribute from *Message.
 public protocol Getter {
-    mutating func getFrom(m: inout Message) throws
+    mutating func getFrom(m: Message) throws
 }
 
 /// Checker checks *Message attribute.
 public protocol Checker {
-    func check(m: inout Message) throws
+    func check(m: Message) throws
 }
 
 /// MAGIC_COOKIE is fixed value that aids in distinguishing STUN packets
@@ -60,7 +60,7 @@ public struct TransactionId: Equatable {
 }
 
 extension TransactionId: Setter {
-    public func addTo(m: inout Message) throws {
+    public func addTo(m: Message) throws {
         m.transactionId = self
         m.writeTransactionId()
     }
@@ -71,7 +71,7 @@ extension TransactionId: Setter {
 /// that decoding will be successful.
 public func isMessage(b: inout [UInt8]) -> Bool {
     b.count >= MESSAGE_HEADER_SIZE
-        && UInt32.fromBeBytes(byte1: b[4], byte2: b[5], byte3: b[6], byte4: b[7]) == MAGIC_COOKIE
+        && UInt32.fromBeBytes(b[4], b[5], b[6], b[7]) == MAGIC_COOKIE
 }
 
 /// Message represents a single STUN packet. It uses aggressive internal
@@ -84,13 +84,14 @@ public class Message: Equatable {
     var typ: MessageType
     var length: Int
     var transactionId: TransactionId
-    //var attributes: Attributes
+    var attributes: Attributes
     var raw: [UInt8]
 
     public init() {
         self.typ = BINDING_REQUEST
         self.length = 0
         self.transactionId = TransactionId()
+        self.attributes = Attributes()
         self.raw = [UInt8](repeating: 0, count: MESSAGE_HEADER_SIZE)
     }
 
@@ -101,9 +102,8 @@ public class Message: Equatable {
 
     public static func == (lhs: Message, rhs: Message) -> Bool {
         return
-            //TODO: lhs.typ == rhs.typ && &&
-            // lhs.attributes == rhs.attributes &&
-            lhs.transactionId == rhs.transactionId && lhs.length == rhs.length
+            lhs.typ == rhs.typ && lhs.length == rhs.length && lhs.transactionId == rhs.transactionId
+            && lhs.attributes == rhs.attributes
     }
 
     // marshal_binary implements the encoding.BinaryMarshaler interface.
@@ -376,19 +376,19 @@ public class Message: Equatable {
              }
              false
          }
+     */
 
-         // get returns byte slice that represents attribute value,
-         // if there is no attribute with such type,
-         // ErrAttributeNotFound is returned.
-         public func get(&self, t: AttrType) -> Result<Vec<u8>> {
-             let (v, ok) = self.attributes.get(t);
-             if ok {
-                 Ok(v.value)
-             } else {
-                 Err(Error::ErrAttributeNotFound)
-             }
-         }
-
+    // get returns byte slice that represents attribute value,
+    // if there is no attribute with such type,
+    // ErrAttributeNotFound is returned.
+    public func get(_ t: AttrType) throws -> [UInt8] {
+        let (v, ok) = self.attributes.get(t)
+        if !ok {
+            throw STUNError.errAttributeNotFound
+        }
+        return v.value
+    }
+    /*
          // Build resets message and applies setters to it in batch, returning on
          // first error. To prevent allocations, pass pointers to values.
          //
@@ -432,7 +432,7 @@ public class Message: Equatable {
 }
 
 extension Message: Setter {
-    public func addTo(m: inout Message) throws {
+    public func addTo(m: Message) throws {
         m.transactionId = self.transactionId
         m.writeTransactionId()
     }
@@ -445,7 +445,7 @@ public let CLASS_SUCCESS_RESPONSE: MessageClass = MessageClass(0x02)
 public let CLASS_ERROR_RESPONSE: MessageClass = MessageClass(0x03)
 
 /// MessageClass is 8-bit representation of 2-bit class of STUN Message Class.
-public struct MessageClass: CustomStringConvertible {
+public struct MessageClass: Equatable, CustomStringConvertible {
     var rawValue: UInt8
 
     public var description: String {
@@ -483,7 +483,7 @@ public let METHOD_CONNECTION_BIND: Method = Method(0x000b)
 public let METHOD_CONNECTION_ATTEMPT: Method = Method(0x000c)
 
 /// Method is uint16 representation of 12-bit STUN method.
-public struct Method: CustomStringConvertible {
+public struct Method: Equatable, CustomStringConvertible {
     var rawValue: UInt16
 
     public var description: String {
@@ -554,7 +554,7 @@ let CLASS_C0SHIFT: UInt16 = 4
 let CLASS_C1SHIFT: UInt16 = 7
 
 // MessageType is STUN Message Type Field.
-public struct MessageType: CustomStringConvertible {
+public struct MessageType: Equatable, CustomStringConvertible {
     var method: Method  // e.g. binding
     var messageClass: MessageClass  // e.g. request
 
@@ -621,7 +621,7 @@ public struct MessageType: CustomStringConvertible {
 
 extension MessageType: Setter {
     /// addTo sets m type to t.
-    public func addTo(m: inout Message) throws {
+    public func addTo(m: Message) throws {
         m.setType(self)
     }
 }

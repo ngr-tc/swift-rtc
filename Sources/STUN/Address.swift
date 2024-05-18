@@ -15,8 +15,8 @@ import NIOCore
 
 let familyIpV4: UInt16 = 0x01
 let familyIpV6: UInt16 = 0x02
-let ipV4Len: UInt = 4
-let ipV6Len: UInt = 16
+let ipV4Len: Int = 4
+let ipV6Len: Int = 16
 
 /// MappedAddress represents MAPPED-ADDRESS attribute.
 ///
@@ -34,52 +34,36 @@ public struct MappedAddress: CustomStringConvertible {
     public init(socketAddress: SocketAddress) {
         self.socketAddress = socketAddress
     }
-    /*
-impl Setter for MappedAddress {
-    /// add_to adds MAPPED-ADDRESS to message.
-    fn add_to(&self, m: &mut Message) -> Result<()> {
-        self.add_to_as(m, ATTR_MAPPED_ADDRESS)
-    }
-}
 
-impl Getter for MappedAddress {
-    /// get_from decodes MAPPED-ADDRESS from message.
-    fn get_from(&mut self, m: &Message) -> Result<()> {
-        self.get_from_as(m, ATTR_MAPPED_ADDRESS)
-    }
-}
-
-impl MappedAddress {
-    /// get_from_as decodes MAPPED-ADDRESS value in message m as an attribute of type t.
-    pub fn get_from_as(&mut self, m: &Message, t: AttrType) -> Result<()> {
-        let v = m.get(t)?;
-        if v.len() <= 4 {
-            return Err(Error::ErrUnexpectedEof);
+    /// decodes MAPPED-ADDRESS value in message m as an attribute of type t.
+    public mutating func getFromAs(_ m: Message, _ t: AttrType) throws {
+        let v = try m.get(t)
+        if v.count <= 4 {
+            throw STUNError.errUnexpectedEof
         }
 
-        let family = u16::from_be_bytes([v[0], v[1]]);
-        if family != FAMILY_IPV6 && family != FAMILY_IPV4 {
-            return Err(Error::Other(format!("bad value {family}")));
+        let family = UInt16.fromBeBytes(v[0], v[1])
+        if family != familyIpV6 && family != familyIpV4 {
+            throw STUNError.errInvalidFamilyIpValue(family)
         }
-        self.port = u16::from_be_bytes([v[2], v[3]]);
+        /*let port = UInt16.fromBeBytes(v[2], v[3])
 
-        if family == FAMILY_IPV6 {
-            let mut ip = [0; IPV6LEN];
-            let l = std::cmp::min(ip.len(), v[4..].len());
+        if family == familyIpV6 {
+            let ip = ByteBuffer(repeating: 0, count: ipV6Len)
+            let l = min(ip.readableBytes, v[4...].count)
             ip[..l].copy_from_slice(&v[4..4 + l]);
             self.ip = IpAddr::V6(Ipv6Addr::from(ip));
         } else {
-            let mut ip = [0; IPV4LEN];
+            let mut ip = [0; ipV4Len];
             let l = std::cmp::min(ip.len(), v[4..].len());
             ip[..l].copy_from_slice(&v[4..4 + l]);
             self.ip = IpAddr::V4(Ipv4Addr::from(ip));
-        };
-
-        Ok(())
+        }*/
     }
 
-    /// add_to_as adds MAPPED-ADDRESS value to m as t attribute.
-    pub fn add_to_as(&self, m: &mut Message, t: AttrType) -> Result<()> {
+    /// adds MAPPED-ADDRESS value to m as t attribute.
+    public func addToAs(_ m: Message, _ t: AttrType) throws {
+        /*
         let family = match self.ip {
             IpAddr::V4(_) => FAMILY_IPV4,
             IpAddr::V6(_) => FAMILY_IPV6,
@@ -95,10 +79,23 @@ impl MappedAddress {
             IpAddr::V6(ipv6) => value.extend_from_slice(&ipv6.octets()),
         };
 
-        m.add(t, &value);
-        Ok(())
-    }
+        m.add(t, value)
  */
+    }
+}
+
+extension MappedAddress: Setter {
+    /// adds MAPPED-ADDRESS to message.
+    public func addTo(m: Message) throws {
+        try self.addToAs(m, attrMappedAddress)
+    }
+}
+
+extension MappedAddress: Getter {
+    /// decodes MAPPED-ADDRESS from message.
+    public mutating func getFrom(m: Message) throws {
+        try self.getFromAs(m, attrMappedAddress)
+    }
 }
 
 /// AlternateServer represents ALTERNATE-SERVER attribute.

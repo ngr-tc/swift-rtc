@@ -13,14 +13,22 @@
 //===----------------------------------------------------------------------===//
 
 /// Attributes is list of message attributes.
-public struct Attributes {
+public struct Attributes: Equatable {
     var rawAttributes: [RawAttribute]
+
+    public init() {
+        self.rawAttributes = []
+    }
+
+    public init(_ rawAttributes: [RawAttribute]) {
+        self.rawAttributes = rawAttributes
+    }
 
     /// get returns first attribute from list by the type.
     /// If attribute is present the RawAttribute is returned and the
     /// boolean is true. Otherwise the returned RawAttribute will be
     /// empty and boolean will be false.
-    public func get(t: AttrType) -> (RawAttribute, Bool) {
+    public func get(_ t: AttrType) -> (RawAttribute, Bool) {
         for candidate in self.rawAttributes {
             if candidate.typ == t {
                 return (candidate, true)
@@ -233,7 +241,7 @@ public let ATTR_ALTERNATE_DOMAIN: AttrType = AttrType(0x8003)
 /// don't understand, but cannot successfully process a message if it
 /// contains comprehension-required attributes that are not
 /// understood.
-public struct RawAttribute: CustomStringConvertible {
+public struct RawAttribute: Equatable, CustomStringConvertible {
     var typ: AttrType
     var length: UInt16  // ignored while encoding
     var value: [UInt8]
@@ -258,7 +266,7 @@ public struct RawAttribute: CustomStringConvertible {
 extension RawAttribute: Setter {
     /// implements Setter, adding attribute as a.Type with a.Value and ignoring
     /// the Length field.
-    public func addTo(m: inout Message) throws {
+    public func addTo(m: Message) throws {
         m.add(t: self.typ, v: self.value)
     }
 }

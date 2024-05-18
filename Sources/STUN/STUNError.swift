@@ -39,6 +39,7 @@ public enum STUNError: Error, CustomStringConvertible {
     case errInvalidUrl
     case errSchemeType
     case errHost
+    case errInvalidFamilyIpValue(UInt16)
 
     public var description: String {
         switch self {
@@ -92,6 +93,8 @@ public enum STUNError: Error, CustomStringConvertible {
             return "unknown scheme type"
         case .errHost:
             return "invalid hostname"
+        case .errInvalidFamilyIpValue(let family):
+            return "invalid family ip value \(family)"
         }
     }
 }
