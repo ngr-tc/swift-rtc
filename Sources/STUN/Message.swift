@@ -109,26 +109,26 @@ public class Message: Equatable, Setter {
         m.writeTransactionId()
     }
 
-     // marshal_binary implements the encoding.BinaryMarshaler interface.
-         public func marshalBinary() -> [UInt8] {
-             // We can't return m.Raw, allocation is expected by implicit interface
-             // contract induced by other implementations.
-             return self.raw
-         }
+    // marshal_binary implements the encoding.BinaryMarshaler interface.
+    public func marshalBinary() -> [UInt8] {
+        // We can't return m.Raw, allocation is expected by implicit interface
+        // contract induced by other implementations.
+        return self.raw
+    }
 
-         // unmarshal_binary implements the encoding.BinaryUnmarshaler interface.
-         public func unmarshalBinary(data: inout [UInt8]) throws {
-             // We can't retain data, copy is expected by interface contract.
-             self.raw = data
-             try self.decode()
-         }
+    // unmarshal_binary implements the encoding.BinaryUnmarshaler interface.
+    public func unmarshalBinary(data: inout [UInt8]) throws {
+        // We can't retain data, copy is expected by interface contract.
+        self.raw = data
+        try self.decode()
+    }
 
-         // NewTransactionID sets m.TransactionID to random value from crypto/rand
-         // and returns error if any.
-         public func newTransactionDd() {
-             self.transactionId = TransactionId()
-             self.writeTransactionId()
-         }
+    // NewTransactionID sets m.TransactionID to random value from crypto/rand
+    // and returns error if any.
+    public func newTransactionDd() {
+        self.transactionId = TransactionId()
+        self.writeTransactionId()
+    }
 
     /*
          // Reset resets Message, attributes and underlying buffer length.
@@ -137,7 +137,7 @@ public class Message: Equatable, Setter {
              self.length = 0
              self.attributes.0.clear();
          }
-    
+
          // grow ensures that internal buffer has n length.
          fn grow(&mut self, n: usize, resize: bool) {
              if self.raw.len() >= n {
@@ -148,12 +148,13 @@ public class Message: Equatable, Setter {
              }
              self.raw.extend_from_slice(&vec![0; n - self.raw.len()]);
          }
-
-         // Add appends new attribute to message. Not goroutine-safe.
-         //
-         // Value of attribute is copied to internal buffer so
-         // it is safe to reuse v.
-         public func add(&mut self, t: AttrType, v: &[u8]) {
+     */
+    // Add appends new attribute to message. Not goroutine-safe.
+    //
+    // Value of attribute is copied to internal buffer so
+    // it is safe to reuse v.
+    public func add(t: AttrType, v: [UInt8]) {
+        /*TODO:
              // Allocating buffer for TLV (type-length-value).
              // T = t, L = len(v), V = v.
              // m.Raw will look like:
@@ -199,9 +200,9 @@ public class Message: Equatable, Setter {
                  self.length += bytes_to_add as u32; // rendering length change
              }
              self.attributes.0.push(attr);
-             self.write_length();
-         }
-
+             self.write_length();*/
+    }
+    /*
          // WriteLength writes m.Length to m.Raw.
          public func write_length(&mut self) {
              self.grow(4, false);
@@ -246,18 +247,18 @@ public class Message: Equatable, Setter {
         self.typ = t
         self.writeType()
     }
-    
-         // Encode re-encodes message into m.Raw.
-        /* public func encode() {
+
+    // Encode re-encodes message into m.Raw.
+    /* public func encode() {
              self.raw = []
              self.writeHeader()
              self.length = 0;
              self.writeAttributes()
          }*/
-    
-         // Decode decodes m.Raw into m.
-         public func decode() throws  {
-             /*TODO:
+
+    // Decode decodes m.Raw into m.
+    public func decode() throws {
+        /*TODO:
              // decoding message header
              let buf = &self.raw;
              if buf.len() < MESSAGE_HEADER_SIZE {
@@ -330,8 +331,8 @@ public class Message: Equatable, Setter {
              }
 
              Ok(())*/
-         }
-/*
+    }
+    /*
          // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
          // call result.
          public func write_to<W: Write>(&self, writer: &mut W) -> Result<usize> {
