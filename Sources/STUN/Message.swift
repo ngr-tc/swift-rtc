@@ -109,37 +109,35 @@ public class Message: Equatable, Setter {
         m.writeTransactionId()
     }
 
-    /*
      // marshal_binary implements the encoding.BinaryMarshaler interface.
-         pub fn marshal_binary(&self) -> Result<Vec<u8>> {
+         public func marshalBinary() -> [UInt8] {
              // We can't return m.Raw, allocation is expected by implicit interface
              // contract induced by other implementations.
-             Ok(self.raw.clone())
+             return self.raw
          }
 
          // unmarshal_binary implements the encoding.BinaryUnmarshaler interface.
-         pub fn unmarshal_binary(&mut self, data: &[u8]) -> Result<()> {
+         public func unmarshalBinary(data: inout [UInt8]) throws {
              // We can't retain data, copy is expected by interface contract.
-             self.raw.clear();
-             self.raw.extend_from_slice(data);
-             self.decode()
+             self.raw = data
+             try self.decode()
          }
 
          // NewTransactionID sets m.TransactionID to random value from crypto/rand
          // and returns error if any.
-         pub fn new_transaction_id(&mut self) -> Result<()> {
-             rand::thread_rng().fill(&mut self.transaction_id.0);
-             self.write_transaction_id();
-             Ok(())
+         public func newTransactionDd() {
+             self.transactionId = TransactionId()
+             self.writeTransactionId()
          }
 
+    /*
          // Reset resets Message, attributes and underlying buffer length.
-         pub fn reset(&mut self) {
-             self.raw.clear();
-             self.length = 0;
+         public func reset() {
+             self.raw = []
+             self.length = 0
              self.attributes.0.clear();
          }
-
+    
          // grow ensures that internal buffer has n length.
          fn grow(&mut self, n: usize, resize: bool) {
              if self.raw.len() >= n {
@@ -155,7 +153,7 @@ public class Message: Equatable, Setter {
          //
          // Value of attribute is copied to internal buffer so
          // it is safe to reuse v.
-         pub fn add(&mut self, t: AttrType, v: &[u8]) {
+         public func add(&mut self, t: AttrType, v: &[u8]) {
              // Allocating buffer for TLV (type-length-value).
              // T = t, L = len(v), V = v.
              // m.Raw will look like:
@@ -205,13 +203,13 @@ public class Message: Equatable, Setter {
          }
 
          // WriteLength writes m.Length to m.Raw.
-         pub fn write_length(&mut self) {
+         public func write_length(&mut self) {
              self.grow(4, false);
              self.raw[2..4].copy_from_slice(&(self.length as u16).to_be_bytes());
          }
 
          // WriteHeader writes header to underlying buffer. Not goroutine-safe.
-         pub fn write_header(&mut self) {
+         public func write_header(&mut self) {
              self.grow(MESSAGE_HEADER_SIZE, false);
 
              self.write_type();
@@ -222,13 +220,13 @@ public class Message: Equatable, Setter {
          }
 
          // WriteTransactionID writes m.TransactionID to m.Raw.
-         pub fn write_transaction_id(&mut self) {
+         public func write_transaction_id(&mut self) {
              self.raw[8..MESSAGE_HEADER_SIZE].copy_from_slice(&self.transaction_id.0);
              // transaction ID
          }
 
          // WriteAttributes encodes all m.Attributes to m.
-         pub fn write_attributes(&mut self) {
+         public func write_attributes(&mut self) {
              let attributes: Vec<RawAttribute> = self.attributes.0.drain(..).collect();
              for a in &attributes {
                  self.add(a.typ, &a.value);
@@ -248,17 +246,18 @@ public class Message: Equatable, Setter {
         self.typ = t
         self.writeType()
     }
-    /*
+    
          // Encode re-encodes message into m.Raw.
-         pub fn encode(&mut self) {
-             self.raw.clear();
-             self.write_header();
+        /* public func encode() {
+             self.raw = []
+             self.writeHeader()
              self.length = 0;
-             self.write_attributes();
-         }
-
+             self.writeAttributes()
+         }*/
+    
          // Decode decodes m.Raw into m.
-         pub fn decode(&mut self) -> Result<()> {
+         public func decode() throws  {
+             /*TODO:
              // decoding message header
              let buf = &self.raw;
              if buf.len() < MESSAGE_HEADER_SIZE {
@@ -330,12 +329,12 @@ public class Message: Equatable, Setter {
                  self.attributes.0.push(a);
              }
 
-             Ok(())
+             Ok(())*/
          }
-
+/*
          // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
          // call result.
-         pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<usize> {
+         public func write_to<W: Write>(&self, writer: &mut W) -> Result<usize> {
              let n = writer.write(&self.raw)?;
              Ok(n)
          }
@@ -345,7 +344,7 @@ public class Message: Equatable, Setter {
          // ErrUnexpectedEOF, ErrUnexpectedHeaderEOF or *DecodeErr.
          //
          // Can return *DecodeErr while decoding too.
-         pub fn read_from<R: Read>(&mut self, reader: &mut R) -> Result<usize> {
+         public func read_from<R: Read>(&mut self, reader: &mut R) -> Result<usize> {
              let mut t_buf = vec![0; DEFAULT_RAW_CAPACITY];
              let n = reader.read(&mut t_buf)?;
              self.raw = t_buf[..n].to_vec();
@@ -356,7 +355,7 @@ public class Message: Equatable, Setter {
          // Write decodes message and return error if any.
          //
          // Any error is unrecoverable, but message could be partially decoded.
-         pub fn write(&mut self, t_buf: &[u8]) -> Result<usize> {
+         public func write(&mut self, t_buf: &[u8]) -> Result<usize> {
              self.raw.clear();
              self.raw.extend_from_slice(t_buf);
              self.decode()?;
@@ -364,14 +363,14 @@ public class Message: Equatable, Setter {
          }
 
          // CloneTo clones m to b securing any further m mutations.
-         pub fn clone_to(&self, b: &mut Message) -> Result<()> {
+         public func clone_to(&self, b: &mut Message) -> Result<()> {
              b.raw.clear();
              b.raw.extend_from_slice(&self.raw);
              b.decode()
          }
 
          // Contains return true if message contain t attribute.
-         pub fn contains(&self, t: AttrType) -> bool {
+         public func contains(&self, t: AttrType) -> bool {
              for a in &self.attributes.0 {
                  if a.typ == t {
                      return true;
@@ -383,7 +382,7 @@ public class Message: Equatable, Setter {
          // get returns byte slice that represents attribute value,
          // if there is no attribute with such type,
          // ErrAttributeNotFound is returned.
-         pub fn get(&self, t: AttrType) -> Result<Vec<u8>> {
+         public func get(&self, t: AttrType) -> Result<Vec<u8>> {
              let (v, ok) = self.attributes.get(t);
              if ok {
                  Ok(v.value)
@@ -407,7 +406,7 @@ public class Message: Equatable, Setter {
          //  m.Build(&t, &username, &nonce, &realm) // 0 allocations
          //
          // See BenchmarkBuildOverhead.
-         pub fn build(&mut self, setters: &[Box<dyn Setter>]) -> Result<()> {
+         public func build(&mut self, setters: &[Box<dyn Setter>]) -> Result<()> {
              self.reset();
              self.write_header();
              for s in setters {
@@ -417,7 +416,7 @@ public class Message: Equatable, Setter {
          }
 
          // Check applies checkers to message in batch, returning on first error.
-         pub fn check<C: Checker>(&self, checkers: &[C]) -> Result<()> {
+         public func check<C: Checker>(&self, checkers: &[C]) -> Result<()> {
              for c in checkers {
                  c.check(self)?;
              }
@@ -425,7 +424,7 @@ public class Message: Equatable, Setter {
          }
 
          // Parse applies getters to message in batch, returning on first error.
-         pub fn parse<G: Getter>(&self, getters: &mut [G]) -> Result<()> {
+         public func parse<G: Getter>(&self, getters: &mut [G]) -> Result<()> {
              for c in getters {
                  c.get_from(self)?;
              }
