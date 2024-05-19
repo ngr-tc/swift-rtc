@@ -46,41 +46,48 @@ public struct MappedAddress: CustomStringConvertible {
         if family != familyIpV6 && family != familyIpV4 {
             throw STUNError.errInvalidFamilyIpValue(family)
         }
-        /*let port = UInt16.fromBeBytes(v[2], v[3])
+        let port = UInt16.fromBeBytes(v[2], v[3])
 
-        if family == familyIpV6 {
-            let ip = ByteBuffer(repeating: 0, count: ipV6Len)
-            let l = min(ip.readableBytes, v[4...].count)
-            ip[..l].copy_from_slice(&v[4..4 + l]);
-            self.ip = IpAddr::V6(Ipv6Addr::from(ip));
-        } else {
-            let mut ip = [0; ipV4Len];
-            let l = std::cmp::min(ip.len(), v[4..].len());
-            ip[..l].copy_from_slice(&v[4..4 + l]);
-            self.ip = IpAddr::V4(Ipv4Addr::from(ip));
-        }*/
+        let l =
+            if family == familyIpV6 {
+                min(ipV6Len, v[4...].count)
+            } else {
+                min(ipV4Len, v[4...].count)
+            }
+        self.socketAddress = try SocketAddress(
+            packedIPAddress: ByteBuffer(bytes: v[4..<4 + l]), port: Int(port))
     }
 
     /// adds MAPPED-ADDRESS value to m as t attribute.
     public func addToAs(_ m: Message, _ t: AttrType) throws {
-        /*
-        let family = match self.ip {
-            IpAddr::V4(_) => FAMILY_IPV4,
-            IpAddr::V6(_) => FAMILY_IPV6,
-        };
+        let family =
+            switch self.socketAddress {
+            case SocketAddress.v4(_):
+                familyIpV4
+            case SocketAddress.v6(_):
+                familyIpV4
+            default:
+                throw STUNError.errInvalidFamilyIpValue(0)
+            }
 
-        let mut value = vec![0u8; 4];
+        guard let port = self.socketAddress.port else {
+            throw STUNError.errInvalidFamilyIpValue(0)
+        }
+        var value: [UInt8] = []
         //value[0] = 0 // first 8 bits are zeroes
-        value[0..2].copy_from_slice(&family.to_be_bytes());
-        value[2..4].copy_from_slice(&self.port.to_be_bytes());
+        value.append(contentsOf: family.toBeBytes())
+        value.append(contentsOf: UInt16(port).toBeBytes())
 
-        match self.ip {
-            IpAddr::V4(ipv4) => value.extend_from_slice(&ipv4.octets()),
-            IpAddr::V6(ipv6) => value.extend_from_slice(&ipv6.octets()),
-        };
+        switch self.socketAddress {
+        case SocketAddress.v4(let ipv4):
+            value.append(contentsOf: ipv4.octets())
+        case SocketAddress.v6(let ipv6):
+            value.append(contentsOf: ipv6.octets())
+        default:
+            throw STUNError.errInvalidFamilyIpValue(0)
+        }
 
         m.add(t, value)
- */
     }
 }
 

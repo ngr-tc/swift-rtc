@@ -150,7 +150,7 @@ public class Message: Equatable {
     //
     // Value of attribute is copied to internal buffer so
     // it is safe to reuse v.
-    public func add(t: AttrType, v: [UInt8]) {
+    public func add(_ t: AttrType, _ v: [UInt8]) {
         /*TODO:
              // Allocating buffer for TLV (type-length-value).
              // T = t, L = len(v), V = v.

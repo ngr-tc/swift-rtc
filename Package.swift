@@ -50,7 +50,10 @@ let package = Package(
                 "Utils",
                 .product(name: "NIOCore", package: "swift-nio")
             ]),
-        .target(name: "Utils"),
+        .target(name: "Utils",
+            dependencies: [
+                .product(name: "NIOCore", package: "swift-nio")
+            ]),
 
         // MARK: - Tests
         .testTarget(name: "DataChannelTests", dependencies: ["DataChannel"]),
