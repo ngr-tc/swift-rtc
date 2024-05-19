@@ -30,6 +30,10 @@ public struct MappedAddress: CustomStringConvertible {
     public var description: String {
         return self.socketAddress.description
     }
+    
+    public init() {
+        self.socketAddress = try! SocketAddress(ipAddress: "0.0.0.0", port: 0)
+    }
 
     public init(socketAddress: SocketAddress) {
         self.socketAddress = socketAddress
@@ -65,7 +69,7 @@ public struct MappedAddress: CustomStringConvertible {
             case SocketAddress.v4(_):
                 familyIpV4
             case SocketAddress.v6(_):
-                familyIpV4
+                familyIpV6
             default:
                 throw STUNError.errInvalidFamilyIpValue(0)
             }
