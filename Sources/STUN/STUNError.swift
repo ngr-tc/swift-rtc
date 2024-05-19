@@ -40,6 +40,8 @@ public enum STUNError: Error, CustomStringConvertible {
     case errSchemeType
     case errHost
     case errInvalidFamilyIpValue(UInt16)
+    case errInvalidMagicCookie(UInt32)
+    case errBufferTooSmall
 
     public var description: String {
         switch self {
@@ -95,6 +97,10 @@ public enum STUNError: Error, CustomStringConvertible {
             return "invalid hostname"
         case .errInvalidFamilyIpValue(let family):
             return "invalid family ip value \(family)"
+        case .errInvalidMagicCookie(let cookie):
+            return "\(cookie) is invalid magic cookie (should be \(magicCookie)"
+        case .errBufferTooSmall:
+            return "buffer too small"
         }
     }
 }

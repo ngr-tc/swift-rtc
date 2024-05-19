@@ -16,17 +16,17 @@ import Utils
 /// Interfaces that are implemented by message attributes, shorthands for them,
 /// or helpers for message fields as type or transaction id.
 public protocol Setter {
-    func addTo(m: Message) throws
+    func addTo(_ m: Message) throws
 }
 
 /// Getter parses attribute from *Message.
 public protocol Getter {
-    mutating func getFrom(m: Message) throws
+    mutating func getFrom(_ m: Message) throws
 }
 
 /// Checker checks *Message attribute.
 public protocol Checker {
-    func check(m: Message) throws
+    func check(_ m: Message) throws
 }
 
 /// MAGIC_COOKIE is fixed value that aids in distinguishing STUN packets
@@ -37,12 +37,12 @@ public protocol Checker {
 /// network byte order.
 ///
 /// Defined in "STUN Message Structure", section 6.
-public let MAGIC_COOKIE: UInt32 = 0x2112_A442
-public let ATTRIBUTE_HEADER_SIZE: Int = 4
-public let MESSAGE_HEADER_SIZE: Int = 20
-let DEFAULT_RAW_CAPACITY: Int = 120
+public let magicCookie: UInt32 = 0x2112_A442
+public let attributeHeaderSize: Int = 4
+public let messageHeaderSize: Int = 20
+let defaultRawCapacity: Int = 120
 // TRANSACTION_ID_SIZE is length of transaction id array (in bytes).
-public let TRANSACTION_ID_SIZE: Int = 12  // 96 bit
+public let transactionIdSize: Int = 12  // 96 bit
 
 public struct TransactionId: Equatable {
     public var rawValue: [UInt8]
@@ -50,7 +50,7 @@ public struct TransactionId: Equatable {
     /// new returns new random transaction ID using crypto/rand
     /// as source.
     public init() {
-        self.rawValue = (0..<TRANSACTION_ID_SIZE).map { _ in UInt8.random(in: UInt8.min...UInt8.max)
+        self.rawValue = (0..<transactionIdSize).map { _ in UInt8.random(in: UInt8.min...UInt8.max)
         }
     }
 
@@ -60,7 +60,7 @@ public struct TransactionId: Equatable {
 }
 
 extension TransactionId: Setter {
-    public func addTo(m: Message) throws {
+    public func addTo(_ m: Message) throws {
         m.transactionId = self
         m.writeTransactionId()
     }
@@ -70,8 +70,8 @@ extension TransactionId: Setter {
 /// Useful for multiplexing. is_message does not guarantee
 /// that decoding will be successful.
 public func isMessage(b: inout [UInt8]) -> Bool {
-    b.count >= MESSAGE_HEADER_SIZE
-        && UInt32.fromBeBytes(b[4], b[5], b[6], b[7]) == MAGIC_COOKIE
+    b.count >= messageHeaderSize
+        && UInt32.fromBeBytes(b[4], b[5], b[6], b[7]) == magicCookie
 }
 
 /// Message represents a single STUN packet. It uses aggressive internal
@@ -88,16 +88,11 @@ public class Message: Equatable {
     var raw: [UInt8]
 
     public init() {
-        self.typ = BINDING_REQUEST
+        self.typ = bindingRequest
         self.length = 0
         self.transactionId = TransactionId()
         self.attributes = Attributes()
-        self.raw = [UInt8](repeating: 0, count: MESSAGE_HEADER_SIZE)
-    }
-
-    /// writeTransactionID writes m.TransactionID to m.Raw.
-    public func writeTransactionId() {
-        self.raw[8..<MESSAGE_HEADER_SIZE] = self.transactionId.rawValue[...]
+        self.raw = [UInt8](repeating: 0, count: messageHeaderSize)
     }
 
     public static func == (lhs: Message, rhs: Message) -> Bool {
@@ -127,116 +122,107 @@ public class Message: Equatable {
         self.writeTransactionId()
     }
 
-    /*
-         // Reset resets Message, attributes and underlying buffer length.
-         public func reset() {
-             self.raw = []
-             self.length = 0
-             self.attributes.0.clear();
-         }
+    // Reset resets Message, attributes and underlying buffer length.
+    public func reset() {
+        self.raw = []
+        self.length = 0
+        self.attributes.rawAttributes = []
+    }
 
-         // grow ensures that internal buffer has n length.
-         fn grow(&mut self, n: usize, resize: bool) {
-             if self.raw.len() >= n {
-                 if resize {
-                     self.raw.resize(n, 0);
-                 }
-                 return;
-             }
-             self.raw.extend_from_slice(&vec![0; n - self.raw.len()]);
-         }
-     */
+    // grow ensures that internal buffer has n length.
+    public func grow(_ n: Int, _ resize: Bool) {
+        if self.raw.count >= n {
+            if resize {
+                self.raw = Array(self.raw[..<n])
+            }
+            return
+        }
+        self.raw.append(contentsOf: Array(repeating: 0, count: n - self.raw.count))
+    }
+
     // Add appends new attribute to message. Not goroutine-safe.
     //
     // Value of attribute is copied to internal buffer so
     // it is safe to reuse v.
     public func add(_ t: AttrType, _ v: [UInt8]) {
-        /*TODO:
-             // Allocating buffer for TLV (type-length-value).
-             // T = t, L = len(v), V = v.
-             // m.Raw will look like:
-             // [0:20]                               <- message header
-             // [20:20+m.Length]                     <- existing message attributes
-             // [20+m.Length:20+m.Length+len(v) + 4] <- allocated buffer for new TLV
-             // [first:last]                         <- same as previous
-             // [0 1|2 3|4    4 + len(v)]            <- mapping for allocated buffer
-             //   T   L        V
-             let alloc_size = ATTRIBUTE_HEADER_SIZE + v.len(); // ~ len(TLV) = len(TL) + len(V)
-             let first = MESSAGE_HEADER_SIZE + self.length as usize; // first byte number
-             let mut last = first + alloc_size; // last byte number
-             self.grow(last, true); // growing cap(Raw) to fit TLV
-             self.length += alloc_size as u32; // rendering length change
+        // Allocating buffer for TLV (type-length-value).
+        // T = t, L = len(v), V = v.
+        // m.Raw will look like:
+        // [0:20]                               <- message header
+        // [20:20+m.Length]                     <- existing message attributes
+        // [20+m.Length:20+m.Length+len(v) + 4] <- allocated buffer for new TLV
+        // [first:last]                         <- same as previous
+        // [0 1|2 3|4    4 + len(v)]            <- mapping for allocated buffer
+        //   T   L        V
+        let allocSize = attributeHeaderSize + v.count  // ~ len(TLV) = len(TL) + len(V)
+        let first = messageHeaderSize + self.length  // first byte number
+        var last = first + allocSize  // last byte number
+        self.grow(last, true)  // growing cap(Raw) to fit TLV
+        self.length += allocSize  // rendering length change
 
-             // Encoding attribute TLV to allocated buffer.
-             let buf = &mut self.raw[first..last];
-             buf[0..2].copy_from_slice(&t.value().to_be_bytes()); // T
-             buf[2..4].copy_from_slice(&(v.len() as u16).to_be_bytes()); // L
+        // Encoding attribute TLV to allocated buffer.
+        self.raw.replaceSubrange(first..<first + 2, with: t.value().toBeBytes())  // T
+        self.raw.replaceSubrange(
+            first + 2..<first + attributeHeaderSize, with: UInt16(v.count).toBeBytes())  // L
+        self.raw.replaceSubrange(first + attributeHeaderSize..<last, with: v)  // V
 
-             let value = &mut buf[ATTRIBUTE_HEADER_SIZE..];
-             value.copy_from_slice(v); // V
+        let attr = RawAttribute(
+            typ: t,  // T
+            length: v.count,  // L
+            value: Array(self.raw[first + attributeHeaderSize..<last])  // V
+        )
 
-             let attr = RawAttribute {
-                 typ: t,                 // T
-                 length: v.len() as u16, // L
-                 value: value.to_vec(),  // V
-             };
-
-             // Checking that attribute value needs padding.
-             if attr.length as usize % PADDING != 0 {
-                 // Performing padding.
-                 let bytes_to_add = nearest_padded_value_length(v.len()) - v.len();
-                 last += bytes_to_add;
-                 self.grow(last, true);
-                 // setting all padding bytes to zero
-                 // to prevent data leak from previous
-                 // data in next bytes_to_add bytes
-                 let buf = &mut self.raw[last - bytes_to_add..last];
-                 for b in buf {
-                     *b = 0;
-                 }
-                 self.length += bytes_to_add as u32; // rendering length change
-             }
-             self.attributes.0.push(attr);
-             self.write_length();*/
+        // Checking that attribute value needs padding.
+        if attr.length % padding != 0 {
+            // Performing padding.
+            let bytesToAdd = nearestPaddedValueLength(v.count) - v.count
+            last += bytesToAdd
+            self.grow(last, true)
+            // setting all padding bytes to zero
+            // to prevent data leak from previous
+            // data in next bytes_to_add bytes
+            self.raw.replaceSubrange(
+                last - bytesToAdd..<last, with: Array(repeating: 0, count: bytesToAdd))
+            self.length += bytesToAdd  // rendering length change
+        }
+        self.attributes.rawAttributes.append(attr)
+        self.writeLength()
     }
-    /*
-         // WriteLength writes m.Length to m.Raw.
-         public func write_length(&mut self) {
-             self.grow(4, false);
-             self.raw[2..4].copy_from_slice(&(self.length as u16).to_be_bytes());
-         }
 
-         // WriteHeader writes header to underlying buffer. Not goroutine-safe.
-         public func write_header(&mut self) {
-             self.grow(MESSAGE_HEADER_SIZE, false);
+    // WriteLength writes m.Length to m.Raw.
+    public func writeLength() {
+        self.grow(4, false)
+        self.raw.replaceSubrange(2..<4, with: UInt16(self.length).toBeBytes())
+    }
 
-             self.write_type();
-             self.write_length();
-             self.raw[4..8].copy_from_slice(&MAGIC_COOKIE.to_be_bytes()); // magic cookie
-             self.raw[8..MESSAGE_HEADER_SIZE].copy_from_slice(&self.transaction_id.0);
-             // transaction ID
-         }
+    // WriteHeader writes header to underlying buffer. Not goroutine-safe.
+    public func writeHeader() {
+        self.grow(messageHeaderSize, false)
 
-         // WriteTransactionID writes m.TransactionID to m.Raw.
-         public func write_transaction_id(&mut self) {
-             self.raw[8..MESSAGE_HEADER_SIZE].copy_from_slice(&self.transaction_id.0);
-             // transaction ID
-         }
+        self.writeType()
+        self.writeLength()
+        self.raw.replaceSubrange(4..<8, with: magicCookie.toBeBytes())  // magic cookie
+        self.raw.replaceSubrange(8..<messageHeaderSize, with: self.transactionId.rawValue)
+        // transaction ID
+    }
 
-         // WriteAttributes encodes all m.Attributes to m.
-         public func write_attributes(&mut self) {
-             let attributes: Vec<RawAttribute> = self.attributes.0.drain(..).collect();
-             for a in &attributes {
-                 self.add(a.typ, &a.value);
-             }
-             self.attributes = Attributes(attributes);
-         }
+    // WriteTransactionID writes m.TransactionID to m.Raw.
+    public func writeTransactionId() {
+        self.raw.replaceSubrange(8..<messageHeaderSize, with: self.transactionId.rawValue)
+        // transaction ID
+    }
 
-    */
+    // WriteAttributes encodes all m.Attributes to m.
+    public func writeAttributes() {
+        for a in self.attributes.rawAttributes {
+            self.add(a.typ, a.value)
+        }
+    }
+
     // WriteType writes m.Type to m.Raw.
     public func writeType() {
-        //TODO: self.grow(2, false);
-        //TODO: self.raw[..2].copy_from_slice(&self.typ.value().to_be_bytes()); // message type
+        self.grow(2, false)
+        self.raw.replaceSubrange(..<2, with: self.typ.value().toBeBytes())  // message type
     }
 
     // SetType sets m.Type and writes it to m.Raw.
@@ -246,137 +232,116 @@ public class Message: Equatable {
     }
 
     // Encode re-encodes message into m.Raw.
-    /* public func encode() {
-             self.raw = []
-             self.writeHeader()
-             self.length = 0;
-             self.writeAttributes()
-         }*/
+    public func encode() {
+        self.raw = []
+        self.writeHeader()
+        self.length = 0
+        self.writeAttributes()
+    }
 
     // Decode decodes m.Raw into m.
     public func decode() throws {
-        /*TODO:
-             // decoding message header
-             let buf = &self.raw;
-             if buf.len() < MESSAGE_HEADER_SIZE {
-                 return Err(Error::ErrUnexpectedHeaderEof);
-             }
+        // decoding message header
+        if self.raw.count < messageHeaderSize {
+            throw STUNError.errUnexpectedHeaderEof
+        }
 
-             let t = u16::from_be_bytes([buf[0], buf[1]]); // first 2 bytes
-             let size = u16::from_be_bytes([buf[2], buf[3]]) as usize; // second 2 bytes
-             let cookie = u32::from_be_bytes([buf[4], buf[5], buf[6], buf[7]]); // last 4 bytes
-             let full_size = MESSAGE_HEADER_SIZE + size; // len(m.Raw)
+        let t = UInt16.fromBeBytes(self.raw[0], self.raw[1])  // first 2 bytes
+        let size = Int(UInt16.fromBeBytes(self.raw[2], self.raw[3]))  // second 2 bytes
+        // last 4 bytes
+        let cookie = UInt32.fromBeBytes(self.raw[4], self.raw[5], self.raw[6], self.raw[7])
+        let fullSize = messageHeaderSize + size  // len(m.Raw)
 
-             if cookie != MAGIC_COOKIE {
-                 return Err(Error::Other(format!(
-                     "{cookie:x} is invalid magic cookie (should be {MAGIC_COOKIE:x})"
-                 )));
-             }
-             if buf.len() < full_size {
-                 return Err(Error::Other(format!(
-                     "buffer length {} is less than {} (expected message size)",
-                     buf.len(),
-                     full_size
-                 )));
-             }
+        if cookie != magicCookie {
+            throw STUNError.errInvalidMagicCookie(cookie)
+        }
+        if self.raw.count < fullSize {
+            throw STUNError.errBufferTooSmall
+        }
 
-             // saving header data
-             self.typ.read_value(t);
-             self.length = size as u32;
-             self.transaction_id
-                 .0
-                 .copy_from_slice(&buf[8..MESSAGE_HEADER_SIZE]);
+        // saving header data
+        self.typ.readValue(t)
+        self.length = size
+        self.transactionId.rawValue = Array(self.raw[8..<messageHeaderSize])
 
-             self.attributes.0.clear();
-             let mut offset = 0;
-             let mut b = &buf[MESSAGE_HEADER_SIZE..full_size];
+        self.attributes.rawAttributes = []
+        var offset = 0
+        var b = self.raw[messageHeaderSize..<fullSize]
 
-             while offset < size {
-                 // checking that we have enough bytes to read header
-                 if b.len() < ATTRIBUTE_HEADER_SIZE {
-                     return Err(Error::Other(format!(
-                         "buffer length {} is less than {} (expected header size)",
-                         b.len(),
-                         ATTRIBUTE_HEADER_SIZE
-                     )));
-                 }
+        while offset < size {
+            // checking that we have enough bytes to read header
+            if b.count < attributeHeaderSize {
+                throw STUNError.errBufferTooSmall
+            }
 
-                 let mut a = RawAttribute {
-                     typ: compat_attr_type(u16::from_be_bytes([b[0], b[1]])), // first 2 bytes
-                     length: u16::from_be_bytes([b[2], b[3]]),                // second 2 bytes
-                     ..Default::default()
-                 };
-                 let a_l = a.length as usize; // attribute length
-                 let a_buff_l = nearest_padded_value_length(a_l); // expected buffer length (with padding)
+            var a = RawAttribute(
+                typ: compatAttrType(UInt16.fromBeBytes(b[0], b[1])),  // first 2 bytes
+                length: Int(UInt16.fromBeBytes(b[2], b[3])),  // second 2 bytes
+                value: []
+            )
+            let al = a.length  // attribute length
+            let abuffl = nearestPaddedValueLength(al)  // expected buffer length (with padding)
 
-                 b = &b[ATTRIBUTE_HEADER_SIZE..]; // slicing again to simplify value read
-                 offset += ATTRIBUTE_HEADER_SIZE;
-                 if b.len() < a_buff_l {
-                     // checking size
-                     return Err(Error::Other(format!(
-                         "buffer length {} is less than {} (expected value size for {})",
-                         b.len(),
-                         a_buff_l,
-                         a.typ
-                     )));
-                 }
-                 a.value = b[..a_l].to_vec();
-                 offset += a_buff_l;
-                 b = &b[a_buff_l..];
+            b = b[attributeHeaderSize...]  // slicing again to simplify value read
+            offset += attributeHeaderSize
+            if b.count < abuffl {
+                // checking size
+                throw STUNError.errBufferTooSmall
+            }
+            a.value = Array(b[..<al])
+            offset += abuffl
+            b = b[abuffl...]
 
-                 self.attributes.0.push(a);
-             }
-
-             Ok(())*/
+            self.attributes.rawAttributes.append(a)
+        }
     }
-    /*
-         // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
-         // call result.
-         public func write_to<W: Write>(&self, writer: &mut W) -> Result<usize> {
-             let n = writer.write(&self.raw)?;
-             Ok(n)
-         }
 
-         // ReadFrom implements ReaderFrom. Reads message from r into m.Raw,
-         // Decodes it and return error if any. If m.Raw is too small, will return
-         // ErrUnexpectedEOF, ErrUnexpectedHeaderEOF or *DecodeErr.
-         //
-         // Can return *DecodeErr while decoding too.
-         public func read_from<R: Read>(&mut self, reader: &mut R) -> Result<usize> {
-             let mut t_buf = vec![0; DEFAULT_RAW_CAPACITY];
-             let n = reader.read(&mut t_buf)?;
-             self.raw = t_buf[..n].to_vec();
-             self.decode()?;
-             Ok(n)
-         }
+    // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
+    // call result.
+    public func writeTo(writer: inout [UInt8]) throws -> Int {
+        let n = min(writer.count, self.raw.count)
+        writer.replaceSubrange(..<n, with: self.raw[..<n])
+        return n
+    }
 
-         // Write decodes message and return error if any.
-         //
-         // Any error is unrecoverable, but message could be partially decoded.
-         public func write(&mut self, t_buf: &[u8]) -> Result<usize> {
-             self.raw.clear();
-             self.raw.extend_from_slice(t_buf);
-             self.decode()?;
-             Ok(t_buf.len())
-         }
+    // ReadFrom implements ReaderFrom. Reads message from r into m.Raw,
+    // Decodes it and return error if any. If m.Raw is too small, will return
+    // ErrUnexpectedEOF, ErrUnexpectedHeaderEOF or *DecodeErr.
+    //
+    // Can return *DecodeErr while decoding too.
+    public func readFrom(reader: [UInt8]) throws -> Int {
+        let n = reader.count
+        self.raw = reader
+        try self.decode()
+        return n
+    }
 
-         // CloneTo clones m to b securing any further m mutations.
-         public func clone_to(&self, b: &mut Message) -> Result<()> {
-             b.raw.clear();
-             b.raw.extend_from_slice(&self.raw);
-             b.decode()
-         }
+    // Write decodes message and return error if any.
+    //
+    // Any error is unrecoverable, but message could be partially decoded.
+    public func write(_ tbuf: [UInt8]) throws -> Int {
+        self.raw = []
+        self.raw.append(contentsOf: tbuf)
+        try self.decode()
+        return tbuf.count
+    }
 
-         // Contains return true if message contain t attribute.
-         public func contains(&self, t: AttrType) -> bool {
-             for a in &self.attributes.0 {
-                 if a.typ == t {
-                     return true;
-                 }
-             }
-             false
-         }
-     */
+    // CloneTo clones m to b securing any further m mutations.
+    public func cloneTo(b: Message) throws {
+        b.raw = []
+        b.raw.append(contentsOf: self.raw)
+        try b.decode()
+    }
+
+    // Contains return true if message contain t attribute.
+    public func contains(t: AttrType) -> Bool {
+        for a in self.attributes.rawAttributes {
+            if a.typ == t {
+                return true
+            }
+        }
+        return false
+    }
 
     // get returns byte slice that represents attribute value,
     // if there is no attribute with such type,
@@ -388,61 +353,58 @@ public class Message: Equatable {
         }
         return v.value
     }
-    /*
-         // Build resets message and applies setters to it in batch, returning on
-         // first error. To prevent allocations, pass pointers to values.
-         //
-         // Example:
-         //  var (
-         //      t        = BindingRequest
-         //      username = NewUsername("username")
-         //      nonce    = NewNonce("nonce")
-         //      realm    = NewRealm("example.org")
-         //  )
-         //  m := new(Message)
-         //  m.Build(t, username, nonce, realm)     // 4 allocations
-         //  m.Build(&t, &username, &nonce, &realm) // 0 allocations
-         //
-         // See BenchmarkBuildOverhead.
-         public func build(&mut self, setters: &[Box<dyn Setter>]) -> Result<()> {
-             self.reset();
-             self.write_header();
-             for s in setters {
-                 s.add_to(self)?;
-             }
-             Ok(())
-         }
 
-         // Check applies checkers to message in batch, returning on first error.
-         public func check<C: Checker>(&self, checkers: &[C]) -> Result<()> {
-             for c in checkers {
-                 c.check(self)?;
-             }
-             Ok(())
-         }
+    // Build resets message and applies setters to it in batch, returning on
+    // first error. To prevent allocations, pass pointers to values.
+    //
+    // Example:
+    //  var (
+    //      t        = BindingRequest
+    //      username = NewUsername("username")
+    //      nonce    = NewNonce("nonce")
+    //      realm    = NewRealm("example.org")
+    //  )
+    //  m := new(Message)
+    //  m.Build(t, username, nonce, realm)     // 4 allocations
+    //  m.Build(&t, &username, &nonce, &realm) // 0 allocations
+    //
+    // See BenchmarkBuildOverhead.
+    public func build(setters: inout [Setter]) throws {
+        self.reset()
+        self.writeHeader()
+        for s in setters {
+            try s.addTo(self)
+        }
+    }
 
-         // Parse applies getters to message in batch, returning on first error.
-         public func parse<G: Getter>(&self, getters: &mut [G]) -> Result<()> {
-             for c in getters {
-                 c.get_from(self)?;
-             }
-             Ok(())
+    // Check applies checkers to message in batch, returning on first error.
+    public func check(checkers: inout [Checker]) throws {
+        for c in checkers {
+            try c.check(self)
+        }
+    }
+
+    /*TODO?
+     // Parse applies getters to message in batch, returning on first error.
+     public func parse(getters: inout [inout Getter]) throws {
+         for c in getters {
+             try c.getFrom(self)
          }
-     */
+     }*/
 }
 
 extension Message: Setter {
-    public func addTo(m: Message) throws {
+    public func addTo(_ m: Message) throws {
         m.transactionId = self.transactionId
         m.writeTransactionId()
     }
 }
 
 /// Possible values for message class in STUN Message Type.
-public let CLASS_REQUEST: MessageClass = MessageClass(0x00)
-public let CLASS_INDICATION: MessageClass = MessageClass(0x01)
-public let CLASS_SUCCESS_RESPONSE: MessageClass = MessageClass(0x02)
-public let CLASS_ERROR_RESPONSE: MessageClass = MessageClass(0x03)
+public let classRequest: MessageClass = MessageClass(0x00)
+public let classIndication: MessageClass = MessageClass(0x01)
+public let classSuccessResponse: MessageClass = MessageClass(0x02)
+public let classErrorResponse: MessageClass = MessageClass(0x03)
 
 /// MessageClass is 8-bit representation of 2-bit class of STUN Message Class.
 public struct MessageClass: Equatable, CustomStringConvertible {
@@ -469,18 +431,18 @@ public struct MessageClass: Equatable, CustomStringConvertible {
 }
 
 /// Possible methods for STUN Message.
-public let METHOD_BINDING: Method = Method(0x001)
-public let METHOD_ALLOCATE: Method = Method(0x003)
-public let METHOD_REFRESH: Method = Method(0x004)
-public let METHOD_SEND: Method = Method(0x006)
-public let METHOD_DATA: Method = Method(0x007)
-public let METHOD_CREATE_PERMISSION: Method = Method(0x008)
-public let METHOD_CHANNEL_BIND: Method = Method(0x009)
+public let methodBinding: Method = Method(0x001)
+public let methodAllocate: Method = Method(0x003)
+public let methodRefresh: Method = Method(0x004)
+public let methodSend: Method = Method(0x006)
+public let methodData: Method = Method(0x007)
+public let methodCreatePermission: Method = Method(0x008)
+public let methodChannelBind: Method = Method(0x009)
 
 /// Methods from RFC 6062.
-public let METHOD_CONNECT: Method = Method(0x000a)
-public let METHOD_CONNECTION_BIND: Method = Method(0x000b)
-public let METHOD_CONNECTION_ATTEMPT: Method = Method(0x000c)
+public let methodConnect: Method = Method(0x000a)
+public let methodConnectionBind: Method = Method(0x000b)
+public let methodConnectionAttempt: Method = Method(0x000c)
 
 /// Method is uint16 representation of 12-bit STUN method.
 public struct Method: Equatable, CustomStringConvertible {
@@ -522,36 +484,36 @@ public struct Method: Equatable, CustomStringConvertible {
 
 /// Common STUN message types.
 /// Binding request message type.
-public let BINDING_REQUEST: MessageType = MessageType(
-    method: METHOD_BINDING,
-    messageClass: CLASS_REQUEST
+public let bindingRequest: MessageType = MessageType(
+    method: methodBinding,
+    messageClass: classRequest
 )
 /// Binding success response message type
-public let BINDING_SUCCESS: MessageType = MessageType(
-    method: METHOD_BINDING,
-    messageClass: CLASS_SUCCESS_RESPONSE
+public let bindingSuccess: MessageType = MessageType(
+    method: methodBinding,
+    messageClass: classSuccessResponse
 )
 /// Binding error response message type.
-public let BINDING_ERROR: MessageType = MessageType(
-    method: METHOD_BINDING,
-    messageClass: CLASS_ERROR_RESPONSE
+public let bindigError: MessageType = MessageType(
+    method: methodBinding,
+    messageClass: classErrorResponse
 )
 
-let METHOD_ABITS: UInt16 = 0xf  // 0b0000000000001111
-let METHOD_BBITS: UInt16 = 0x70  // 0b0000000001110000
-let METHOD_DBITS: UInt16 = 0xf80  // 0b0000111110000000
+let methodAbits: UInt16 = 0xf  // 0b0000000000001111
+let methodBbits: UInt16 = 0x70  // 0b0000000001110000
+let methodDbits: UInt16 = 0xf80  // 0b0000111110000000
 
-let METHOD_BSHIFT: UInt16 = 1
-let METHOD_DSHIFT: UInt16 = 2
+let methodBshift: UInt16 = 1
+let methodDshift: UInt16 = 2
 
-let FIRST_BIT: UInt16 = 0x1
-let SECOND_BIT: UInt16 = 0x2
+let firstBit: UInt16 = 0x1
+let secondBit: UInt16 = 0x2
 
-let C0BIT: UInt16 = FIRST_BIT
-let C1BIT: UInt16 = SECOND_BIT
+let c0Bit: UInt16 = firstBit
+let c1Bit: UInt16 = secondBit
 
-let CLASS_C0SHIFT: UInt16 = 4
-let CLASS_C1SHIFT: UInt16 = 7
+let classC0Shift: UInt16 = 4
+let classC1Shift: UInt16 = 7
 
 // MessageType is STUN Message Type Field.
 public struct MessageType: Equatable, CustomStringConvertible {
@@ -580,12 +542,12 @@ public struct MessageType: Equatable, CustomStringConvertible {
         // Warning: Abandon all hope ye who enter here.
         // Splitting M into A(M0-M3), B(M4-M6), D(M7-M11).
         var method = self.method.rawValue
-        let a = method & METHOD_ABITS  // A = M * 0b0000000000001111 (right 4 bits)
-        let b = method & METHOD_BBITS  // B = M * 0b0000000001110000 (3 bits after A)
-        let d = method & METHOD_DBITS  // D = M * 0b0000111110000000 (5 bits after B)
+        let a = method & methodAbits  // A = M * 0b0000000000001111 (right 4 bits)
+        let b = method & methodBbits  // B = M * 0b0000000001110000 (3 bits after A)
+        let d = method & methodDbits  // D = M * 0b0000111110000000 (5 bits after B)
 
         // Shifting to add "holes" for C0 (at 4 bit) and C1 (8 bit).
-        method = a + (b << METHOD_BSHIFT) + (d << METHOD_DSHIFT)
+        method = a + (b << methodBshift) + (d << methodDshift)
 
         // C0 is zero bit of C, C1 is first bit.
         // C0 = C * 0b01, C1 = (C * 0b10) >> 1
@@ -594,26 +556,26 @@ public struct MessageType: Equatable, CustomStringConvertible {
         // We need C0 shifted by 4, and C1 by 8 to fit "11" and "7" positions
         // (see figure 3).
         let c = UInt16(self.messageClass.rawValue)
-        let c0 = (c & C0BIT) << CLASS_C0SHIFT
-        let c1 = (c & C1BIT) << CLASS_C1SHIFT
+        let c0 = (c & c0Bit) << classC0Shift
+        let c1 = (c & c1Bit) << classC1Shift
         let messageClass = c0 + c1
 
         return method + messageClass
     }
 
     /// readValue decodes uint16 into MessageType.
-    public mutating func readValue(value: UInt16) {
+    public mutating func readValue(_ value: UInt16) {
         // Decoding class.
         // We are taking first bit from v >> 4 and second from v >> 7.
-        let c0 = (value >> CLASS_C0SHIFT) & C0BIT
-        let c1 = (value >> CLASS_C1SHIFT) & C1BIT
+        let c0 = (value >> classC0Shift) & c0Bit
+        let c1 = (value >> classC1Shift) & c1Bit
         let messageClass = c0 + c1
         self.messageClass = MessageClass(UInt8(messageClass))
 
         // Decoding method.
-        let a = value & METHOD_ABITS  // A(M0-M3)
-        let b = (value >> METHOD_BSHIFT) & METHOD_BBITS  // B(M4-M6)
-        let d = (value >> METHOD_DSHIFT) & METHOD_DBITS  // D(M7-M11)
+        let a = value & methodAbits  // A(M0-M3)
+        let b = (value >> methodBshift) & methodBbits  // B(M4-M6)
+        let d = (value >> methodDshift) & methodDbits  // D(M7-M11)
         let m = a + b + d
         self.method = Method(m)
     }
@@ -621,7 +583,7 @@ public struct MessageType: Equatable, CustomStringConvertible {
 
 extension MessageType: Setter {
     /// addTo sets m type to t.
-    public func addTo(m: Message) throws {
+    public func addTo(_ m: Message) throws {
         m.setType(self)
     }
 }

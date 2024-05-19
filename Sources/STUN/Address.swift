@@ -93,14 +93,14 @@ public struct MappedAddress: CustomStringConvertible {
 
 extension MappedAddress: Setter {
     /// adds MAPPED-ADDRESS to message.
-    public func addTo(m: Message) throws {
+    public func addTo(_ m: Message) throws {
         try self.addToAs(m, attrMappedAddress)
     }
 }
 
 extension MappedAddress: Getter {
     /// decodes MAPPED-ADDRESS from message.
-    public mutating func getFrom(m: Message) throws {
+    public mutating func getFrom(_ m: Message) throws {
         try self.getFromAs(m, attrMappedAddress)
     }
 }

@@ -65,51 +65,51 @@ public struct AttrType: Equatable, CustomStringConvertible {
             return "NONCE"
         case attrXormappedAddress:
             return "XOR-MAPPED-ADDRESS"
-        case ATTR_SOFTWARE:
+        case attrSoftware:
             return "SOFTWARE"
-        case ATTR_ALTERNATE_SERVER:
+        case attrAlternateServer:
             return "ALTERNATE-SERVER"
-        case ATTR_FINGERPRINT:
+        case attrFingerprint:
             return "FINGERPRINT"
-        case ATTR_PRIORITY:
+        case attrPriority:
             return "PRIORITY"
-        case ATTR_USE_CANDIDATE:
+        case attrUseCandidate:
             return "USE-CANDIDATE"
-        case ATTR_ICE_CONTROLLED:
+        case attrIceControlled:
             return "ICE-CONTROLLED"
-        case ATTR_ICE_CONTROLLING:
+        case attrIceControlling:
             return "ICE-CONTROLLING"
-        case ATTR_CHANNEL_NUMBER:
+        case attrChannelNumber:
             return "CHANNEL-NUMBER"
-        case ATTR_LIFETIME:
+        case attrLifetime:
             return "LIFETIME"
-        case ATTR_XOR_PEER_ADDRESS:
+        case attrXorPeerAddress:
             return "XOR-PEER-ADDRESS"
-        case ATTR_DATA:
+        case attrData:
             return "DATA"
-        case ATTR_XOR_RELAYED_ADDRESS:
+        case attrXorRelayedAddress:
             return "XOR-RELAYED-ADDRESS"
-        case ATTR_EVEN_PORT:
+        case attrEvenPort:
             return "EVEN-PORT"
-        case ATTR_REQUESTED_TRANSPORT:
+        case attrRequestedTransport:
             return "REQUESTED-TRANSPORT"
-        case ATTR_DONT_FRAGMENT:
+        case attrDontFragment:
             return "DONT-FRAGMENT"
-        case ATTR_RESERVATION_TOKEN:
+        case attrReservationToken:
             return "RESERVATION-TOKEN"
-        case ATTR_CONNECTION_ID:
+        case attrConnectionId:
             return "CONNECTION-ID"
-        case ATTR_REQUESTED_ADDRESS_FAMILY:
+        case attrRequestedAddressFamily:
             return "REQUESTED-ADDRESS-FAMILY"
-        case ATTR_MESSAGE_INTEGRITY_SHA256:
+        case attrMessageIntegritySha256:
             return "MESSAGE-INTEGRITY-SHA256"
-        case ATTR_PASSWORD_ALGORITHM:
+        case attrPasswordAlgorithm:
             return "PASSWORD-ALGORITHM"
-        case ATTR_USER_HASH:
+        case attrUserHash:
             return "USERHASH"
-        case ATTR_PASSWORD_ALGORITHMS:
+        case attrPasswordAlgorithms:
             return "PASSWORD-ALGORITHMS"
-        case ATTR_ALTERNATE_DOMAIN:
+        case attrAlternateDomain:
             return "ALTERNATE-DOMAIN"
         default:
             return "0x\(String(self.rawValue, radix: 16, uppercase: false))"
@@ -152,87 +152,87 @@ public let attrXormappedAddress: AttrType = AttrType(0x0020)
 
 /// Attributes from comprehension-optional range (0x8000-0xFFFF).
 // SOFTWARE
-public let ATTR_SOFTWARE: AttrType = AttrType(0x8022)
+public let attrSoftware: AttrType = AttrType(0x8022)
 // ALTERNATE-SERVER
-public let ATTR_ALTERNATE_SERVER: AttrType = AttrType(0x8023)
+public let attrAlternateServer: AttrType = AttrType(0x8023)
 // FINGERPRINT
-public let ATTR_FINGERPRINT: AttrType = AttrType(0x8028)
+public let attrFingerprint: AttrType = AttrType(0x8028)
 
 /// Attributes from RFC 5245 ICE.
 // PRIORITY
-public let ATTR_PRIORITY: AttrType = AttrType(0x0024)
+public let attrPriority: AttrType = AttrType(0x0024)
 // USE-CANDIDATE
-public let ATTR_USE_CANDIDATE: AttrType = AttrType(0x0025)
+public let attrUseCandidate: AttrType = AttrType(0x0025)
 // ICE-CONTROLLED
-public let ATTR_ICE_CONTROLLED: AttrType = AttrType(0x8029)
+public let attrIceControlled: AttrType = AttrType(0x8029)
 // ICE-CONTROLLING
-public let ATTR_ICE_CONTROLLING: AttrType = AttrType(0x802A)
+public let attrIceControlling: AttrType = AttrType(0x802A)
 // NETWORK-COST
-public let ATTR_NETWORK_COST: AttrType = AttrType(0xC057)
+public let attrNetworkCost: AttrType = AttrType(0xC057)
 
 /// Attributes from RFC 5766 TURN.
 // CHANNEL-NUMBER
-public let ATTR_CHANNEL_NUMBER: AttrType = AttrType(0x000C)
+public let attrChannelNumber: AttrType = AttrType(0x000C)
 // LIFETIME
-public let ATTR_LIFETIME: AttrType = AttrType(0x000D)
+public let attrLifetime: AttrType = AttrType(0x000D)
 // XOR-PEER-ADDRESS
-public let ATTR_XOR_PEER_ADDRESS: AttrType = AttrType(0x0012)
+public let attrXorPeerAddress: AttrType = AttrType(0x0012)
 // DATA
-public let ATTR_DATA: AttrType = AttrType(0x0013)
+public let attrData: AttrType = AttrType(0x0013)
 // XOR-RELAYED-ADDRESS
-public let ATTR_XOR_RELAYED_ADDRESS: AttrType = AttrType(0x0016)
+public let attrXorRelayedAddress: AttrType = AttrType(0x0016)
 // EVEN-PORT
-public let ATTR_EVEN_PORT: AttrType = AttrType(0x0018)
+public let attrEvenPort: AttrType = AttrType(0x0018)
 // REQUESTED-TRANSPORT
-public let ATTR_REQUESTED_TRANSPORT: AttrType = AttrType(0x0019)
+public let attrRequestedTransport: AttrType = AttrType(0x0019)
 // DONT-FRAGMENT
-public let ATTR_DONT_FRAGMENT: AttrType = AttrType(0x001A)
+public let attrDontFragment: AttrType = AttrType(0x001A)
 // RESERVATION-TOKEN
-public let ATTR_RESERVATION_TOKEN: AttrType = AttrType(0x0022)
+public let attrReservationToken: AttrType = AttrType(0x0022)
 
 /// Attributes from RFC 5780 NAT Behavior Discovery
 // CHANGE-REQUEST
-public let ATTR_CHANGE_REQUEST: AttrType = AttrType(0x0003)
+public let attrChangeRequest: AttrType = AttrType(0x0003)
 // PADDING
-public let ATTR_PADDING: AttrType = AttrType(0x0026)
+public let attrPadding: AttrType = AttrType(0x0026)
 // RESPONSE-PORT
-public let ATTR_RESPONSE_PORT: AttrType = AttrType(0x0027)
+public let attrResponsePort: AttrType = AttrType(0x0027)
 // CACHE-TIMEOUT
-public let ATTR_CACHE_TIMEOUT: AttrType = AttrType(0x8027)
+public let attrCacheTimeout: AttrType = AttrType(0x8027)
 // RESPONSE-ORIGIN
-public let ATTR_RESPONSE_ORIGIN: AttrType = AttrType(0x802b)
+public let attrResponseOrigin: AttrType = AttrType(0x802b)
 // OTHER-ADDRESS
-public let ATTR_OTHER_ADDRESS: AttrType = AttrType(0x802C)
+public let attrOtherAddress: AttrType = AttrType(0x802C)
 
 /// Attributes from RFC 3489, removed by RFC 5389,
 ///  but still used by RFC5389-implementing software like Vovida.org, reTURNServer, etc.
 // SOURCE-ADDRESS
-public let ATTR_SOURCE_ADDRESS: AttrType = AttrType(0x0004)
+public let attrSourceAddress: AttrType = AttrType(0x0004)
 // CHANGED-ADDRESS
-public let ATTR_CHANGED_ADDRESS: AttrType = AttrType(0x0005)
+public let attrChangedAddress: AttrType = AttrType(0x0005)
 
 /// Attributes from RFC 6062 TURN Extensions for TCP Allocations.
 // CONNECTION-ID
-public let ATTR_CONNECTION_ID: AttrType = AttrType(0x002a)
+public let attrConnectionId: AttrType = AttrType(0x002a)
 
 /// Attributes from RFC 6156 TURN IPv6.
 // REQUESTED-ADDRESS-FAMILY
-public let ATTR_REQUESTED_ADDRESS_FAMILY: AttrType = AttrType(0x0017)
+public let attrRequestedAddressFamily: AttrType = AttrType(0x0017)
 
 /// Attributes from An Origin Attribute for the STUN Protocol.
-public let ATTR_ORIGIN: AttrType = AttrType(0x802F)
+public let attrOrigin: AttrType = AttrType(0x802F)
 
 /// Attributes from RFC 8489 STUN.
 // MESSAGE-INTEGRITY-SHA256
-public let ATTR_MESSAGE_INTEGRITY_SHA256: AttrType = AttrType(0x001C)
+public let attrMessageIntegritySha256: AttrType = AttrType(0x001C)
 // PASSWORD-ALGORITHM
-public let ATTR_PASSWORD_ALGORITHM: AttrType = AttrType(0x001D)
+public let attrPasswordAlgorithm: AttrType = AttrType(0x001D)
 // USER-HASH
-public let ATTR_USER_HASH: AttrType = AttrType(0x001E)
+public let attrUserHash: AttrType = AttrType(0x001E)
 // PASSWORD-ALGORITHMS
-public let ATTR_PASSWORD_ALGORITHMS: AttrType = AttrType(0x8002)
+public let attrPasswordAlgorithms: AttrType = AttrType(0x8002)
 // ALTERNATE-DOMAIN
-public let ATTR_ALTERNATE_DOMAIN: AttrType = AttrType(0x8003)
+public let attrAlternateDomain: AttrType = AttrType(0x8003)
 
 /// RawAttribute is a Type-Length-Value (TLV) object that
 /// can be added to a STUN message. Attributes are divided into two
@@ -243,7 +243,7 @@ public let ATTR_ALTERNATE_DOMAIN: AttrType = AttrType(0x8003)
 /// understood.
 public struct RawAttribute: Equatable, CustomStringConvertible {
     var typ: AttrType
-    var length: UInt16  // ignored while encoding
+    var length: Int  // ignored while encoding
     var value: [UInt8]
 
     public init() {
@@ -252,7 +252,7 @@ public struct RawAttribute: Equatable, CustomStringConvertible {
         self.value = []
     }
 
-    public init(typ: AttrType, length: UInt16, value: [UInt8]) {
+    public init(typ: AttrType, length: Int, value: [UInt8]) {
         self.typ = typ
         self.length = length
         self.value = value
@@ -266,7 +266,7 @@ public struct RawAttribute: Equatable, CustomStringConvertible {
 extension RawAttribute: Setter {
     /// implements Setter, adding attribute as a.Type with a.Value and ignoring
     /// the Length field.
-    public func addTo(m: Message) throws {
+    public func addTo(_ m: Message) throws {
         m.add(self.typ, self.value)
     }
 }
@@ -279,7 +279,7 @@ let padding: Int = 4
 /// padding bits are ignored, and may be any value.
 ///
 /// https://tools.ietf.org/html/rfc5389#section-15
-func nearestPaddedValueLength(l: Int) -> Int {
+func nearestPaddedValueLength(_ l: Int) -> Int {
     var n = padding * (l / padding)
     if n < l {
         n += padding
@@ -290,7 +290,7 @@ func nearestPaddedValueLength(l: Int) -> Int {
 /// This method converts uint16 vlue to AttrType. If it finds an old attribute
 /// type value, it also translates it to the new value to enable backward
 /// compatibility. (See: https://github.com/pion/stun/issues/21)
-func compatAttrType(val: UInt16) -> AttrType {
+func compatAttrType(_ val: UInt16) -> AttrType {
     if val == 0x8020 {
         // draft-ietf-behave-rfc3489bis-02, MS-TURN
         return attrXormappedAddress  // new: 0x0020 (from draft-ietf-behave-rfc3489bis-03 on)
