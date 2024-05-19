@@ -369,7 +369,7 @@ public class Message: Equatable {
     //  m.Build(&t, &username, &nonce, &realm) // 0 allocations
     //
     // See BenchmarkBuildOverhead.
-    public func build(setters: inout [Setter]) throws {
+    public func build(_ setters: [Setter]) throws {
         self.reset()
         self.writeHeader()
         for s in setters {
@@ -378,7 +378,7 @@ public class Message: Equatable {
     }
 
     // Check applies checkers to message in batch, returning on first error.
-    public func check(checkers: inout [Checker]) throws {
+    public func check(_ checkers: [Checker]) throws {
         for c in checkers {
             try c.check(self)
         }
