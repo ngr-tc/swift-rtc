@@ -77,15 +77,7 @@ public struct MappedAddress: CustomStringConvertible {
         //value[0] = 0 // first 8 bits are zeroes
         value.append(contentsOf: family.toBeBytes())
         value.append(contentsOf: UInt16(port).toBeBytes())
-
-        switch self.socketAddress {
-        case SocketAddress.v4(let ipv4):
-            value.append(contentsOf: ipv4.octets())
-        case SocketAddress.v6(let ipv6):
-            value.append(contentsOf: ipv6.octets())
-        default:
-            throw STUNError.errInvalidFamilyIpValue(0)
-        }
+        value.append(contentsOf: socketAddress.octets())
 
         m.add(t, value)
     }

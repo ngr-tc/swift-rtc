@@ -119,22 +119,3 @@ extension UInt16 {
         return [UInt8((self >> 0) & 0xFF), UInt8((self >> 8) & 0xFF)]
     }
 }
-
-extension SocketAddress.IPv4Address {
-    public func octets() -> [UInt8] {
-        //FIXME: big-endian
-        return self.address.sin_addr.s_addr.toLeBytes()
-    }
-}
-
-extension SocketAddress.IPv6Address {
-    public func octets() -> [UInt8] {
-        //FIXME: big-endian
-        var octets: [UInt8] = []
-        octets.append(contentsOf: self.address.sin6_addr.__u6_addr.__u6_addr32.0.toLeBytes())
-        octets.append(contentsOf: self.address.sin6_addr.__u6_addr.__u6_addr32.1.toLeBytes())
-        octets.append(contentsOf: self.address.sin6_addr.__u6_addr.__u6_addr32.2.toLeBytes())
-        octets.append(contentsOf: self.address.sin6_addr.__u6_addr.__u6_addr32.3.toLeBytes())
-        return octets
-    }
-}
