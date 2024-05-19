@@ -244,7 +244,7 @@ public let attrAlternateDomain: AttrType = AttrType(0x8003)
 public struct RawAttribute: Equatable, CustomStringConvertible {
     var typ: AttrType
     var length: Int  // ignored while encoding
-    var value: [UInt8]
+    var value: [UInt8]  //FIXME: optimize [UInt8]
 
     public init() {
         self.typ = AttrType(0)
@@ -252,7 +252,7 @@ public struct RawAttribute: Equatable, CustomStringConvertible {
         self.value = []
     }
 
-    public init(typ: AttrType, length: Int, value: [UInt8]) {
+    public init(typ: AttrType, length: Int, value: [UInt8]) {  //FIXME: optimize [UInt8]
         self.typ = typ
         self.length = length
         self.value = value

@@ -45,7 +45,7 @@ let defaultRawCapacity: Int = 120
 public let transactionIdSize: Int = 12  // 96 bit
 
 public struct TransactionId: Equatable {
-    public var rawValue: [UInt8]
+    public var rawValue: [UInt8]  //FIXME: optimize [UInt8]
 
     /// new returns new random transaction ID using crypto/rand
     /// as source.
@@ -69,7 +69,7 @@ extension TransactionId: Setter {
 /// isMessage returns true if b looks like STUN message.
 /// Useful for multiplexing. is_message does not guarantee
 /// that decoding will be successful.
-public func isMessage(b: inout [UInt8]) -> Bool {
+public func isMessage(b: inout [UInt8]) -> Bool {  //FIXME: optimize [UInt8]
     b.count >= messageHeaderSize
         && UInt32.fromBeBytes(b[4], b[5], b[6], b[7]) == magicCookie
 }
@@ -85,7 +85,7 @@ public class Message: Equatable {
     var length: Int
     var transactionId: TransactionId
     var attributes: Attributes
-    var raw: [UInt8]
+    var raw: [UInt8]  //FIXME: optimize [UInt8]
 
     public init() {
         self.typ = bindingRequest
@@ -109,7 +109,7 @@ public class Message: Equatable {
     }
 
     // unmarshal_binary implements the encoding.BinaryUnmarshaler interface.
-    public func unmarshalBinary(data: inout [UInt8]) throws {
+    public func unmarshalBinary(data: inout [UInt8]) throws {  //FIXME: optimize [UInt8]
         // We can't retain data, copy is expected by interface contract.
         self.raw = data
         try self.decode()
@@ -144,7 +144,7 @@ public class Message: Equatable {
     //
     // Value of attribute is copied to internal buffer so
     // it is safe to reuse v.
-    public func add(_ t: AttrType, _ v: [UInt8]) {
+    public func add(_ t: AttrType, _ v: [UInt8]) {  //FIXME: optimize [UInt8]
         // Allocating buffer for TLV (type-length-value).
         // T = t, L = len(v), V = v.
         // m.Raw will look like:
@@ -298,7 +298,7 @@ public class Message: Equatable {
 
     // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
     // call result.
-    public func writeTo(writer: inout [UInt8]) throws -> Int {
+    public func writeTo(writer: inout [UInt8]) throws -> Int {  //FIXME: optimize [UInt8]
         let n = min(writer.count, self.raw.count)
         writer.replaceSubrange(..<n, with: self.raw[..<n])
         return n
@@ -309,7 +309,7 @@ public class Message: Equatable {
     // ErrUnexpectedEOF, ErrUnexpectedHeaderEOF or *DecodeErr.
     //
     // Can return *DecodeErr while decoding too.
-    public func readFrom(reader: [UInt8]) throws -> Int {
+    public func readFrom(reader: [UInt8]) throws -> Int {  //FIXME: optimize [UInt8]
         let n = reader.count
         self.raw = reader
         try self.decode()
@@ -319,7 +319,7 @@ public class Message: Equatable {
     // Write decodes message and return error if any.
     //
     // Any error is unrecoverable, but message could be partially decoded.
-    public func write(_ tbuf: [UInt8]) throws -> Int {
+    public func write(_ tbuf: [UInt8]) throws -> Int {  //FIXME: optimize [UInt8]
         self.raw = []
         self.raw.append(contentsOf: tbuf)
         try self.decode()
@@ -346,7 +346,7 @@ public class Message: Equatable {
     // get returns byte slice that represents attribute value,
     // if there is no attribute with such type,
     // ErrAttributeNotFound is returned.
-    public func get(_ t: AttrType) throws -> [UInt8] {
+    public func get(_ t: AttrType) throws -> [UInt8] {  //FIXME: optimize [UInt8]
         let (v, ok) = self.attributes.get(t)
         if !ok {
             throw STUNError.errAttributeNotFound
@@ -384,7 +384,7 @@ public class Message: Equatable {
         }
     }
 
-    /*TODO?
+    /*FIXME: ?
      // Parse applies getters to message in batch, returning on first error.
      public func parse(getters: inout [inout Getter]) throws {
          for c in getters {
