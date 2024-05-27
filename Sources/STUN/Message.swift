@@ -267,31 +267,35 @@ public class Message: Equatable {
 
         self.attributes.rawAttributes = []
         var offset = 0
-        var b = rawView[messageHeaderSize..<fullSize]
+        var b = messageHeaderSize
+        var bCount = fullSize - messageHeaderSize
 
         while offset < size {
             // checking that we have enough bytes to read header
-            if b.count < attributeHeaderSize {
+            if bCount < attributeHeaderSize {
                 throw STUNError.errBufferTooSmall
             }
 
             var a = RawAttribute(
-                typ: compatAttrType(UInt16.fromBeBytes(b[0], b[1])),  // first 2 bytes
-                length: Int(UInt16.fromBeBytes(b[2], b[3])),  // second 2 bytes
+                typ: compatAttrType(UInt16.fromBeBytes(rawView[b + 0], rawView[b + 1])),
+                length: Int(UInt16.fromBeBytes(rawView[b + 2], rawView[b + 3])),
                 value: ByteBuffer()
             )
             let al = a.length  // attribute length
             let abuffl = nearestPaddedValueLength(al)  // expected buffer length (with padding)
 
-            b = b[attributeHeaderSize...]  // slicing again to simplify value read
+            b += attributeHeaderSize  // slicing again to simplify value read
+            bCount -= attributeHeaderSize
             offset += attributeHeaderSize
-            if b.count < abuffl {
+
+            if bCount < abuffl {
                 // checking size
                 throw STUNError.errBufferTooSmall
             }
-            a.value = ByteBuffer(b[..<al])
+            a.value = ByteBuffer(rawView[b..<b + al])
+            b += abuffl
+            bCount -= abuffl
             offset += abuffl
-            b = b[abuffl...]
 
             self.attributes.rawAttributes.append(a)
         }
@@ -311,7 +315,7 @@ public class Message: Equatable {
     // ErrUnexpectedEOF, ErrUnexpectedHeaderEOF or *DecodeErr.
     //
     // Can return *DecodeErr while decoding too.
-    public func readFrom(reader: ByteBufferView) throws -> Int {
+    public func readFrom(_ reader: ByteBufferView) throws -> Int {
         let n = reader.count
         self.raw = ByteBuffer(reader)
         try self.decode()
