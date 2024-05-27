@@ -1,3 +1,4 @@
+import NIOCore
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the SwiftRTC open source project
@@ -12,7 +13,6 @@
 //
 //===----------------------------------------------------------------------===//
 import XCTest
-import NIOCore
 
 @testable import STUN
 
@@ -30,26 +30,26 @@ final class AttributeTests: XCTestCase {
         XCTAssertEqual(gotV, ByteBufferView(v))
     }
 
-    /*TODO:
     func testMessageGetNoAllocs() throws {
-         let m = Message()
-         let a = TextAttribute (
-             attr: attrSoftware,
-             text: "c"
-         )
-         a.add_to(&mut m)?;
-         m.write_header();
+        let m = Message()
+        let a = TextAttribute(
+            attr: attrSoftware,
+            text: "c"
+        )
+        try a.addTo(m)
+        m.writeHeader()
 
-         //"Default"
-         {
-             m.get(ATTR_SOFTWARE)?;
-         }
-         //"Not found"
-         {
-             let result = m.get(ATTR_ORIGIN);
-             assert!(result.is_err(), "should error");
-         }
-     }*/
+        //"Default"
+        let _ = try m.get(attrSoftware)
+
+        //"Not found"
+        do {
+            let _ = try m.get(attrOrigin)
+            XCTAssertTrue(false, "should error")
+        } catch STUNError.errAttributeNotFound {
+            XCTAssertTrue(true)
+        }
+    }
 
     func testPadding() throws {
         let tt = [

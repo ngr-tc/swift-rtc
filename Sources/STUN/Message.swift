@@ -1,3 +1,4 @@
+import NIOCore
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the SwiftRTC open source project
@@ -12,7 +13,6 @@
 //
 //===----------------------------------------------------------------------===//
 import Utils
-import NIOCore
 
 /// Interfaces that are implemented by message attributes, shorthands for them,
 /// or helpers for message fields as type or transaction id.
@@ -51,8 +51,9 @@ public struct TransactionId: Equatable {
     /// new returns new random transaction ID using crypto/rand
     /// as source.
     public init() {
-        self.rawValue = ByteBuffer(bytes: (0..<transactionIdSize).map { _ in UInt8.random(in: UInt8.min...UInt8.max)
-        })
+        self.rawValue = ByteBuffer(
+            bytes: (0..<transactionIdSize).map { _ in UInt8.random(in: UInt8.min...UInt8.max)
+            })
     }
 
     public static func == (lhs: TransactionId, rhs: TransactionId) -> Bool {
@@ -160,7 +161,7 @@ public class Message: Equatable {
         var last = first + allocSize  // last byte number
         self.grow(last, true)  // growing cap(Raw) to fit TLV
         self.length += allocSize  // rendering length change
-        
+
         // Encoding attribute TLV to allocated buffer.
         self.raw.setBytes(t.value().toBeBytes(), at: first)  // T
         self.raw.setBytes(UInt16(v.count).toBeBytes(), at: first + 2)  // L
@@ -201,7 +202,7 @@ public class Message: Equatable {
         self.writeType()
         self.writeLength()
         self.raw.setBytes(magicCookie.toBeBytes(), at: 4)  // magic cookie
-        self.raw.setBuffer(self.transactionId.rawValue,at: 8)
+        self.raw.setBuffer(self.transactionId.rawValue, at: 8)
         // transaction ID
     }
 
@@ -328,7 +329,7 @@ public class Message: Equatable {
 
     // CloneTo clones m to b securing any further m mutations.
     public func cloneTo(b: Message) throws {
-        b.raw = self.raw //TODO: check whether shared memory buffer is ok?
+        b.raw = self.raw  //TODO: check whether shared memory buffer is ok?
         try b.decode()
     }
 

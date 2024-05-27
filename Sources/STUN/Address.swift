@@ -30,7 +30,7 @@ public struct MappedAddress: CustomStringConvertible {
     public var description: String {
         return self.socketAddress.description
     }
-    
+
     public init() {
         self.socketAddress = try! SocketAddress(ipAddress: "0.0.0.0", port: 0)
     }

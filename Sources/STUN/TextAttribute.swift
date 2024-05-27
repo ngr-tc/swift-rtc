@@ -13,10 +13,10 @@
 //===----------------------------------------------------------------------===//
 import NIOCore
 
-let MAX_USERNAME_B: Int = 513
-let MAX_REALM_B: Int = 763
-let MAX_SOFTWARE_B: Int = 763
-let MAX_NONCE_B: Int = 763
+let maxUsernameB: Int = 513
+let maxRealmB: Int = 763
+let maxSoftwareB: Int = 763
+let maxNonceB: Int = 763
 
 /// Username represents USERNAME attribute.
 ///
@@ -42,18 +42,15 @@ public typealias Software = TextAttribute
 public struct TextAttribute {
     var attr: AttrType
     var text: String
-    
+
     public init(attr: AttrType, text: String) {
         self.attr = attr
         self.text = text
     }
-    
+
     // gets t attribute from m and appends its value to reseted v.
     public static func getFromAs(_ m: Message, _ attr: AttrType) throws -> Self {
-        if attr != attrUsername &&
-            attr != attrRealm &&
-            attr != attrSoftware &&
-            attr != attrNonce {
+        if attr != attrUsername && attr != attrRealm && attr != attrSoftware && attr != attrNonce {
             throw STUNError.errUnsupportedAttrType(attr)
         }
 
@@ -72,24 +69,29 @@ extension TextAttribute: CustomStringConvertible {
     }
 }
 
-/*
 extension TextAttribute: Setter {
     /// adds attribute with type t to m, checking maximum length. If max_len
     /// is less than 0, no check is performed.
     public func addTo(_ m: Message) throws {
-        let text = self.text.as_bytes();
-        let max_len = match self.attr {
-            ATTR_USERNAME => MAX_USERNAME_B,
-            ATTR_REALM => MAX_REALM_B,
-            ATTR_SOFTWARE => MAX_SOFTWARE_B,
-            ATTR_NONCE => MAX_NONCE_B,
-            _ => return Err(Error::Other(format!("Unsupported AttrType {}", self.attr))),
-        };
-
-        try checkOverflow(self.attr, text.len(), max_len)
-        m.add(self.attr, text)
+        let maxLen =
+            switch self.attr {
+            case attrUsername:
+                maxUsernameB
+            case attrRealm:
+                maxRealmB
+            case attrSoftware:
+                maxSoftwareB
+            case attrNonce:
+                maxNonceB
+            default:
+                throw STUNError.errUnsupportedAttrType(self.attr)
+            }
+        let text = ByteBuffer(string: self.text)
+        let textView = ByteBufferView(text)
+        try checkOverflow(self.attr, textView.count, maxLen)
+        m.add(self.attr, textView)
     }
-}*/
+}
 
 extension TextAttribute: Getter {
     public mutating func getFrom(_ m: Message) throws {
