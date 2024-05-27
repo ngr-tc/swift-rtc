@@ -43,7 +43,7 @@ final class AddressTests: XCTestCase {
 
         //"Bad family"
         var (v, _) = m.attributes.get(attrMappedAddress)
-        v.value[0] = 32
+        v.value.setBytes([32], at:0)
         try got.getFrom(m)
 
         //"Bad length"

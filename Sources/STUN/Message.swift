@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 import Utils
+import NIOCore
 
 /// Interfaces that are implemented by message attributes, shorthands for them,
 /// or helpers for message fields as type or transaction id.
@@ -45,13 +46,13 @@ let defaultRawCapacity: Int = 120
 public let transactionIdSize: Int = 12  // 96 bit
 
 public struct TransactionId: Equatable {
-    public var rawValue: [UInt8]  //FIXME: optimize [UInt8]
+    public var rawValue: ByteBuffer
 
     /// new returns new random transaction ID using crypto/rand
     /// as source.
     public init() {
-        self.rawValue = (0..<transactionIdSize).map { _ in UInt8.random(in: UInt8.min...UInt8.max)
-        }
+        self.rawValue = ByteBuffer(bytes: (0..<transactionIdSize).map { _ in UInt8.random(in: UInt8.min...UInt8.max)
+        })
     }
 
     public static func == (lhs: TransactionId, rhs: TransactionId) -> Bool {
@@ -69,7 +70,7 @@ extension TransactionId: Setter {
 /// isMessage returns true if b looks like STUN message.
 /// Useful for multiplexing. is_message does not guarantee
 /// that decoding will be successful.
-public func isMessage(b: inout [UInt8]) -> Bool {  //FIXME: optimize [UInt8]
+public func isMessage(b: ByteBufferView) -> Bool {
     b.count >= messageHeaderSize
         && UInt32.fromBeBytes(b[4], b[5], b[6], b[7]) == magicCookie
 }
@@ -85,14 +86,14 @@ public class Message: Equatable {
     var length: Int
     var transactionId: TransactionId
     var attributes: Attributes
-    var raw: [UInt8]  //FIXME: optimize [UInt8]
+    var raw: ByteBuffer
 
     public init() {
         self.typ = bindingRequest
         self.length = 0
         self.transactionId = TransactionId()
         self.attributes = Attributes()
-        self.raw = [UInt8](repeating: 0, count: messageHeaderSize)
+        self.raw = ByteBuffer(repeating: 0, count: messageHeaderSize)
     }
 
     public static func == (lhs: Message, rhs: Message) -> Bool {
@@ -102,14 +103,14 @@ public class Message: Equatable {
     }
 
     // marshal_binary implements the encoding.BinaryMarshaler interface.
-    public func marshalBinary() -> [UInt8] {
+    public func marshalBinary() -> ByteBuffer {
         // We can't return m.Raw, allocation is expected by implicit interface
         // contract induced by other implementations.
         return self.raw
     }
 
     // unmarshal_binary implements the encoding.BinaryUnmarshaler interface.
-    public func unmarshalBinary(data: inout [UInt8]) throws {  //FIXME: optimize [UInt8]
+    public func unmarshalBinary(data: inout ByteBuffer) throws {
         // We can't retain data, copy is expected by interface contract.
         self.raw = data
         try self.decode()
@@ -124,27 +125,27 @@ public class Message: Equatable {
 
     // Reset resets Message, attributes and underlying buffer length.
     public func reset() {
-        self.raw = []
+        self.raw = ByteBuffer()
         self.length = 0
         self.attributes.rawAttributes = []
     }
 
     // grow ensures that internal buffer has n length.
     public func grow(_ n: Int, _ resize: Bool) {
-        if self.raw.count >= n {
+        if self.raw.readableBytes >= n {
             if resize {
-                self.raw = Array(self.raw[..<n])
+                self.raw = ByteBuffer(ByteBufferView(self.raw)[..<n])
             }
             return
         }
-        self.raw.append(contentsOf: Array(repeating: 0, count: n - self.raw.count))
+        self.raw.writeBytes(Array(repeating: 0, count: n - self.raw.readableBytes))
     }
 
     // Add appends new attribute to message. Not goroutine-safe.
     //
     // Value of attribute is copied to internal buffer so
     // it is safe to reuse v.
-    public func add(_ t: AttrType, _ v: [UInt8]) {  //FIXME: optimize [UInt8]
+    public func add(_ t: AttrType, _ v: ByteBufferView) {
         // Allocating buffer for TLV (type-length-value).
         // T = t, L = len(v), V = v.
         // m.Raw will look like:
@@ -159,17 +160,16 @@ public class Message: Equatable {
         var last = first + allocSize  // last byte number
         self.grow(last, true)  // growing cap(Raw) to fit TLV
         self.length += allocSize  // rendering length change
-
+        
         // Encoding attribute TLV to allocated buffer.
-        self.raw.replaceSubrange(first..<first + 2, with: t.value().toBeBytes())  // T
-        self.raw.replaceSubrange(
-            first + 2..<first + attributeHeaderSize, with: UInt16(v.count).toBeBytes())  // L
-        self.raw.replaceSubrange(first + attributeHeaderSize..<last, with: v)  // V
+        self.raw.setBytes(t.value().toBeBytes(), at: first)  // T
+        self.raw.setBytes(UInt16(v.count).toBeBytes(), at: first + 2)  // L
+        self.raw.setBytes(v, at: first + attributeHeaderSize)  // V
 
         let attr = RawAttribute(
             typ: t,  // T
             length: v.count,  // L
-            value: Array(self.raw[first + attributeHeaderSize..<last])  // V
+            value: ByteBuffer(ByteBufferView(self.raw)[first + attributeHeaderSize..<last])  // V
         )
 
         // Checking that attribute value needs padding.
@@ -181,8 +181,7 @@ public class Message: Equatable {
             // setting all padding bytes to zero
             // to prevent data leak from previous
             // data in next bytes_to_add bytes
-            self.raw.replaceSubrange(
-                last - bytesToAdd..<last, with: Array(repeating: 0, count: bytesToAdd))
+            self.raw.setBytes(Array(repeating: 0, count: bytesToAdd), at: last - bytesToAdd)
             self.length += bytesToAdd  // rendering length change
         }
         self.attributes.rawAttributes.append(attr)
@@ -192,7 +191,7 @@ public class Message: Equatable {
     // WriteLength writes m.Length to m.Raw.
     public func writeLength() {
         self.grow(4, false)
-        self.raw.replaceSubrange(2..<4, with: UInt16(self.length).toBeBytes())
+        self.raw.setBytes(UInt16(self.length).toBeBytes(), at: 2)
     }
 
     // WriteHeader writes header to underlying buffer. Not goroutine-safe.
@@ -201,28 +200,28 @@ public class Message: Equatable {
 
         self.writeType()
         self.writeLength()
-        self.raw.replaceSubrange(4..<8, with: magicCookie.toBeBytes())  // magic cookie
-        self.raw.replaceSubrange(8..<messageHeaderSize, with: self.transactionId.rawValue)
+        self.raw.setBytes(magicCookie.toBeBytes(), at: 4)  // magic cookie
+        self.raw.setBuffer(self.transactionId.rawValue,at: 8)
         // transaction ID
     }
 
     // WriteTransactionID writes m.TransactionID to m.Raw.
     public func writeTransactionId() {
-        self.raw.replaceSubrange(8..<messageHeaderSize, with: self.transactionId.rawValue)
+        self.raw.setBuffer(self.transactionId.rawValue, at: 8)
         // transaction ID
     }
 
     // WriteAttributes encodes all m.Attributes to m.
     public func writeAttributes() {
         for a in self.attributes.rawAttributes {
-            self.add(a.typ, a.value)
+            self.add(a.typ, ByteBufferView(a.value))
         }
     }
 
     // WriteType writes m.Type to m.Raw.
     public func writeType() {
         self.grow(2, false)
-        self.raw.replaceSubrange(..<2, with: self.typ.value().toBeBytes())  // message type
+        self.raw.setBytes(self.typ.value().toBeBytes(), at: 0)  // message type
     }
 
     // SetType sets m.Type and writes it to m.Raw.
@@ -233,7 +232,7 @@ public class Message: Equatable {
 
     // Encode re-encodes message into m.Raw.
     public func encode() {
-        self.raw = []
+        self.raw = ByteBuffer()
         self.writeHeader()
         self.length = 0
         self.writeAttributes()
@@ -241,32 +240,33 @@ public class Message: Equatable {
 
     // Decode decodes m.Raw into m.
     public func decode() throws {
+        let rawView = ByteBufferView(self.raw)
         // decoding message header
-        if self.raw.count < messageHeaderSize {
+        if rawView.count < messageHeaderSize {
             throw STUNError.errUnexpectedHeaderEof
         }
 
-        let t = UInt16.fromBeBytes(self.raw[0], self.raw[1])  // first 2 bytes
-        let size = Int(UInt16.fromBeBytes(self.raw[2], self.raw[3]))  // second 2 bytes
+        let t = UInt16.fromBeBytes(rawView[0], rawView[1])  // first 2 bytes
+        let size = Int(UInt16.fromBeBytes(rawView[2], rawView[3]))  // second 2 bytes
         // last 4 bytes
-        let cookie = UInt32.fromBeBytes(self.raw[4], self.raw[5], self.raw[6], self.raw[7])
+        let cookie = UInt32.fromBeBytes(rawView[4], rawView[5], rawView[6], rawView[7])
         let fullSize = messageHeaderSize + size  // len(m.Raw)
 
         if cookie != magicCookie {
             throw STUNError.errInvalidMagicCookie(cookie)
         }
-        if self.raw.count < fullSize {
+        if rawView.count < fullSize {
             throw STUNError.errBufferTooSmall
         }
 
         // saving header data
         self.typ.readValue(t)
         self.length = size
-        self.transactionId.rawValue = Array(self.raw[8..<messageHeaderSize])
+        self.transactionId.rawValue = ByteBuffer(rawView[8..<messageHeaderSize])
 
         self.attributes.rawAttributes = []
         var offset = 0
-        var b = self.raw[messageHeaderSize..<fullSize]
+        var b = rawView[messageHeaderSize..<fullSize]
 
         while offset < size {
             // checking that we have enough bytes to read header
@@ -277,7 +277,7 @@ public class Message: Equatable {
             var a = RawAttribute(
                 typ: compatAttrType(UInt16.fromBeBytes(b[0], b[1])),  // first 2 bytes
                 length: Int(UInt16.fromBeBytes(b[2], b[3])),  // second 2 bytes
-                value: []
+                value: ByteBuffer()
             )
             let al = a.length  // attribute length
             let abuffl = nearestPaddedValueLength(al)  // expected buffer length (with padding)
@@ -288,7 +288,7 @@ public class Message: Equatable {
                 // checking size
                 throw STUNError.errBufferTooSmall
             }
-            a.value = Array(b[..<al])
+            a.value = ByteBuffer(b[..<al])
             offset += abuffl
             b = b[abuffl...]
 
@@ -298,10 +298,11 @@ public class Message: Equatable {
 
     // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
     // call result.
-    public func writeTo(writer: inout [UInt8]) throws -> Int {  //FIXME: optimize [UInt8]
-        let n = min(writer.count, self.raw.count)
-        writer.replaceSubrange(..<n, with: self.raw[..<n])
-        return n
+    public func writeTo(writer: inout ByteBuffer) throws -> Int {
+        let readerIndexBefore = self.raw.readerIndex
+        writer.writeBuffer(&self.raw)
+        self.raw.moveReaderIndex(to: readerIndexBefore)
+        return self.raw.readableBytes
     }
 
     // ReadFrom implements ReaderFrom. Reads message from r into m.Raw,
@@ -309,9 +310,9 @@ public class Message: Equatable {
     // ErrUnexpectedEOF, ErrUnexpectedHeaderEOF or *DecodeErr.
     //
     // Can return *DecodeErr while decoding too.
-    public func readFrom(reader: [UInt8]) throws -> Int {  //FIXME: optimize [UInt8]
+    public func readFrom(reader: ByteBufferView) throws -> Int {
         let n = reader.count
-        self.raw = reader
+        self.raw = ByteBuffer(reader)
         try self.decode()
         return n
     }
@@ -319,17 +320,15 @@ public class Message: Equatable {
     // Write decodes message and return error if any.
     //
     // Any error is unrecoverable, but message could be partially decoded.
-    public func write(_ tbuf: [UInt8]) throws -> Int {  //FIXME: optimize [UInt8]
-        self.raw = []
-        self.raw.append(contentsOf: tbuf)
+    public func write(_ tbuf: ByteBufferView) throws -> Int {
+        self.raw = ByteBuffer(tbuf)
         try self.decode()
         return tbuf.count
     }
 
     // CloneTo clones m to b securing any further m mutations.
     public func cloneTo(b: Message) throws {
-        b.raw = []
-        b.raw.append(contentsOf: self.raw)
+        b.raw = self.raw //TODO: check whether shared memory buffer is ok?
         try b.decode()
     }
 
@@ -346,12 +345,12 @@ public class Message: Equatable {
     // get returns byte slice that represents attribute value,
     // if there is no attribute with such type,
     // ErrAttributeNotFound is returned.
-    public func get(_ t: AttrType) throws -> [UInt8] {  //FIXME: optimize [UInt8]
+    public func get(_ t: AttrType) throws -> ByteBufferView {
         let (v, ok) = self.attributes.get(t)
         if !ok {
             throw STUNError.errAttributeNotFound
         }
-        return v.value
+        return ByteBufferView(v.value)
     }
 
     // Build resets message and applies setters to it in batch, returning on

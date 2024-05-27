@@ -42,6 +42,8 @@ public enum STUNError: Error, CustomStringConvertible {
     case errInvalidFamilyIpValue(UInt16)
     case errInvalidMagicCookie(UInt32)
     case errBufferTooSmall
+    case errUnsupportedAttrType(AttrType)
+    case errInvalidTextAttribute
 
     public var description: String {
         switch self {
@@ -101,6 +103,10 @@ public enum STUNError: Error, CustomStringConvertible {
             return "\(cookie) is invalid magic cookie (should be \(magicCookie)"
         case .errBufferTooSmall:
             return "buffer too small"
+        case .errUnsupportedAttrType(let attr):
+            return "unsupported AttrType \(attr)"
+        case .errInvalidTextAttribute:
+            return "invalid text attribute"
         }
     }
 }

@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 import XCTest
+import NIOCore
 
 @testable import STUN
 
 final class AttributeTests: XCTestCase {
     func testRawAttributeAddTo() throws {
-        let v: [UInt8] = [1, 2, 3, 4]
+        let v: ByteBuffer = ByteBuffer([1, 2, 3, 4])
         let m = Message()
         let ra = RawAttribute(
             typ: attrData,
@@ -26,7 +27,7 @@ final class AttributeTests: XCTestCase {
         )
         try m.build([ra])
         let gotV = try m.get(attrData)
-        XCTAssertEqual(gotV, v)
+        XCTAssertEqual(gotV, ByteBufferView(v))
     }
 
     /*TODO:

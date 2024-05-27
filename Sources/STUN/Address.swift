@@ -77,13 +77,12 @@ public struct MappedAddress: CustomStringConvertible {
         guard let port = self.socketAddress.port else {
             throw STUNError.errInvalidFamilyIpValue(0)
         }
-        var value: [UInt8] = []
-        //value[0] = 0 // first 8 bits are zeroes
-        value.append(contentsOf: family.toBeBytes())
-        value.append(contentsOf: UInt16(port).toBeBytes())
-        value.append(contentsOf: socketAddress.octets())
+        var value: ByteBuffer = ByteBuffer()
+        value.writeBytes(family.toBeBytes())
+        value.writeBytes(UInt16(port).toBeBytes())
+        value.writeBytes(socketAddress.octets())
 
-        m.add(t, value)
+        m.add(t, ByteBufferView(value))
     }
 }
 

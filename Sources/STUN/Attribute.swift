@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
+import NIOCore
 
 /// Attributes is list of message attributes.
 public struct Attributes: Equatable {
@@ -244,15 +245,15 @@ public let attrAlternateDomain: AttrType = AttrType(0x8003)
 public struct RawAttribute: Equatable, CustomStringConvertible {
     var typ: AttrType
     var length: Int  // ignored while encoding
-    var value: [UInt8]  //FIXME: optimize [UInt8]
+    var value: ByteBuffer
 
     public init() {
         self.typ = AttrType(0)
         self.length = 0
-        self.value = []
+        self.value = ByteBuffer()
     }
 
-    public init(typ: AttrType, length: Int, value: [UInt8]) {  //FIXME: optimize [UInt8]
+    public init(typ: AttrType, length: Int, value: ByteBuffer) {
         self.typ = typ
         self.length = length
         self.value = value
@@ -267,7 +268,7 @@ extension RawAttribute: Setter {
     /// implements Setter, adding attribute as a.Type with a.Value and ignoring
     /// the Length field.
     public func addTo(_ m: Message) throws {
-        m.add(self.typ, self.value)
+        m.add(self.typ, ByteBufferView(self.value))
     }
 }
 
