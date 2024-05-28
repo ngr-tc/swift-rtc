@@ -305,7 +305,7 @@ public class Message: Equatable {
     // call result.
     public func writeTo(writer: inout ByteBuffer) throws -> Int {
         let readerIndexBefore = self.raw.readerIndex
-        writer.writeBuffer(&self.raw)
+        writer.writeImmutableBuffer(self.raw)
         self.raw.moveReaderIndex(to: readerIndexBefore)
         return self.raw.readableBytes
     }
@@ -350,12 +350,12 @@ public class Message: Equatable {
     // get returns byte slice that represents attribute value,
     // if there is no attribute with such type,
     // ErrAttributeNotFound is returned.
-    public func get(_ t: AttrType) throws -> ByteBufferView {
+    public func get(_ t: AttrType) throws -> ByteBuffer {
         let (v, ok) = self.attributes.get(t)
         if !ok {
             throw STUNError.errAttributeNotFound
         }
-        return ByteBufferView(v.value)
+        return v.value
     }
 
     // Build resets message and applies setters to it in batch, returning on

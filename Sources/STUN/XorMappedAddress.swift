@@ -22,7 +22,8 @@ func safeXorBytes(_ dst: inout ByteBuffer, _ a: ByteBufferView, _ b: ByteBufferV
         n = dst.writerIndex
     }
     for i in 0..<n {
-        dst.setRepeatingByte(a[i] ^ b[i], count: 1, at: i)
+        let c = a[a.startIndex + i] ^ b[b.startIndex + i]
+        dst.setRepeatingByte(c, count: 1, at: i)
     }
     return n
 }
@@ -45,98 +46,105 @@ public struct XorMappedAddress {
     public init() {
         self.socketAddress = try! SocketAddress(ipAddress: "0.0.0.0", port: 0)
     }
-}
-/*
-impl fmt::Display for XorMappedAddress {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let family = match self.ip {
-            IpAddr::V4(_) => FAMILY_IPV4,
-            IpAddr::V6(_) => FAMILY_IPV6,
-        };
-        if family == FAMILY_IPV4 {
-            write!(f, "{}:{}", self.ip, self.port)
-        } else {
-            write!(f, "[{}]:{}", self.ip, self.port)
-        }
-    }
-}
 
-impl Setter for XorMappedAddress {
-    /// add_to adds XOR-MAPPED-ADDRESS to m. Can return ErrBadIPLength
-    /// if len(a.IP) is invalid.
-    fn add_to(&self, m: &mut Message) -> Result<()> {
-        self.add_to_as(m, ATTR_XORMAPPED_ADDRESS)
+    public init(socketAddress: SocketAddress) {
+        self.socketAddress = socketAddress
     }
-}
 
-impl Getter for XorMappedAddress {
-    /// get_from decodes XOR-MAPPED-ADDRESS attribute in message and returns
-    /// error if any. While decoding, a.IP is reused if possible and can be
-    /// rendered to invalid state (e.g. if a.IP was set to IPv6 and then
-    /// IPv4 value were decoded into it), be careful.
-    fn get_from(&mut self, m: &Message) -> Result<()> {
-        self.get_from_as(m, ATTR_XORMAPPED_ADDRESS)
-    }
-}
-
-impl XorMappedAddress {
     /// add_to_as adds XOR-MAPPED-ADDRESS value to m as t attribute.
-    pub fn add_to_as(&self, m: &mut Message, t: AttrType) -> Result<()> {
-        let (family, ip_len, ip) = match self.ip {
-            IpAddr::V4(ipv4) => (FAMILY_IPV4, IPV4LEN, ipv4.octets().to_vec()),
-            IpAddr::V6(ipv6) => (FAMILY_IPV6, IPV6LEN, ipv6.octets().to_vec()),
-        };
+    public func addToAs(_ m: Message, _ t: AttrType) throws {
+        let (family, ipLen) =
+            switch self.socketAddress {
+            case SocketAddress.v4(_):
+                (familyIpV4, ipV4Len)
+            case SocketAddress.v6(_):
+                (familyIpV6, ipV6Len)
+            default:
+                throw STUNError.errInvalidFamilyIpValue(0)
+            }
 
-        let mut value = [0; 32 + 128];
-        //value[0] = 0 // first 8 bits are zeroes
-        let mut xor_value = vec![0; IPV6LEN];
-        xor_value[4..].copy_from_slice(&m.transaction_id.0);
-        xor_value[0..4].copy_from_slice(&MAGIC_COOKIE.to_be_bytes());
-        value[0..2].copy_from_slice(&family.to_be_bytes());
-        value[2..4].copy_from_slice(&(self.port ^ (MAGIC_COOKIE >> 16) as u16).to_be_bytes());
-        xor_bytes(&mut value[4..4 + ip_len], &ip, &xor_value);
-        m.add(t, &value[..4 + ip_len]);
-        Ok(())
+        guard let port = self.socketAddress.port else {
+            throw STUNError.errInvalidFamilyIpValue(0)
+        }
+
+        var xorValue = ByteBuffer()
+        xorValue.writeBytes(magicCookie.toBeBytes())
+        xorValue.writeImmutableBuffer(m.transactionId.rawValue)
+
+        let ip = ByteBuffer(bytes: self.socketAddress.octets())
+        var xorIp = ByteBuffer(repeating: 0, count: ipLen)
+
+        let _ = xorBytes(&xorIp, ByteBufferView(ip), ByteBufferView(xorValue))
+
+        var value = ByteBuffer()
+        value.writeBytes(family.toBeBytes())
+        value.writeBytes((UInt16(port) ^ UInt16(magicCookie >> 16)).toBeBytes())
+        value.writeImmutableBuffer(xorIp)
+        m.add(t, ByteBufferView(value))
     }
 
     /// get_from_as decodes XOR-MAPPED-ADDRESS attribute value in message
     /// getting it as for t type.
-    pub fn get_from_as(&mut self, m: &Message, t: AttrType) -> Result<()> {
-        let v = m.get(t)?;
-        if v.len() <= 4 {
-            return Err(Error::ErrUnexpectedEof);
+    public mutating func getFromAs(_ m: Message, _ t: AttrType) throws {
+        let b = try m.get(t)
+        let v = ByteBufferView(b)
+        if v.count <= 4 {
+            throw STUNError.errUnexpectedEof
         }
 
-        let family = u16::from_be_bytes([v[0], v[1]]);
-        if family != FAMILY_IPV6 && family != FAMILY_IPV4 {
-            return Err(Error::Other(format!("bad value {family}")));
+        let family = UInt16.fromBeBytes(v[0], v[1])
+        if family != familyIpV6 && family != familyIpV4 {
+            throw STUNError.errInvalidFamilyIpValue(family)
         }
 
-        check_overflow(
-            t,
-            v[4..].len(),
-            if family == FAMILY_IPV4 {
-                IPV4LEN
+        let ipLen =
+            if family == familyIpV4 {
+                ipV4Len
             } else {
-                IPV6LEN
-            },
-        )?;
-        self.port = u16::from_be_bytes([v[2], v[3]]) ^ (MAGIC_COOKIE >> 16) as u16;
-        let mut xor_value = vec![0; 4 + TRANSACTION_ID_SIZE];
-        xor_value[0..4].copy_from_slice(&MAGIC_COOKIE.to_be_bytes());
-        xor_value[4..].copy_from_slice(&m.transaction_id.0);
+                ipV6Len
+            }
+        try checkOverflow(t, v[4...].count, ipLen)
 
-        if family == FAMILY_IPV6 {
-            let mut ip = [0; IPV6LEN];
-            xor_bytes(&mut ip, &v[4..], &xor_value);
-            self.ip = IpAddr::V6(Ipv6Addr::from(ip));
+        let port = UInt16.fromBeBytes(v[2], v[3]) ^ UInt16(magicCookie >> 16)
+        var xorValue = ByteBuffer()
+        xorValue.writeBytes(magicCookie.toBeBytes())
+        xorValue.writeImmutableBuffer(m.transactionId.rawValue)
+        let xorValueView = ByteBufferView(xorValue)
+
+        if family == familyIpV6 {
+            var ip = ByteBuffer(bytes: Array(repeating: 0, count: ipV6Len))
+            let _ = xorBytes(&ip, v[4...], xorValueView)
+            self.socketAddress = try SocketAddress(
+                packedIPAddress: ip, port: Int(port))
         } else {
-            let mut ip = [0; IPV4LEN];
-            xor_bytes(&mut ip, &v[4..], &xor_value);
-            self.ip = IpAddr::V4(Ipv4Addr::from(ip));
-        };
-
-        Ok(())
+            var ip = ByteBuffer(bytes: Array(repeating: 0, count: ipV4Len))
+            let _ = xorBytes(&ip, v[4...], xorValueView)
+            self.socketAddress = try SocketAddress(
+                packedIPAddress: ip, port: Int(port))
+        }
     }
 }
-*/
+
+extension XorMappedAddress: CustomStringConvertible {
+    public var description: String {
+        return self.socketAddress.description
+    }
+}
+
+extension XorMappedAddress: Setter {
+    /// add_to adds XOR-MAPPED-ADDRESS to m. Can return ErrBadIPLength
+    /// if len(a.IP) is invalid.
+    public func addTo(_ m: Message) throws {
+        try self.addToAs(m, attrXorMappedAddress)
+    }
+}
+
+extension XorMappedAddress: Getter {
+    /// get_from decodes XOR-MAPPED-ADDRESS attribute in message and returns
+    /// error if any. While decoding, a.IP is reused if possible and can be
+    /// rendered to invalid state (e.g. if a.IP was set to IPv6 and then
+    /// IPv4 value were decoded into it), be careful.
+    public mutating func getFrom(_ m: Message) throws {
+        try self.getFromAs(m, attrXorMappedAddress)
+    }
+}

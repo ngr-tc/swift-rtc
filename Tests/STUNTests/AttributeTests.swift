@@ -27,7 +27,7 @@ final class AttributeTests: XCTestCase {
         )
         try m.build([ra])
         let gotV = try m.get(attrData)
-        XCTAssertEqual(gotV, ByteBufferView(v))
+        XCTAssertEqual(gotV, v)
     }
 
     func testMessageGetNoAllocs() throws {

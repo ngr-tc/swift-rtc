@@ -37,7 +37,8 @@ public struct MappedAddress {
 
     /// decodes MAPPED-ADDRESS value in message m as an attribute of type t.
     public mutating func getFromAs(_ m: Message, _ t: AttrType) throws {
-        let v = try m.get(t)
+        let b = try m.get(t)
+        let v = ByteBufferView(b)
         if v.count <= 4 {
             throw STUNError.errUnexpectedEof
         }

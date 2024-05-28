@@ -55,8 +55,8 @@ public struct TextAttribute {
         }
 
         let a = try m.get(attr)
-        let ab = ByteBuffer(a)
-        guard let text = ab.getString(at: 0, length: a.count) else {
+        let aView = ByteBufferView(a)
+        guard let text = a.getString(at: 0, length: aView.count) else {
             throw STUNError.errInvalidTextAttribute
         }
         return TextAttribute(attr: attr, text: text)

@@ -81,7 +81,7 @@ extension AttrType: CustomStringConvertible {
             return "REALM"
         case attrNonce:
             return "NONCE"
-        case attrXormappedAddress:
+        case attrXorMappedAddress:
             return "XOR-MAPPED-ADDRESS"
         case attrSoftware:
             return "SOFTWARE"
@@ -151,7 +151,7 @@ public let attrRealm: AttrType = AttrType(0x0014)
 // NONCE
 public let attrNonce: AttrType = AttrType(0x0015)
 // XOR-MAPPED-ADDRESS
-public let attrXormappedAddress: AttrType = AttrType(0x0020)
+public let attrXorMappedAddress: AttrType = AttrType(0x0020)
 
 /// Attributes from comprehension-optional range (0x8000-0xFFFF).
 // SOFTWARE
@@ -299,7 +299,7 @@ func nearestPaddedValueLength(_ l: Int) -> Int {
 func compatAttrType(_ val: UInt16) -> AttrType {
     if val == 0x8020 {
         // draft-ietf-behave-rfc3489bis-02, MS-TURN
-        return attrXormappedAddress  // new: 0x0020 (from draft-ietf-behave-rfc3489bis-03 on)
+        return attrXorMappedAddress  // new: 0x0020 (from draft-ietf-behave-rfc3489bis-03 on)
     } else {
         return AttrType(val)
     }

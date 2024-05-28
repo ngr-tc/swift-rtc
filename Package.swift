@@ -29,7 +29,8 @@ let package = Package(
         .library(name: "Utils", targets: ["Utils"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0")
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
+        .package(url: "https://github.com/swift-extras/swift-extras-base64.git", from: "1.0.0")
     ],
     targets: [
         // MARK: - Targets
@@ -63,7 +64,11 @@ let package = Package(
         .testTarget(name: "SCTPTests", dependencies: ["SCTP"]),
         .testTarget(name: "SDPTests", dependencies: ["SDP"]),
         .testTarget(name: "SRTPTests", dependencies: ["SRTP"]),
-        .testTarget(name: "STUNTests", dependencies: ["STUN"]),
+        .testTarget(name: "STUNTests", 
+            dependencies: [
+                "STUN",
+                .product(name: "ExtrasBase64", package: "swift-extras-base64")
+            ]),
         .testTarget(name: "UtilsTests", dependencies: ["Utils"]),
 
         // MARK: - Examples

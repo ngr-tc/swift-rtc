@@ -171,4 +171,25 @@ final class UtilsTests: XCTestCase {
         XCTAssertEqual(socketAddressFromString1, socketAddressFromByteBuffer)
         XCTAssertEqual(ipv6Bytes, socketAddressFromByteBuffer.octets())
     }
+
+    func testSocketAddressIPv6NonZeros() throws {
+        let socketAddressFromString = try SocketAddress(
+            ipAddress: "fe80::dc2b:44ff:fe20:6009", port: 21254)
+
+        var ipv6Bytes = [UInt8](repeating: 0, count: 16)
+        ipv6Bytes[0] = 0xfe
+        ipv6Bytes[1] = 0x80
+        ipv6Bytes[8] = 0xdc
+        ipv6Bytes[9] = 0x2b
+        ipv6Bytes[10] = 0x44
+        ipv6Bytes[11] = 0xff
+        ipv6Bytes[12] = 0xfe
+        ipv6Bytes[13] = 0x20
+        ipv6Bytes[14] = 0x60
+        ipv6Bytes[15] = 0x09
+        let socketAddressFromByteBuffer = try SocketAddress(
+            packedIPAddress: ByteBuffer(bytes: ipv6Bytes), port: 21254)
+        XCTAssertEqual(socketAddressFromString, socketAddressFromByteBuffer)
+        XCTAssertEqual(ipv6Bytes, socketAddressFromByteBuffer.octets())
+    }
 }

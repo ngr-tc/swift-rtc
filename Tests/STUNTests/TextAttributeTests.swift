@@ -251,6 +251,6 @@ final class TextAttributeTests: XCTestCase {
         let _ = try n.addTo(m)
 
         let v = try m.get(attrNonce)
-        XCTAssertEqual(v, ByteBufferView(ByteBuffer(string: "example.org")))
+        XCTAssertEqual(v, ByteBuffer(string: "example.org"))
     }
 }
