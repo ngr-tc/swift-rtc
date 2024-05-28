@@ -18,11 +18,19 @@ import Utils
 public typealias Information = String
 
 /// Address describes a structured address token from within the "c=" field.
-public struct Address: Equatable, CustomStringConvertible {
+public struct Address: Equatable {
     var address: String
     var ttl: Int?
     var range: Int?
 
+    public init(address: String, ttl: Int? = nil, range: Int? = nil) {
+        self.address = address
+        self.ttl = ttl
+        self.range = range
+    }
+}
+
+extension Address: CustomStringConvertible {
     public var description: String {
         var output = self.address
         if let ttl = self.ttl {
@@ -33,28 +41,14 @@ public struct Address: Equatable, CustomStringConvertible {
         }
         return output
     }
-
-    public init(address: String, ttl: Int? = nil, range: Int? = nil) {
-        self.address = address
-        self.ttl = ttl
-        self.range = range
-    }
 }
 
 /// ConnectionInformation defines the representation for the "c=" field
 /// containing connection data.
-public struct ConnectionInformation: Equatable, CustomStringConvertible {
+public struct ConnectionInformation: Equatable {
     var networkType: String
     var addressType: String
     var address: Address?
-
-    public var description: String {
-        if let address = self.address {
-            return "\(self.networkType) \(self.addressType) \(address)"
-        } else {
-            return "\(self.networkType) \(self.addressType)"
-        }
-    }
 
     public init(networkType: String, addressType: String, address: Address? = nil) {
         self.networkType = networkType
@@ -63,17 +57,22 @@ public struct ConnectionInformation: Equatable, CustomStringConvertible {
     }
 }
 
+extension ConnectionInformation: CustomStringConvertible {
+    public var description: String {
+        if let address = self.address {
+            return "\(self.networkType) \(self.addressType) \(address)"
+        } else {
+            return "\(self.networkType) \(self.addressType)"
+        }
+    }
+}
+
 /// Bandwidth describes an optional field which denotes the proposed bandwidth
 /// to be used by the session or media.
-public struct Bandwidth: Equatable, CustomStringConvertible {
+public struct Bandwidth: Equatable {
     var experimental: Bool
     var bandwidthType: String
     var bandwidth: UInt64
-
-    public var description: String {
-        let output = self.experimental ? "X-" : ""
-        return "\(output)\(self.bandwidthType):\(self.bandwidth)"
-    }
 
     public init(experimental: Bool, bandwidthType: String, bandwidth: UInt64) {
         self.experimental = experimental
@@ -82,22 +81,35 @@ public struct Bandwidth: Equatable, CustomStringConvertible {
     }
 }
 
+extension Bandwidth: CustomStringConvertible {
+    public var description: String {
+        let output = self.experimental ? "X-" : ""
+        return "\(output)\(self.bandwidthType):\(self.bandwidth)"
+    }
+
+}
+
 /// EncryptionKey describes the "k=" which conveys encryption key information.
 public typealias EncryptionKey = String
 
 /// ConnectionRole indicates which of the end points should initiate the connection establishment
-public enum ConnectionRole: String, Equatable, CustomStringConvertible {
+public enum ConnectionRole: String, Equatable {
     case active, passive, actpass, holdconn
+}
 
+extension ConnectionRole: CustomStringConvertible {
     public var description: String {
         self.rawValue
     }
 }
 
 /// Direction is a marker for transmission direction of an endpoint
-public enum Direction: String, Equatable, CustomStringConvertible {
+public enum Direction: String, Equatable {
     case sendrecv, sendonly, recvonly, inactive
 
+}
+
+extension Direction: CustomStringConvertible {
     public var description: String {
         self.rawValue
     }
@@ -107,17 +119,9 @@ public let attributeKey: String = "a="
 
 /// Attribute describes the "a=" field which represents the primary means for
 /// extending SDP.
-public struct Attribute: Equatable, CustomStringConvertible {
+public struct Attribute: Equatable {
     var key: String
     var value: String?
-
-    public var description: String {
-        if let value = self.value {
-            return "\(self.key):\(value)"
-        } else {
-            return "\(self.key)"
-        }
-    }
 
     /// init constructs a new attribute
     public init(key: String, value: String? = nil) {
@@ -128,6 +132,16 @@ public struct Attribute: Equatable, CustomStringConvertible {
     /// isIceCandidate returns true if the attribute key equals "candidate".
     public func isIceCandidate() -> Bool {
         return self.key == "candidate"
+    }
+}
+
+extension Attribute: CustomStringConvertible {
+    public var description: String {
+        if let value = self.value {
+            return "\(self.key):\(value)"
+        } else {
+            return "\(self.key)"
+        }
     }
 }
 
@@ -149,28 +163,11 @@ public let audioLevelUri: String = "urn:ietf:params:rtp-hdrext:ssrc-audio-level"
 public let videoOrientationUri: String = "urn:3gpp:video-orientation"
 
 /// ExtMap represents the activation of a single RTP header extension
-public struct ExtMap: Equatable, CustomStringConvertible {
+public struct ExtMap: Equatable {
     var value: Int
     var direction: Direction?
     var uri: String?
     var extAttr: String?
-
-    public var description: String {
-        var output = String(self.value)
-        if let direction = self.direction {
-            output += "/\(direction)"
-        }
-
-        if let uri = self.uri {
-            output += " \(uri)"
-        }
-
-        if let extAttr = self.extAttr {
-            output += " \(extAttr)"
-        }
-
-        return output
-    }
 
     public init(value: Int, direction: Direction? = nil, uri: String? = nil, extAttr: String? = nil)
     {
@@ -233,22 +230,36 @@ public struct ExtMap: Equatable, CustomStringConvertible {
     }
 }
 
+extension ExtMap: CustomStringConvertible {
+    public var description: String {
+        var output = String(self.value)
+        if let direction = self.direction {
+            output += "/\(direction)"
+        }
+
+        if let uri = self.uri {
+            output += " \(uri)"
+        }
+
+        if let extAttr = self.extAttr {
+            output += " \(extAttr)"
+        }
+
+        return output
+    }
+}
+
 /// Codec represents a codec parsed from
 /// a=rtpmap:<payload type> <encoding name>/<clock rate>[/<encoding parameters>]
 /// a=fmtp:<format> <format specific parameters>
 /// a=ftcp-fb:<payload type> <RTCP feedback type> [<RTCP feedback parameter>]
-public struct Codec: Equatable, CustomStringConvertible {
+public struct Codec: Equatable {
     var payloadType: UInt8
     var name: String
     var clockRate: UInt32
     var encodingParameters: String
     var fmtp: String
     var rtcpFeedbacks: [String]
-
-    public var description: String {
-        return
-            "\(self.payloadType) \(self.name)/\(self.clockRate)/\(self.encodingParameters) (\(self.fmtp)) [\(self.rtcpFeedbacks.joined(separator: ", "))]"
-    }
 
     // Initialize the Codec object with default values for its properties
     public init(
@@ -261,6 +272,13 @@ public struct Codec: Equatable, CustomStringConvertible {
         self.encodingParameters = encodingParameters
         self.fmtp = fmtp
         self.rtcpFeedbacks = rtcpFeedbacks
+    }
+}
+
+extension Codec: CustomStringConvertible {
+    public var description: String {
+        return
+            "\(self.payloadType) \(self.name)/\(self.clockRate)/\(self.encodingParameters) (\(self.fmtp)) [\(self.rtcpFeedbacks.joined(separator: ", "))]"
     }
 }
 

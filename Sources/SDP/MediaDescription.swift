@@ -16,10 +16,17 @@
 /// it may be necessary to specify multiple transport ports, the protocol allows
 /// to write it as: <port>/<number of ports> where number of ports is a an
 /// offsetting range.
-public struct RangedPort: Equatable, CustomStringConvertible {
+public struct RangedPort: Equatable {
     var value: Int
     var range: Int?
 
+    public init(value: Int, range: Int? = nil) {
+        self.value = value
+        self.range = range
+    }
+}
+
+extension RangedPort: CustomStringConvertible {
     public var description: String {
         if let range = self.range {
             return "\(self.value)/\(range)"
@@ -28,28 +35,14 @@ public struct RangedPort: Equatable, CustomStringConvertible {
         }
     }
 
-    public init(value: Int, range: Int? = nil) {
-        self.value = value
-        self.range = range
-    }
 }
 
 /// MediaName describes the "m=" field storage structure.
-public struct MediaName: Equatable, CustomStringConvertible {
+public struct MediaName: Equatable {
     var media: String
     var port: RangedPort
     var protos: [String]
     var formats: [String]
-
-    public var description: String {
-        let s = [
-            self.media,
-            self.port.description,
-            self.protos.joined(separator: "/"),
-            self.formats.joined(separator: " "),
-        ]
-        return s.joined(separator: " ")
-    }
 
     public init() {
         self.media = ""
@@ -63,6 +56,18 @@ public struct MediaName: Equatable, CustomStringConvertible {
         self.port = port
         self.protos = protos
         self.formats = formats
+    }
+}
+
+extension MediaName: CustomStringConvertible {
+    public var description: String {
+        let s = [
+            self.media,
+            self.port.description,
+            self.protos.joined(separator: "/"),
+            self.formats.joined(separator: " "),
+        ]
+        return s.joined(separator: " ")
     }
 }
 

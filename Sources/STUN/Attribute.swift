@@ -41,13 +41,30 @@ public struct Attributes: Equatable {
 }
 
 /// AttrType is attribute type.
-public struct AttrType: Equatable, CustomStringConvertible {
+public struct AttrType: Equatable {
     var rawValue: UInt16
 
     public init(_ rawValue: UInt16) {
         self.rawValue = rawValue
     }
 
+    /// required returns true if type is from comprehension-required range (0x0000-0x7FFF).
+    public func required() -> Bool {
+        self.rawValue <= 0x7FFF
+    }
+
+    /// optional returns true if type is from comprehension-optional range (0x8000-0xFFFF).
+    public func optional() -> Bool {
+        self.rawValue >= 0x8000
+    }
+
+    /// value returns uint16 representation of attribute type.
+    public func value() -> UInt16 {
+        self.rawValue
+    }
+}
+
+extension AttrType: CustomStringConvertible {
     public var description: String {
         switch self {
         case attrMappedAddress:
@@ -115,21 +132,6 @@ public struct AttrType: Equatable, CustomStringConvertible {
         default:
             return "0x\(String(self.rawValue, radix: 16, uppercase: false))"
         }
-    }
-
-    /// required returns true if type is from comprehension-required range (0x0000-0x7FFF).
-    public func required() -> Bool {
-        self.rawValue <= 0x7FFF
-    }
-
-    /// optional returns true if type is from comprehension-optional range (0x8000-0xFFFF).
-    public func optional() -> Bool {
-        self.rawValue >= 0x8000
-    }
-
-    /// value returns uint16 representation of attribute type.
-    public func value() -> UInt16 {
-        self.rawValue
     }
 }
 
@@ -242,7 +244,7 @@ public let attrAlternateDomain: AttrType = AttrType(0x8003)
 /// don't understand, but cannot successfully process a message if it
 /// contains comprehension-required attributes that are not
 /// understood.
-public struct RawAttribute: Equatable, CustomStringConvertible {
+public struct RawAttribute: Equatable {
     var typ: AttrType
     var length: Int  // ignored while encoding
     var value: ByteBuffer
@@ -259,6 +261,9 @@ public struct RawAttribute: Equatable, CustomStringConvertible {
         self.value = value
     }
 
+}
+
+extension RawAttribute: CustomStringConvertible {
     public var description: String {
         return "\(self.typ): \(value)"
     }

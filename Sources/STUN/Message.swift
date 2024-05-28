@@ -411,9 +411,15 @@ public let classSuccessResponse: MessageClass = MessageClass(0x02)
 public let classErrorResponse: MessageClass = MessageClass(0x03)
 
 /// MessageClass is 8-bit representation of 2-bit class of STUN Message Class.
-public struct MessageClass: Equatable, CustomStringConvertible {
+public struct MessageClass: Equatable {
     var rawValue: UInt8
 
+    public init(_ rawValue: UInt8) {
+        self.rawValue = rawValue
+    }
+}
+
+extension MessageClass: CustomStringConvertible {
     public var description: String {
         switch self.rawValue {
         case 0x00:
@@ -427,10 +433,6 @@ public struct MessageClass: Equatable, CustomStringConvertible {
         default:
             return "unknown message class"
         }
-    }
-
-    public init(_ rawValue: UInt8) {
-        self.rawValue = rawValue
     }
 }
 
@@ -449,9 +451,15 @@ public let methodConnectionBind: Method = Method(0x000b)
 public let methodConnectionAttempt: Method = Method(0x000c)
 
 /// Method is uint16 representation of 12-bit STUN method.
-public struct Method: Equatable, CustomStringConvertible {
+public struct Method: Equatable {
     var rawValue: UInt16
 
+    public init(_ rawValue: UInt16) {
+        self.rawValue = rawValue
+    }
+}
+
+extension Method: CustomStringConvertible {
     public var description: String {
         switch self.rawValue {
         case 0x001:
@@ -479,10 +487,6 @@ public struct Method: Equatable, CustomStringConvertible {
         default:
             return "0x\(String(self.rawValue, radix: 16, uppercase: false))"
         }
-    }
-
-    public init(_ rawValue: UInt16) {
-        self.rawValue = rawValue
     }
 }
 
@@ -520,17 +524,13 @@ let classC0Shift: UInt16 = 4
 let classC1Shift: UInt16 = 7
 
 // MessageType is STUN Message Type Field.
-public struct MessageType: Equatable, CustomStringConvertible {
+public struct MessageType: Equatable {
     var method: Method  // e.g. binding
     var messageClass: MessageClass  // e.g. request
 
     public init(method: Method, messageClass: MessageClass) {
         self.method = method
         self.messageClass = messageClass
-    }
-
-    public var description: String {
-        return "\(self.method) \(messageClass)"
     }
 
     /// value returns bit representation of messageType.
@@ -582,6 +582,12 @@ public struct MessageType: Equatable, CustomStringConvertible {
         let d = (value >> methodDshift) & methodDbits  // D(M7-M11)
         let m = a + b + d
         self.method = Method(m)
+    }
+}
+
+extension MessageType: CustomStringConvertible {
+    public var description: String {
+        return "\(self.method) \(messageClass)"
     }
 }
 

@@ -45,18 +45,13 @@ public typealias Version = Int
 
 /// Origin defines the structure for the "o=" field which provides the
 /// originator of the session plus a session identifier and version number.
-public struct Origin: Equatable, CustomStringConvertible {
+public struct Origin: Equatable {
     var username: String
     var sessionId: UInt64
     var sessionVersion: UInt64
     var networkType: String
     var addressType: String
     var unicastAddress: String
-
-    public var description: String {
-        return
-            "\(self.username) \(self.sessionId) \(self.sessionVersion) \(self.networkType) \(self.addressType) \(self.unicastAddress)"
-    }
 
     public init(
         username: String, sessionId: UInt64, sessionVersion: UInt64, networkType: String,
@@ -69,6 +64,14 @@ public struct Origin: Equatable, CustomStringConvertible {
         self.addressType = addressType
         self.unicastAddress = unicastAddress
     }
+}
+
+extension Origin: CustomStringConvertible {
+    public var description: String {
+        return
+            "\(self.username) \(self.sessionId) \(self.sessionVersion) \(self.networkType) \(self.addressType) \(self.unicastAddress)"
+    }
+
 }
 
 /// SessionName describes a structured representations for the "s=" field
@@ -87,13 +90,9 @@ public typealias PhoneNumber = String
 
 /// TimeZone defines the structured object for "z=" line which describes
 /// repeated sessions scheduling.
-public struct TimeZone: Equatable, CustomStringConvertible {
+public struct TimeZone: Equatable {
     var adjustmentTime: UInt64
     var offset: Int64
-
-    public var description: String {
-        return "\(self.adjustmentTime) \(self.offset)"
-    }
 
     public init(adjustmentTime: UInt64, offset: Int64) {
         self.adjustmentTime = adjustmentTime
@@ -101,15 +100,17 @@ public struct TimeZone: Equatable, CustomStringConvertible {
     }
 }
 
+extension TimeZone: CustomStringConvertible {
+    public var description: String {
+        return "\(self.adjustmentTime) \(self.offset)"
+    }
+}
+
 /// Timing defines the "t=" field's structured representation for the start and
 /// stop times.
-public struct Timing: Equatable, CustomStringConvertible {
+public struct Timing: Equatable {
     var startTime: UInt64
     var stopTime: UInt64
-
-    public var description: String {
-        return "\(self.startTime) \(self.stopTime)"
-    }
 
     public init(startTime: UInt64, stopTime: UInt64) {
         self.startTime = startTime
@@ -117,20 +118,19 @@ public struct Timing: Equatable, CustomStringConvertible {
     }
 }
 
+extension Timing: CustomStringConvertible {
+    public var description: String {
+        return "\(self.startTime) \(self.stopTime)"
+    }
+
+}
+
 /// RepeatTime describes the "r=" fields of the session description which
 /// represents the intervals and durations for repeated scheduled sessions.
-public struct RepeatTime: Equatable, CustomStringConvertible {
+public struct RepeatTime: Equatable {
     var interval: Int64
     var duration: Int64
     var offsets: [Int64]
-
-    public var description: String {
-        var output = "\(self.interval) \(self.duration)"
-        if !offsets.isEmpty {
-            output += " " + offsets.map { String($0) }.joined(separator: " ")
-        }
-        return output
-    }
 
     public init(interval: Int64, duration: Int64, offsets: [Int64]) {
         self.interval = interval
@@ -139,10 +139,20 @@ public struct RepeatTime: Equatable, CustomStringConvertible {
     }
 }
 
+extension RepeatTime: CustomStringConvertible {
+    public var description: String {
+        var output = "\(self.interval) \(self.duration)"
+        if !offsets.isEmpty {
+            output += " " + offsets.map { String($0) }.joined(separator: " ")
+        }
+        return output
+    }
+}
+
 /// TimeDescription describes "t=", "r=" fields of the session description
 /// which are used to specify the start and stop times for a session as well as
 /// repeat intervals and durations for the scheduled session.
-public struct TimeDescription: Equatable, CustomStringConvertible {
+public struct TimeDescription: Equatable {
     /// `t=<start-time> <stop-time>`
     ///
     /// <https://tools.ietf.org/html/rfc4566#section-5.9>
@@ -153,17 +163,19 @@ public struct TimeDescription: Equatable, CustomStringConvertible {
     /// <https://tools.ietf.org/html/rfc4566#section-5.10>
     var repeatTimes: [RepeatTime]
 
+    public init(timing: Timing, repeatTimes: [RepeatTime]) {
+        self.timing = timing
+        self.repeatTimes = repeatTimes
+    }
+}
+
+extension TimeDescription: CustomStringConvertible {
     public var description: String {
         var result = keyValueBuild(key: "t=", value: self.timing.description)
         for repeatTime in self.repeatTimes {
             result += keyValueBuild(key: "r=", value: repeatTime.description)
         }
         return result
-    }
-
-    public init(timing: Timing, repeatTimes: [RepeatTime]) {
-        self.timing = timing
-        self.repeatTimes = repeatTimes
     }
 }
 
@@ -186,7 +198,7 @@ func keyValueBuild(key: String, value: String?) -> String {
 
 /// SessionDescription is a a well-defined format for conveying sufficient
 /// information to discover and participate in a multimedia session.
-public struct SessionDescription: Equatable, CustomStringConvertible {
+public struct SessionDescription: Equatable {
     /// `v=0`
     ///
     /// <https://tools.ietf.org/html/rfc4566#section-5.1>
@@ -257,10 +269,6 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
 
     /// <https://tools.ietf.org/html/rfc4566#section-5.14>
     var mediaDescriptions: [MediaDescription]
-
-    public var description: String {
-        return self.marshal()
-    }
 
     public init() {
         self.version = 0
@@ -602,6 +610,13 @@ public struct SessionDescription: Equatable, CustomStringConvertible {
         }
         return lexer.desc
     }
+}
+
+extension SessionDescription: CustomStringConvertible {
+    public var description: String {
+        return self.marshal()
+    }
+
 }
 
 func s1(lexer: Lexer) throws -> StateFn? {

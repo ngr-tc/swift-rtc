@@ -24,12 +24,8 @@ let ipV6Len: Int = 16
 /// compatibility with RFC 3489 clients.
 ///
 /// RFC 5389 Section 15.1
-public struct MappedAddress: CustomStringConvertible {
+public struct MappedAddress {
     var socketAddress: SocketAddress
-
-    public var description: String {
-        return self.socketAddress.description
-    }
 
     public init() {
         self.socketAddress = try! SocketAddress(ipAddress: "0.0.0.0", port: 0)
@@ -83,6 +79,12 @@ public struct MappedAddress: CustomStringConvertible {
         value.writeBytes(socketAddress.octets())
 
         m.add(t, ByteBufferView(value))
+    }
+}
+
+extension MappedAddress: CustomStringConvertible {
+    public var description: String {
+        return self.socketAddress.description
     }
 }
 

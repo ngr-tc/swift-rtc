@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-public enum STUNError: Error, CustomStringConvertible {
+public enum STUNError: Error {
     //STUN errors
     case errAttributeNotFound
     case errTransactionStopped
@@ -44,7 +44,9 @@ public enum STUNError: Error, CustomStringConvertible {
     case errBufferTooSmall
     case errUnsupportedAttrType(AttrType)
     case errInvalidTextAttribute
+}
 
+extension STUNError: CustomStringConvertible {
     public var description: String {
         switch self {
         case .errAttributeNotFound:
