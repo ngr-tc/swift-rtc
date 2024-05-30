@@ -42,12 +42,12 @@ extension String {
         return Substring(self).trimmingWhitespace()
     }
 
-    public func trimmingPrefix(_ prefix: String) -> String {
-        var result = self
-        while result.hasPrefix(prefix) {
-            result = String(result.dropFirst(prefix.count))
-        }
-        return result
+    public func trimmingPrefix(_ prefix: String) -> Substring {
+        return Substring(self).trimmingPrefix(prefix)
+    }
+
+    public func trimmingSuffix(_ suffix: String) -> Substring {
+        return Substring(self).trimmingSuffix(suffix)
     }
 
     public func trimmingNewline() -> Substring {
@@ -65,6 +65,22 @@ extension Substring {
         // There must be at least one non-ascii whitespace character, so banging here is safe.
         let lastNonWhitespace = self.utf8.lastIndex(where: { !$0.isASCIIWhitespace })!
         return Substring(self.utf8[firstNonWhitespace...lastNonWhitespace])
+    }
+
+    public func trimmingPrefix(_ prefix: String) -> Substring {
+        var result = self
+        while result.hasPrefix(prefix) {
+            result = result.dropFirst(prefix.count)
+        }
+        return result
+    }
+
+    public func trimmingSuffix(_ suffix: String) -> Substring {
+        var result = self
+        while result.hasSuffix(suffix) {
+            result = result.dropLast(suffix.count)
+        }
+        return result
     }
 
     public func trimmingNewline() -> Substring {

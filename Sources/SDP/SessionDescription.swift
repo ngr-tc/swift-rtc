@@ -1049,7 +1049,7 @@ func unmarshalBandwidth(value: String) throws -> Bandwidth {
     var bandwidthType = parts[0]
     let experimental = bandwidthType.starts(with: "X-")
     if experimental {
-        bandwidthType = bandwidthType.trimmingPrefix("X-")
+        bandwidthType = String(bandwidthType.trimmingPrefix("X-"))
     } else {
         // Set according to currently registered with IANA
         // https://tools.ietf.org/html/rfc4566#section-5.8
