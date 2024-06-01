@@ -13,6 +13,7 @@ import Crypto
 //
 //===----------------------------------------------------------------------===//
 import NIOCore
+import Foundation
 
 /// separator for credentials.
 let credentialsSep: Character = ":"
@@ -27,12 +28,17 @@ public struct MessageIntegrity {
     var rawValue: ByteBuffer
 }
 
-/*
-func newHmac(key: ByteBufferView, message: ByteBufferView) -> ByteBuffer {
-    let mac = HMAC(hmac::HMAC_SHA1_FOR_LEGACY_USE_ONLY, key);
-    hmac::sign(&mac, message).as_ref().to_vec()
+extension ByteBufferView: ContiguousBytes {
+    
 }
-*/
+
+func newHmac(key: ByteBufferView, message: ByteBufferView) -> ByteBuffer {
+    let symKey = SymmetricKey(data: key)
+    var _ = HMAC<Insecure.SHA1>(key: symKey);
+    //mac.update(data: message)
+    //mac.finalize()
+    return ByteBuffer()
+}
 
 extension MessageIntegrity: CustomStringConvertible {
     public var description: String {
