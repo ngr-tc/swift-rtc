@@ -11,7 +11,6 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
-import NIOCore
 
 extension UTF8.CodeUnit {
     var isASCIIWhitespace: Bool {
