@@ -11,47 +11,40 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
+import NIOCore
 
-/*
-// check_size returns ErrAttrSizeInvalid if got is not equal to expected.
-pub fn check_size(_at: AttrType, got: usize, expected: usize) -> Result<()> {
-    if got == expected {
-        Ok(())
-    } else {
-        Err(Error::ErrAttributeSizeInvalid)
+/// check_size returns ErrAttrSizeInvalid if got is not equal to expected.
+public func checkSize(_ at: AttrType, got: Int, expected: Int) throws {
+    if got != expected {
+        throw STUNError.errAttributeSizeInvalid
     }
 }
 
 // is_attr_size_invalid returns true if error means that attribute size is invalid.
-pub fn is_attr_size_invalid(err: &Error) -> bool {
-    Error::ErrAttributeSizeInvalid == *err
-}
+//public func isAttrSizeInvalid(err: &Error) -> bool {
+//    Error::ErrAttributeSizeInvalid == *err
+//}
 
-pub(crate) fn check_hmac(got: &[u8], expected: &[u8]) -> Result<()> {
-    if got.ct_eq(expected).unwrap_u8() != 1 {
-        Err(Error::ErrIntegrityMismatch)
-    } else {
-        Ok(())
+func checkHmac(got: ByteBufferView, expected: ByteBufferView) throws {
+    if got != expected {
+        throw STUNError.errIntegrityMismatch
     }
 }
 
-pub(crate) fn check_fingerprint(got: u32, expected: u32) -> Result<()> {
-    if got == expected {
-        Ok(())
-    } else {
-        Err(Error::ErrFingerprintMismatch)
+func checkFingerprint(got: UInt32, expected: UInt32) throws {
+    if got != expected {
+        throw STUNError.errFingerprintMismatch
     }
 }
-*/
+
 // checkOverflow returns ErrAttributeSizeOverflow if got is bigger that max.
 public func checkOverflow(_ at: AttrType, _ got: Int, _ max: Int) throws {
     if got > max {
         throw STUNError.errAttributeSizeOverflow
     }
 }
-/*
+
 // is_attr_size_overflow returns true if error means that attribute size is too big.
-pub fn is_attr_size_overflow(err: &Error) -> bool {
-    Error::ErrAttributeSizeOverflow == *err
-}
-*/
+//public func is_attr_size_overflow(err: &Error) -> bool {
+//    Error::ErrAttributeSizeOverflow == *err
+//}
