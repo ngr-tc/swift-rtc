@@ -82,7 +82,7 @@ public struct MessageIntegrity {
         let startOfHmac =
             messageHeaderSize + m.length - (attributeHeaderSize + messageIntegritySize)
         // data before integrity attribute
-        guard let b = m.raw.getSlice(at: 0, length: startOfHmac) else {
+        guard let b = m.raw.viewBytes(at: 0, length: startOfHmac) else {
             throw STUNError.errBufferTooSmall
         }
         let expected = newHmac(key: ByteBufferView(self.rawValue), message: b)
@@ -92,11 +92,14 @@ public struct MessageIntegrity {
     }
 }
 
-func newHmac(key: ByteBufferView, message: ByteBuffer) -> ByteBuffer {
-    let mac = HMAC<Insecure.SHA1>.authenticationCode(
-        //FIXME: optimize it without extra copy bytes
-        for: message.getBytes(at: 0, length: message.readableBytes) ?? [],
-        using: SymmetricKey(data: key))
+func newHmac(key: ByteBufferView, message: ByteBufferView) -> ByteBuffer {
+    var hmac = HMAC<Insecure.SHA1>(key: SymmetricKey(data: key))
+
+    message.withUnsafeBytes { bufferPointer in
+        hmac.update(data: bufferPointer)
+    }
+
+    let mac = hmac.finalize()
 
     var v = ByteBuffer()
     let _ = mac.withUnsafeBytes { bufferPointer in
@@ -132,7 +135,7 @@ extension MessageIntegrity: Setter {
         // writing length to m.Raw
         m.writeLength()
         // calculating HMAC for adjusted m.Raw
-        let v = newHmac(key: ByteBufferView(self.rawValue), message: m.raw)
+        let v = newHmac(key: ByteBufferView(self.rawValue), message: ByteBufferView(m.raw))
         m.length = length  // changing m.Length back
 
         m.add(attrMessageIntegrity, ByteBufferView(v))
