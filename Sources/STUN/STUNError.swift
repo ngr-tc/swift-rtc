@@ -44,6 +44,7 @@ public enum STUNError: Error {
     case errBufferTooSmall
     case errUnsupportedAttrType(AttrType)
     case errInvalidTextAttribute
+    case errInvalidString
 }
 
 extension STUNError: CustomStringConvertible {
@@ -109,6 +110,8 @@ extension STUNError: CustomStringConvertible {
             return "unsupported AttrType \(attr)"
         case .errInvalidTextAttribute:
             return "invalid text attribute"
+        case .errInvalidString:
+            return "invalid string"
         }
     }
 }
