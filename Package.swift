@@ -31,7 +31,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
         .package(url: "https://github.com/swift-extras/swift-extras-base64.git", from: "1.0.0"),
-        .package(url: "https://github.com/karwa/swift-url", .upToNextMinor(from: "0.4.1"))
+        .package(url: "https://github.com/karwa/swift-url", .upToNextMinor(from: "0.4.1")),
+        .package(url: "https://github.com/tayloraswift/swift-hash.git", from: "0.5.0")
     ],
     targets: [
         // MARK: - Targets
@@ -51,7 +52,8 @@ let package = Package(
             dependencies: [
                 "Utils",
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "WebURL", package: "swift-url")
+                .product(name: "WebURL", package: "swift-url"),
+                .product(name: "CRC", package: "swift-hash")
             ]),
         .target(name: "Utils",
             dependencies: [
