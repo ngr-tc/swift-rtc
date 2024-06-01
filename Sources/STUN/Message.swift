@@ -56,6 +56,10 @@ public struct TransactionId: Equatable {
             })
     }
 
+    public init(_ rawValue: ByteBuffer) {
+        self.rawValue = rawValue
+    }
+
     public static func == (lhs: TransactionId, rhs: TransactionId) -> Bool {
         return lhs.rawValue == rhs.rawValue
     }
@@ -90,9 +94,9 @@ public class Message: Equatable {
     var raw: ByteBuffer
 
     public init() {
-        self.typ = bindingRequest
+        self.typ = MessageType(method: Method(0), messageClass: MessageClass(0))
         self.length = 0
-        self.transactionId = TransactionId()
+        self.transactionId = TransactionId(ByteBuffer(repeating: 0, count: transactionIdSize))
         self.attributes = Attributes()
         self.raw = ByteBuffer(repeating: 0, count: messageHeaderSize)
     }
