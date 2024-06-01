@@ -17,6 +17,13 @@ import PackageDescription
 
 let package = Package(
     name: "swift-rtc",
+    // minimal version align with swift-crypto
+    platforms: [
+        .macOS(.v10_15),
+        .iOS(.v13),
+        .watchOS(.v6),
+        .tvOS(.v13),
+    ],
     products: [
         .library(name: "DataChannel", targets: ["DataChannel"]),
         .library(name: "DTLS", targets: ["DTLS"]),
@@ -30,6 +37,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.4.0"),
         .package(url: "https://github.com/swift-extras/swift-extras-base64.git", from: "1.0.0"),
         .package(url: "https://github.com/karwa/swift-url", .upToNextMinor(from: "0.4.1")),
         .package(url: "https://github.com/tayloraswift/swift-hash.git", from: "0.5.0")
@@ -52,6 +60,7 @@ let package = Package(
             dependencies: [
                 "Utils",
                 .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "WebURL", package: "swift-url"),
                 .product(name: "CRC", package: "swift-hash")
             ]),
