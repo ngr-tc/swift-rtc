@@ -34,7 +34,10 @@ public struct MessageIntegrity {
         let s = [username, realm, password].joined(separator: credentialsSep)
         var md5 = Insecure.MD5()
         s.utf8CString.withUnsafeBytes { bufferPointer in
-            md5.update(bufferPointer: bufferPointer)
+            // remove null terminate byte due to CString
+            let bufferPointerWithoutNullTerminate = UnsafeRawBufferPointer(
+                start: bufferPointer.baseAddress, count: bufferPointer.count - 1)
+            md5.update(bufferPointer: bufferPointerWithoutNullTerminate)
         }
         let h = md5.finalize()
 
@@ -53,7 +56,7 @@ public struct MessageIntegrity {
     /// Check checks MESSAGE-INTEGRITY attribute.
     ///
     /// CPU costly, see BenchmarkMessageIntegrity_Check.
-    public func check(m: Message) throws {
+    public func check(_ m: Message) throws {
         let b = try m.get(attrMessageIntegrity)
         let v = ByteBufferView(b)
 
@@ -91,6 +94,7 @@ public struct MessageIntegrity {
 
 func newHmac(key: ByteBufferView, message: ByteBuffer) -> ByteBuffer {
     let mac = HMAC<Insecure.SHA1>.authenticationCode(
+        //FIXME: optimize it without extra copy bytes
         for: message.getBytes(at: 0, length: message.readableBytes) ?? [],
         using: SymmetricKey(data: key))
 
@@ -103,7 +107,7 @@ func newHmac(key: ByteBufferView, message: ByteBuffer) -> ByteBuffer {
 
 extension MessageIntegrity: CustomStringConvertible {
     public var description: String {
-        return "KEY: " + self.rawValue.hexDump(format: .detailed)
+        return "KEY: 0x[" + self.rawValue.hexDump(format: .plain) + "]"
     }
 }
 
