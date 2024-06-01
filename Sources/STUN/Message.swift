@@ -45,7 +45,7 @@ let defaultRawCapacity: Int = 120
 // TRANSACTION_ID_SIZE is length of transaction id array (in bytes).
 public let transactionIdSize: Int = 12  // 96 bit
 
-public struct TransactionId: Equatable {
+public struct TransactionId: Equatable, Hashable {
     public var rawValue: ByteBuffer
 
     /// new returns new random transaction ID using crypto/rand
@@ -54,6 +54,10 @@ public struct TransactionId: Equatable {
         self.rawValue = ByteBuffer(
             bytes: (0..<transactionIdSize).map { _ in UInt8.random(in: UInt8.min...UInt8.max)
             })
+    }
+    
+    public init(_ rawValue: [UInt8]) {
+        self.rawValue = ByteBuffer(bytes: rawValue)
     }
 
     public init(_ rawValue: ByteBuffer) {

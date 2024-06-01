@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-public enum SDPError: Error {
+public enum SDPError: Error, Equatable {
     case codecNotFound
     case missingWhitespace
     case missingColon

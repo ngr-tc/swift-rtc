@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-public enum STUNError: Error {
+public enum STUNError: Error, Equatable {
     //STUN errors
     case errAttributeNotFound
     case errTransactionStopped
