@@ -71,13 +71,13 @@ public enum EcnCodepoint: UInt8, Equatable {
 /// Transport Context with local address, peer address, ECN, protocol, etc.
 public struct TransportContext {
     /// Local socket address, either IPv4 or IPv6
-    var local: SocketAddress
+    public var local: SocketAddress
     /// Peer socket address, either IPv4 or IPv6
-    var peer: SocketAddress
+    public var peer: SocketAddress
     /// Type of protocol, either UDP or TCP
-    var proto: TransportProtocol
+    public var proto: TransportProtocol
     /// Explicit congestion notification bits to set on the packet
-    var ecn: EcnCodepoint?
+    public var ecn: EcnCodepoint?
 
     public init(
         local: SocketAddress, peer: SocketAddress, proto: TransportProtocol,
@@ -93,11 +93,11 @@ public struct TransportContext {
 /// A generic transmit with [TransportContext]
 public struct Transmit<T> {
     /// Received/Sent time
-    var now: NIODeadline
+    public var now: NIODeadline
     /// A transport context with [local_addr](TransportContext::local_addr) and [peer_addr](TransportContext::peer_addr)
-    var transport: TransportContext
+    public var transport: TransportContext
     /// Message body with generic type
-    var message: T
+    public var message: T
 
     public init(now: NIODeadline, transport: TransportContext, message: T) {
         self.now = now

@@ -1,3 +1,4 @@
+import ExtrasBase64
 import NIOCore
 //===----------------------------------------------------------------------===//
 //
@@ -69,6 +70,13 @@ public struct TransactionId: Equatable, Hashable {
     }
 }
 
+extension TransactionId: CustomStringConvertible {
+    public var description: String {
+        return Base64.encodeToString(
+            bytes: self.rawValue.getBytes(at: 0, length: self.rawValue.readableBytes) ?? [])
+    }
+}
+
 extension TransactionId: Setter {
     public func addTo(_ m: Message) throws {
         m.transactionId = self
@@ -91,11 +99,11 @@ public func isMessage(b: ByteBufferView) -> Bool {
 /// Message, its fields, results of m.Get or any attribute a.GetFrom
 /// are valid only until Message.Raw is not modified.
 public class Message: Equatable {
-    var typ: MessageType
-    var length: Int
-    var transactionId: TransactionId
-    var attributes: Attributes
-    var raw: ByteBuffer
+    public var typ: MessageType
+    public var length: Int
+    public var transactionId: TransactionId
+    public var attributes: Attributes
+    public var raw: ByteBuffer
 
     public init() {
         self.typ = MessageType(method: Method(0), messageClass: MessageClass(0))
@@ -403,6 +411,13 @@ public class Message: Equatable {
              try c.getFrom(self)
          }
      }*/
+}
+
+extension Message: CustomStringConvertible {
+    public var description: String {
+        return
+            "\(self.typ.description) l=\(self.length) attrs=\(self.attributes.rawAttributes.count) id=\(self.transactionId.description)"
+    }
 }
 
 extension Message: Setter {

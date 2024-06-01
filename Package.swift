@@ -40,7 +40,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.4.0"),
         .package(url: "https://github.com/swift-extras/swift-extras-base64.git", from: "1.0.0"),
         .package(url: "https://github.com/karwa/swift-url", .upToNextMinor(from: "0.4.1")),
-        .package(url: "https://github.com/tayloraswift/swift-hash.git", from: "0.5.0")
+        .package(url: "https://github.com/tayloraswift/swift-hash.git", from: "0.5.0"),
     ],
     targets: [
         // MARK: - Targets
@@ -53,7 +53,7 @@ let package = Package(
             name: "SDP",
             dependencies: [
                 "Utils",
-                .product(name: "NIOCore", package: "swift-nio")
+                .product(name: "NIOCore", package: "swift-nio"),
             ]),
         .target(name: "SRTP"),
         .target(name: "STUN",
@@ -62,7 +62,8 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "WebURL", package: "swift-url"),
-                .product(name: "CRC", package: "swift-hash")
+                .product(name: "CRC", package: "swift-hash"),
+                .product(name: "ExtrasBase64", package: "swift-extras-base64"),
             ]),
         .target(name: "Utils",
             dependencies: [
@@ -80,10 +81,25 @@ let package = Package(
         .testTarget(name: "STUNTests", 
             dependencies: [
                 "STUN",
-                .product(name: "ExtrasBase64", package: "swift-extras-base64")
+                .product(name: "ExtrasBase64", package: "swift-extras-base64"),
             ]),
         .testTarget(name: "UtilsTests", dependencies: ["Utils"]),
 
         // MARK: - Examples
+        .executableTarget(name: "XExampleStunClient",
+            dependencies: [
+                "STUN",
+                "Utils",
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+            ]
+        ),
+        .executableTarget(name: "XExampleStunDecode",
+            dependencies: [
+                "STUN",
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "ExtrasBase64", package: "swift-extras-base64"),
+            ]
+        ),
     ]
 )

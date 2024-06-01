@@ -16,8 +16,8 @@ import NIOCore
 /// Event is passed to Handler describing the transaction event.
 /// Do not reuse outside Handler.
 public struct Event {
-    var id: TransactionId
-    var result: Result<Message, STUNError>
+    public var id: TransactionId
+    public var result: Result<Message, STUNError>
 
     public init() {
         self.id = TransactionId()

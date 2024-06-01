@@ -197,13 +197,13 @@ public class Client {
         return nil
     }
 
-    public func handleRead(buf: ByteBufferView) throws {
+    public func handleRead(_ buf: ByteBufferView) throws {
         let msg = Message()
         let _ = try msg.readFrom(buf)
         try self.agent.handleEvent(ClientAgent.process(msg))
     }
 
-    public func handleWrite(m: Message) throws {
+    public func handleWrite(_ m: Message) throws {
         if self.settings.closed {
             throw STUNError.errClientClosed
         }
