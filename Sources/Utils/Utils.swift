@@ -134,3 +134,23 @@ extension UInt16 {
         return [UInt8((self >> 0) & 0xFF), UInt8((self >> 8) & 0xFF)]
     }
 }
+
+extension Result {
+    public func isSuccess() -> Bool {
+        switch self {
+        case .success(_):
+            return true
+        case .failure(_):
+            return false
+        }
+    }
+
+    public func isFailure() -> Bool {
+        switch self {
+        case .success(_):
+            return false
+        case .failure(_):
+            return true
+        }
+    }
+}

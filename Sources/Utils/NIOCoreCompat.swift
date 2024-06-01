@@ -53,3 +53,55 @@ extension SocketAddress {
         return addressBytes ?? []
     }
 }
+
+public enum TransportProtocol {
+    /// UDP
+    case udp
+    /// TCP
+    case tcp
+}
+
+/// Explicit congestion notification codepoint
+public enum EcnCodepoint: UInt8, Equatable {
+    case ect0 = 0b10
+    case ect1 = 0b01
+    case ce = 0b11
+}
+
+/// Transport Context with local address, peer address, ECN, protocol, etc.
+public struct TransportContext {
+    /// Local socket address, either IPv4 or IPv6
+    var local: SocketAddress
+    /// Peer socket address, either IPv4 or IPv6
+    var peer: SocketAddress
+    /// Type of protocol, either UDP or TCP
+    var proto: TransportProtocol
+    /// Explicit congestion notification bits to set on the packet
+    var ecn: EcnCodepoint?
+
+    public init(
+        local: SocketAddress, peer: SocketAddress, proto: TransportProtocol,
+        ecn: EcnCodepoint? = nil
+    ) {
+        self.local = local
+        self.peer = peer
+        self.proto = proto
+        self.ecn = ecn
+    }
+}
+
+/// A generic transmit with [TransportContext]
+public struct Transmit<T> {
+    /// Received/Sent time
+    var now: NIODeadline
+    /// A transport context with [local_addr](TransportContext::local_addr) and [peer_addr](TransportContext::peer_addr)
+    var transport: TransportContext
+    /// Message body with generic type
+    var message: T
+
+    public init(now: NIODeadline, transport: TransportContext, message: T) {
+        self.now = now
+        self.transport = transport
+        self.message = message
+    }
+}

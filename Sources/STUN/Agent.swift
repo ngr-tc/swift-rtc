@@ -13,24 +13,19 @@
 //===----------------------------------------------------------------------===//
 import NIOCore
 
-public enum EventResult {
-    case ok(Message)
-    case err(STUNError)
-}
-
 /// Event is passed to Handler describing the transaction event.
 /// Do not reuse outside Handler.
 public struct Event {
     var id: TransactionId
-    var result: EventResult
+    var result: Result<Message, STUNError>
 
     public init() {
         self.id = TransactionId()
         let message = Message()
-        self.result = EventResult.ok(message)
+        self.result = Result.success(message)
     }
 
-    public init(id: TransactionId, result: EventResult) {
+    public init(id: TransactionId, result: Result<Message, STUNError>) {
         self.id = id
         self.result = result
     }
@@ -78,7 +73,7 @@ public class Agent {
         self.eventsQueue = CircularBuffer()
     }
 
-    public func handleEvent(clientAgent: ClientAgent) throws {
+    public func handleEvent(_ clientAgent: ClientAgent) throws {
         switch clientAgent {
         case .process(let message):
             try self.process(message)
@@ -118,7 +113,7 @@ public class Agent {
         self.eventsQueue.append(
             Event(
                 id: message.transactionId,
-                result: .ok(message)
+                result: .success(message)
             ))
     }
 
@@ -133,7 +128,7 @@ public class Agent {
             self.eventsQueue.append(
                 Event(
                     id: id,
-                    result: .err(STUNError.errAgentClosed)
+                    result: .failure(STUNError.errAgentClosed)
                 ))
         }
         self.transactions.removeAll()
@@ -167,7 +162,7 @@ public class Agent {
             self.eventsQueue.append(
                 Event(
                     id: t.id,
-                    result: .err(STUNError.errTransactionStopped)
+                    result: .failure(STUNError.errTransactionStopped)
                 ))
         } else {
             throw STUNError.errTransactionNotExists
@@ -207,7 +202,7 @@ public class Agent {
             self.eventsQueue.append(
                 Event(
                     id: id,
-                    result: .err(STUNError.errTransactionTimeOut)
+                    result: .failure(STUNError.errTransactionTimeOut)
                 ))
         }
     }

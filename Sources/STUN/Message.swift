@@ -55,7 +55,7 @@ public struct TransactionId: Equatable, Hashable {
             bytes: (0..<transactionIdSize).map { _ in UInt8.random(in: UInt8.min...UInt8.max)
             })
     }
-    
+
     public init(_ rawValue: [UInt8]) {
         self.rawValue = ByteBuffer(bytes: rawValue)
     }

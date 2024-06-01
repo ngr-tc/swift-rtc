@@ -26,7 +26,7 @@ final class AgentTests: XCTestCase {
         try a.close()
 
         while let e = a.pollEvent() {
-            if case EventResult.ok(let message) = e.result {
+            if case Result.success(let message) = e.result {
                 let tid = TransactionId([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
                 XCTAssertEqual(message.transactionId, tid)
             } else {
@@ -43,7 +43,7 @@ final class AgentTests: XCTestCase {
         try a.close()
 
         while let e = a.pollEvent() {
-            if case EventResult.ok(let message) = e.result {
+            if case Result.success(let message) = e.result {
                 let tid = TransactionId([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
                 XCTAssertEqual(message.transactionId, tid)
             } else {
@@ -102,7 +102,7 @@ final class AgentTests: XCTestCase {
         try a.start(id, deadline)
         try a.stop(id)
 
-        if case .err(let err) = a.pollEvent()!.result {
+        if case .failure(let err) = a.pollEvent()!.result {
             XCTAssertEqual(err, STUNError.errTransactionStopped)
         } else {
             XCTAssertTrue(false)
