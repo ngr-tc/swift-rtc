@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.8
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the SwiftRTC open source project
@@ -80,7 +80,7 @@ let package = Package(
         .testTarget(name: "SDPTests", dependencies: ["SDP"]),
         .testTarget(name: "SharedTests", dependencies: ["Shared"]),
         .testTarget(name: "SRTPTests", dependencies: ["SRTP"]),
-        .testTarget(name: "STUNTests", 
+        .testTarget(name: "STUNTests",
             dependencies: [
                 "STUN",
                 .product(name: "ExtrasBase64", package: "swift-extras-base64"),

@@ -1017,15 +1017,12 @@ func unmarshalConnectionInformation(value: String) throws -> ConnectionInformati
     }
 
     let address: Address? =
-        if fields.count > 2 {
-            Address(
-                address: fields[2],
-                ttl: nil,
-                range: nil
-            )
-        } else {
-            nil
-        }
+        fields.count > 2
+        ? Address(
+            address: fields[2],
+            ttl: nil,
+            range: nil
+        ) : nil
 
     return ConnectionInformation(
         networkType: fields[0],
@@ -1155,16 +1152,10 @@ func unmarshalSessionAttribute(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     let fields = value.split(separator: ":", maxSplits: 1).map { String($0) }
-    let attribute =
-        if fields.count == 2 {
-            Attribute(
-                key: fields[0],
-                value: fields[1]
-            )
-        } else {
-            Attribute(
-                key: fields[0])
-        }
+    let attribute = Attribute(
+        key: fields[0],
+        value: fields.count == 2 ? fields[1] : nil
+    )
     lexer.desc.attributes.append(attribute)
 
     return StateFn(f: s11)
@@ -1294,16 +1285,10 @@ func unmarshalMediaAttribute(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     let fields = value.split(separator: ":", maxSplits: 1).map { String($0) }
-    let attribute =
-        if fields.count == 2 {
-            Attribute(
-                key: fields[0],
-                value: fields[1])
-        } else {
-            Attribute(
-                key: fields[0])
-        }
-
+    let attribute = Attribute(
+        key: fields[0],
+        value: fields.count == 2 ? fields[1] : nil
+    )
     if lexer.desc.mediaDescriptions.isEmpty {
         throw SDPError.sdpEmptyTimeDescription
     }
@@ -1317,23 +1302,26 @@ func unmarshalMediaAttribute(lexer: inout Lexer) throws -> StateFn? {
 func parseTimeUnits(value: String) throws -> Int64 {
     // Some time offsets in the protocol can be provided with a shorthand
     // notation. This code ensures to convert it to NTP timestamp format.
-    let (num, factor) =
-        if let last = value.last {
-            switch last {
-            case "d":
-                (String(value.dropLast()), 86400)  // days
-            case "h":
-                (String(value.dropLast()), 3600)  // hours
-            case "m":
-                (String(value.dropLast()), 60)  // minutes
-            case "s":
-                (String(value.dropLast()), 1)  // seconds (allowed for completeness)
-            default:
-                (value, 1)
-            }
-        } else {
-            (value, 1)
+    var (num, factor) = (value, 1)
+    if let last = value.last {
+        switch last {
+        case "d":
+            num = String(value.dropLast())
+            factor = 86400  // days
+        case "h":
+            num = String(value.dropLast())
+            factor = 3600  // hours
+        case "m":
+            num = String(value.dropLast())
+            factor = 60  // minutes
+        case "s":
+            num = String(value.dropLast())
+            factor = 1  // seconds (allowed for completeness)
+        default:
+            num = value
+            factor = 1
         }
+    }
 
     guard let parsedNum = Int64(num) else {
         throw SDPError.sdpInvalidValue(value)

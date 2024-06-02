@@ -74,14 +74,13 @@ extension ErrorCodeAttribute: Getter {
         let numberByte = UInt16(v[errorCodeNumberByte])
         let code = classByte * errorCodeModulo + numberByte
         self.code = ErrorCode(code)
-        self.reason =
-            if let reason = b.getString(
-                at: errorCodeReasonStart, length: v.count - errorCodeReasonStart)
-            {
-                reason
-            } else {
-                throw STUNError.errInvalidString
-            }
+        if let reason = b.getString(
+            at: errorCodeReasonStart, length: v.count - errorCodeReasonStart)
+        {
+            self.reason = reason
+        } else {
+            throw STUNError.errInvalidString
+        }
     }
 }
 

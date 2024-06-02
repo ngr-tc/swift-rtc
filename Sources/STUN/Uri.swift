@@ -59,12 +59,10 @@ public struct Uri: Equatable {
             .trimmingPrefix("[")
             .trimmingSuffix("]")
 
-        let port: UInt16? =
-            if let port = url.port {
-                UInt16(port)
-            } else {
-                nil
-            }
+        var port: UInt16? = nil
+        if let p = url.port {
+            port = UInt16(p)
+        }
 
         return Uri(scheme: url.scheme, host: String(host), port: port)
     }
@@ -72,13 +70,7 @@ public struct Uri: Equatable {
 
 extension Uri: CustomStringConvertible {
     public var description: String {
-        let host =
-            if self.host.contains(":") {
-                "[\(self.host)]"
-            } else {
-                self.host
-            }
-
+        let host = self.host.contains(":") ? "[\(self.host)]" : self.host
         if let port = self.port {
             return "\(self.scheme):\(host):\(port)"
         } else {

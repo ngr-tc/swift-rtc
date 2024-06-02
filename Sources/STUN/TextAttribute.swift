@@ -73,19 +73,19 @@ extension TextAttribute: Setter {
     /// adds attribute with type t to m, checking maximum length. If max_len
     /// is less than 0, no check is performed.
     public func addTo(_ m: inout Message) throws {
-        let maxLen =
-            switch self.attr {
-            case attrUsername:
-                maxUsernameB
-            case attrRealm:
-                maxRealmB
-            case attrSoftware:
-                maxSoftwareB
-            case attrNonce:
-                maxNonceB
-            default:
-                throw STUNError.errUnsupportedAttrType(self.attr)
-            }
+        var maxLen = maxUsernameB
+        switch self.attr {
+        case attrUsername:
+            maxLen = maxUsernameB
+        case attrRealm:
+            maxLen = maxRealmB
+        case attrSoftware:
+            maxLen = maxSoftwareB
+        case attrNonce:
+            maxLen = maxNonceB
+        default:
+            throw STUNError.errUnsupportedAttrType(self.attr)
+        }
         let text = ByteBuffer(string: self.text)
         let textView = ByteBufferView(text)
         try checkOverflow(self.attr, textView.count, maxLen)

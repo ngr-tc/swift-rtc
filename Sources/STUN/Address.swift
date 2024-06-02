@@ -49,27 +49,22 @@ public struct MappedAddress {
         }
         let port = UInt16.fromBeBytes(v[2], v[3])
 
-        let l =
-            if family == familyIpV6 {
-                min(ipV6Len, v[4...].count)
-            } else {
-                min(ipV4Len, v[4...].count)
-            }
+        let l = family == familyIpV6 ? min(ipV6Len, v[4...].count) : min(ipV4Len, v[4...].count)
         self.socketAddress = try SocketAddress(
             packedIPAddress: ByteBuffer(bytes: v[4..<4 + l]), port: Int(port))
     }
 
     /// adds MAPPED-ADDRESS value to m as t attribute.
     public func addToAs(_ m: inout Message, _ t: AttrType) throws {
-        let family =
-            switch self.socketAddress {
-            case SocketAddress.v4(_):
-                familyIpV4
-            case SocketAddress.v6(_):
-                familyIpV6
-            default:
-                throw STUNError.errInvalidFamilyIpValue(0)
-            }
+        var family = familyIpV4
+        switch self.socketAddress {
+        case SocketAddress.v4(_):
+            family = familyIpV4
+        case SocketAddress.v6(_):
+            family = familyIpV6
+        default:
+            throw STUNError.errInvalidFamilyIpValue(0)
+        }
 
         guard let port = self.socketAddress.port else {
             throw STUNError.errInvalidFamilyIpValue(0)

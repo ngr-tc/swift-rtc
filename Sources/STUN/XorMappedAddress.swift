@@ -53,15 +53,17 @@ public struct XorMappedAddress {
 
     /// add_to_as adds XOR-MAPPED-ADDRESS value to m as t attribute.
     public func addToAs(_ m: inout Message, _ t: AttrType) throws {
-        let (family, ipLen) =
-            switch self.socketAddress {
-            case SocketAddress.v4(_):
-                (familyIpV4, ipV4Len)
-            case SocketAddress.v6(_):
-                (familyIpV6, ipV6Len)
-            default:
-                throw STUNError.errInvalidFamilyIpValue(0)
-            }
+        var (family, ipLen) = (familyIpV4, ipV4Len)
+        switch self.socketAddress {
+        case SocketAddress.v4(_):
+            family = familyIpV4
+            ipLen = ipV4Len
+        case SocketAddress.v6(_):
+            family = familyIpV6
+            ipLen = ipV6Len
+        default:
+            throw STUNError.errInvalidFamilyIpValue(0)
+        }
 
         guard let port = self.socketAddress.port else {
             throw STUNError.errInvalidFamilyIpValue(0)
@@ -97,12 +99,7 @@ public struct XorMappedAddress {
             throw STUNError.errInvalidFamilyIpValue(family)
         }
 
-        let ipLen =
-            if family == familyIpV4 {
-                ipV4Len
-            } else {
-                ipV6Len
-            }
+        let ipLen = family == familyIpV4 ? ipV4Len : ipV6Len
         try checkOverflow(t, v[4...].count, ipLen)
 
         let port = UInt16.fromBeBytes(v[2], v[3]) ^ UInt16(magicCookie >> 16)
