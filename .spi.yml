@@ -1,0 +1,4 @@
+version: 1
+builder:
+  configs:
+    - documentation_targets: [DataChannel, DTLS, RTCP, RTP, SCTP, SDP, Shared, SRTP, STUN]
