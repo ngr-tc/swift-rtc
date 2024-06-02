@@ -39,7 +39,7 @@ let attrTypeSize: Int = 2
 
 extension UnknownAttributes: Setter {
     /// add_to adds UNKNOWN-ATTRIBUTES attribute to message.
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         var v = ByteBuffer()  //ATTR_TYPE_SIZE * 20); // 20 should be enough
         // If len(a.Types) > 20, there will be allocations.
         for t in self.attributes {
@@ -52,7 +52,7 @@ extension UnknownAttributes: Setter {
 
 extension UnknownAttributes: Getter {
     /// GetFrom parses UNKNOWN-ATTRIBUTES from message.
-    public mutating func getFrom(_ m: Message) throws {
+    public mutating func getFrom(_ m: inout Message) throws {
         let b = try m.get(attrUnknownAttributes)
         let v = ByteBufferView(b)
         if v.count % attrTypeSize != 0 {

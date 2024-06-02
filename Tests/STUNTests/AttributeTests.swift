@@ -19,7 +19,7 @@ import XCTest
 final class AttributeTests: XCTestCase {
     func testRawAttributeAddTo() throws {
         let v: ByteBuffer = ByteBuffer([1, 2, 3, 4])
-        let m = Message()
+        var m = Message()
         let ra = RawAttribute(
             typ: attrData,
             length: 0,
@@ -31,12 +31,12 @@ final class AttributeTests: XCTestCase {
     }
 
     func testMessageGetNoAllocs() throws {
-        let m = Message()
+        var m = Message()
         let a = TextAttribute(
             attr: attrSoftware,
             text: "c"
         )
-        try a.addTo(m)
+        try a.addTo(&m)
         m.writeHeader()
 
         //"Default"

@@ -52,7 +52,7 @@ public struct XorMappedAddress {
     }
 
     /// add_to_as adds XOR-MAPPED-ADDRESS value to m as t attribute.
-    public func addToAs(_ m: Message, _ t: AttrType) throws {
+    public func addToAs(_ m: inout Message, _ t: AttrType) throws {
         let (family, ipLen) =
             switch self.socketAddress {
             case SocketAddress.v4(_):
@@ -85,7 +85,7 @@ public struct XorMappedAddress {
 
     /// get_from_as decodes XOR-MAPPED-ADDRESS attribute value in message
     /// getting it as for t type.
-    public mutating func getFromAs(_ m: Message, _ t: AttrType) throws {
+    public mutating func getFromAs(_ m: inout Message, _ t: AttrType) throws {
         let b = try m.get(t)
         let v = ByteBufferView(b)
         if v.count <= 4 {
@@ -134,8 +134,8 @@ extension XorMappedAddress: CustomStringConvertible {
 extension XorMappedAddress: Setter {
     /// add_to adds XOR-MAPPED-ADDRESS to m. Can return ErrBadIPLength
     /// if len(a.IP) is invalid.
-    public func addTo(_ m: Message) throws {
-        try self.addToAs(m, attrXorMappedAddress)
+    public func addTo(_ m: inout Message) throws {
+        try self.addToAs(&m, attrXorMappedAddress)
     }
 }
 
@@ -144,7 +144,7 @@ extension XorMappedAddress: Getter {
     /// error if any. While decoding, a.IP is reused if possible and can be
     /// rendered to invalid state (e.g. if a.IP was set to IPv6 and then
     /// IPv4 value were decoded into it), be careful.
-    public mutating func getFrom(_ m: Message) throws {
-        try self.getFromAs(m, attrXorMappedAddress)
+    public mutating func getFrom(_ m: inout Message) throws {
+        try self.getFromAs(&m, attrXorMappedAddress)
     }
 }

@@ -56,7 +56,7 @@ public struct MessageIntegrity {
     /// Check checks MESSAGE-INTEGRITY attribute.
     ///
     /// CPU costly, see BenchmarkMessageIntegrity_Check.
-    public func check(_ m: Message) throws {
+    public func check(_ m: inout Message) throws {
         let b = try m.get(attrMessageIntegrity)
         let v = ByteBufferView(b)
 
@@ -118,7 +118,7 @@ extension MessageIntegrity: Setter {
     /// add_to adds MESSAGE-INTEGRITY attribute to message.
     ///
     /// CPU costly, see BenchmarkMessageIntegrity_AddTo.
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         for a in m.attributes.rawAttributes {
             // Message should not contain FINGERPRINT attribute
             // before MESSAGE-INTEGRITY.

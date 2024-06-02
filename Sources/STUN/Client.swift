@@ -198,7 +198,7 @@ public struct Client {
     }
 
     public mutating func handleRead(_ buf: ByteBufferView) throws {
-        let msg = Message()
+        var msg = Message()
         let _ = try msg.readFrom(buf)
         try self.agent.handleEvent(ClientAgent.process(msg))
     }

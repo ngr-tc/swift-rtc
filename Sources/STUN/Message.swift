@@ -18,17 +18,17 @@ import Utils
 /// Interfaces that are implemented by message attributes, shorthands for them,
 /// or helpers for message fields as type or transaction id.
 public protocol Setter {
-    func addTo(_ m: Message) throws
+    func addTo(_ m: inout Message) throws
 }
 
 /// Getter parses attribute from *Message.
 public protocol Getter {
-    mutating func getFrom(_ m: Message) throws
+    mutating func getFrom(_ m: inout Message) throws
 }
 
 /// Checker checks *Message attribute.
 public protocol Checker {
-    func check(_ m: Message) throws
+    func check(_ m: inout Message) throws
 }
 
 /// MAGIC_COOKIE is fixed value that aids in distinguishing STUN packets
@@ -78,7 +78,7 @@ extension TransactionId: CustomStringConvertible {
 }
 
 extension TransactionId: Setter {
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         m.transactionId = self
         m.writeTransactionId()
     }
@@ -98,7 +98,7 @@ public func isMessage(b: ByteBufferView) -> Bool {
 ///
 /// Message, its fields, results of m.Get or any attribute a.GetFrom
 /// are valid only until Message.Raw is not modified.
-public class Message: Equatable {
+public struct Message: Equatable {
     public var typ: MessageType
     public var length: Int
     public var transactionId: TransactionId
@@ -127,7 +127,7 @@ public class Message: Equatable {
     }
 
     // unmarshal_binary implements the encoding.BinaryUnmarshaler interface.
-    public func unmarshalBinary(data: inout ByteBuffer) throws {
+    public mutating func unmarshalBinary(data: inout ByteBuffer) throws {
         // We can't retain data, copy is expected by interface contract.
         self.raw = data
         try self.decode()
@@ -135,20 +135,20 @@ public class Message: Equatable {
 
     // NewTransactionID sets m.TransactionID to random value from crypto/rand
     // and returns error if any.
-    public func newTransactionDd() {
+    public mutating func newTransactionDd() {
         self.transactionId = TransactionId()
         self.writeTransactionId()
     }
 
     // Reset resets Message, attributes and underlying buffer length.
-    public func reset() {
+    public mutating func reset() {
         self.raw = ByteBuffer()
         self.length = 0
         self.attributes.rawAttributes = []
     }
 
     // grow ensures that internal buffer has n length.
-    public func grow(_ n: Int, _ resize: Bool) {
+    public mutating func grow(_ n: Int, _ resize: Bool) {
         if self.raw.readableBytes >= n {
             if resize {
                 self.raw = ByteBuffer(ByteBufferView(self.raw)[..<n])
@@ -162,7 +162,7 @@ public class Message: Equatable {
     //
     // Value of attribute is copied to internal buffer so
     // it is safe to reuse v.
-    public func add(_ t: AttrType, _ v: ByteBufferView) {
+    public mutating func add(_ t: AttrType, _ v: ByteBufferView) {
         // Allocating buffer for TLV (type-length-value).
         // T = t, L = len(v), V = v.
         // m.Raw will look like:
@@ -206,13 +206,13 @@ public class Message: Equatable {
     }
 
     // WriteLength writes m.Length to m.Raw.
-    public func writeLength() {
+    public mutating func writeLength() {
         self.grow(4, false)
         self.raw.setBytes(UInt16(self.length).toBeBytes(), at: 2)
     }
 
     // WriteHeader writes header to underlying buffer. Not goroutine-safe.
-    public func writeHeader() {
+    public mutating func writeHeader() {
         self.grow(messageHeaderSize, false)
 
         self.writeType()
@@ -223,32 +223,32 @@ public class Message: Equatable {
     }
 
     // WriteTransactionID writes m.TransactionID to m.Raw.
-    public func writeTransactionId() {
+    public mutating func writeTransactionId() {
         self.raw.setBuffer(self.transactionId.rawValue, at: 8)
         // transaction ID
     }
 
     // WriteAttributes encodes all m.Attributes to m.
-    public func writeAttributes() {
+    public mutating func writeAttributes() {
         for a in self.attributes.rawAttributes {
             self.add(a.typ, ByteBufferView(a.value))
         }
     }
 
     // WriteType writes m.Type to m.Raw.
-    public func writeType() {
+    public mutating func writeType() {
         self.grow(2, false)
         self.raw.setBytes(self.typ.value().toBeBytes(), at: 0)  // message type
     }
 
     // SetType sets m.Type and writes it to m.Raw.
-    public func setType(_ t: MessageType) {
+    public mutating func setType(_ t: MessageType) {
         self.typ = t
         self.writeType()
     }
 
     // Encode re-encodes message into m.Raw.
-    public func encode() {
+    public mutating func encode() {
         self.raw = ByteBuffer()
         self.writeHeader()
         self.length = 0
@@ -256,7 +256,7 @@ public class Message: Equatable {
     }
 
     // Decode decodes m.Raw into m.
-    public func decode() throws {
+    public mutating func decode() throws {
         let rawView = ByteBufferView(self.raw)
         // decoding message header
         if rawView.count < messageHeaderSize {
@@ -319,7 +319,7 @@ public class Message: Equatable {
 
     // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
     // call result.
-    public func writeTo(writer: inout ByteBuffer) throws -> Int {
+    public mutating func writeTo(writer: inout ByteBuffer) throws -> Int {
         let readerIndexBefore = self.raw.readerIndex
         writer.writeImmutableBuffer(self.raw)
         self.raw.moveReaderIndex(to: readerIndexBefore)
@@ -331,7 +331,7 @@ public class Message: Equatable {
     // ErrUnexpectedEOF, ErrUnexpectedHeaderEOF or *DecodeErr.
     //
     // Can return *DecodeErr while decoding too.
-    public func readFrom(_ reader: ByteBufferView) throws -> Int {
+    public mutating func readFrom(_ reader: ByteBufferView) throws -> Int {
         let n = reader.count
         self.raw = ByteBuffer(reader)
         try self.decode()
@@ -341,14 +341,14 @@ public class Message: Equatable {
     // Write decodes message and return error if any.
     //
     // Any error is unrecoverable, but message could be partially decoded.
-    public func write(_ tbuf: ByteBufferView) throws -> Int {
+    public mutating func write(_ tbuf: ByteBufferView) throws -> Int {
         self.raw = ByteBuffer(tbuf)
         try self.decode()
         return tbuf.count
     }
 
     // CloneTo clones m to b securing any further m mutations.
-    public func cloneTo(b: Message) throws {
+    public func cloneTo(b: inout Message) throws {
         b.raw = self.raw  //TODO: check whether shared memory buffer is ok?
         try b.decode()
     }
@@ -389,18 +389,18 @@ public class Message: Equatable {
     //  m.Build(&t, &username, &nonce, &realm) // 0 allocations
     //
     // See BenchmarkBuildOverhead.
-    public func build(_ setters: [Setter]) throws {
+    public mutating func build(_ setters: [Setter]) throws {
         self.reset()
         self.writeHeader()
         for s in setters {
-            try s.addTo(self)
+            try s.addTo(&self)
         }
     }
 
     // Check applies checkers to message in batch, returning on first error.
-    public func check(_ checkers: [Checker]) throws {
+    public mutating func check(_ checkers: [Checker]) throws {
         for c in checkers {
-            try c.check(self)
+            try c.check(&self)
         }
     }
 
@@ -421,19 +421,19 @@ extension Message: CustomStringConvertible {
 }
 
 extension Message: Setter {
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         m.transactionId = self.transactionId
         m.writeTransactionId()
     }
 }
 
-/// Possible values for message class in STUN Message Type.
+/// Possible values for MessageClass in STUN Message Type.
 public let classRequest: MessageClass = MessageClass(0x00)
 public let classIndication: MessageClass = MessageClass(0x01)
 public let classSuccessResponse: MessageClass = MessageClass(0x02)
 public let classErrorResponse: MessageClass = MessageClass(0x03)
 
-/// MessageClass is 8-bit representation of 2-bit class of STUN Message Class.
+/// MessageClass is 8-bit representation of 2-bit of STUN MessageClass.
 public struct MessageClass: Equatable {
     var rawValue: UInt8
 
@@ -616,7 +616,7 @@ extension MessageType: CustomStringConvertible {
 
 extension MessageType: Setter {
     /// addTo sets m type to t.
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         m.setType(self)
     }
 }

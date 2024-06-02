@@ -55,7 +55,7 @@ public func fingerprintValue(_ b: ByteBufferView) -> UInt32 {
 
 extension FingerprintAttr: Setter {
     // add_to adds fingerprint to message.
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         let l = m.length
         // length in header should include size of fingerprint attribute
         m.length += Int(fingerprintSize + attributeHeaderSize)  // increasing length

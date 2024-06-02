@@ -36,26 +36,26 @@ final class MessageIntegrityTests: XCTestCase {
 
         //"Check"
         do {
-            let m = Message()
+            var m = Message()
             m.writeHeader()
-            try i.addTo(m)
+            try i.addTo(&m)
 
             let a = TextAttribute(
                 attr: attrSoftware,
                 text: "software"
             )
-            try a.addTo(m)
+            try a.addTo(&m)
             m.writeHeader()
 
-            let dm = Message()
+            var dm = Message()
             dm.raw = ByteBuffer(buffer: m.raw)
             try dm.decode()
-            try i.check(dm)
+            try i.check(&dm)
 
             dm.raw.setRepeatingByte(12, count: 1, at: 24)  // HMAC now invalid
             try dm.decode()
             do {
-                try i.check(dm)
+                try i.check(&dm)
                 XCTAssertTrue(false, "should error")
             } catch STUNError.errIntegrityMismatch {
                 XCTAssertTrue(true)
@@ -66,35 +66,35 @@ final class MessageIntegrityTests: XCTestCase {
     }
 
     func testMessageIntegrityWithFingerprint() throws {
-        let m = Message()
+        var m = Message()
         m.transactionId = TransactionId(ByteBuffer(bytes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]))
         m.writeHeader()
         let a = TextAttribute(
             attr: attrSoftware,
             text: "software"
         )
-        try a.addTo(m)
+        try a.addTo(&m)
 
         let i = MessageIntegrity(password: "pwd")
         XCTAssertEqual(i.description, "KEY: 0x[70 77 64]")
 
         do {
-            try i.check(m)
+            try i.check(&m)
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeNotFound")
         }
 
-        try i.addTo(m)
-        try fingerprint.addTo(m)
-        try i.check(m)
+        try i.addTo(&m)
+        try fingerprint.addTo(&m)
+        try i.check(&m)
 
         m.raw.setRepeatingByte(33, count: 1, at: 24)
         try m.decode()
 
         do {
-            try i.check(m)
+            try i.check(&m)
         } catch STUNError.errIntegrityMismatch {
             XCTAssertTrue(true)
         } catch {
@@ -103,20 +103,20 @@ final class MessageIntegrityTests: XCTestCase {
     }
 
     func testMessageIntegrity() throws {
-        let m = Message()
+        var m = Message()
         let i = MessageIntegrity(password: "password")
         m.writeHeader()
-        try i.addTo(m)
+        try i.addTo(&m)
         let _ = try m.get(attrMessageIntegrity)
     }
 
     func testMessageIntegrityBeforeFingerprint() throws {
-        let m = Message()
+        var m = Message()
         m.writeHeader()
-        try fingerprint.addTo(m)
+        try fingerprint.addTo(&m)
         let i = MessageIntegrity(password: "password")
         do {
-            try i.addTo(m)
+            try i.addTo(&m)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errFingerprintBeforeIntegrity {
             XCTAssertTrue(true)

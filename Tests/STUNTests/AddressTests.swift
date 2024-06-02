@@ -18,24 +18,24 @@ import XCTest
 
 final class AddressTests: XCTestCase {
     func testMappedAddress() throws {
-        let m = Message()
+        var m = Message()
         let addr = MappedAddress(
             socketAddress: try SocketAddress(ipAddress: "122.12.34.5", port: 5412)
         )
         XCTAssertEqual("[IPv4]122.12.34.5:5412", addr.description)
 
         //"add_to"
-        try addr.addTo(m)
+        try addr.addTo(&m)
 
         //"GetFrom"
         var got = MappedAddress()
-        try got.getFrom(m)
+        try got.getFrom(&m)
         XCTAssertEqual(got.socketAddress.ipAddress, addr.socketAddress.ipAddress)
 
         //"Not found"
         do {
-            let message = Message()
-            try got.getFrom(message)
+            var message = Message()
+            try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errAttributeNotFound")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
@@ -44,13 +44,13 @@ final class AddressTests: XCTestCase {
         //"Bad family"
         var (v, _) = m.attributes.get(attrMappedAddress)
         v.value.setBytes([32], at: 0)
-        try got.getFrom(m)
+        try got.getFrom(&m)
 
         //"Bad length"
         do {
-            let message = Message()
+            var message = Message()
             message.add(attrMappedAddress, [1, 2, 3])
-            try got.getFrom(message)
+            try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errUnexpectedEof")
         } catch STUNError.errUnexpectedEof {
             XCTAssertTrue(true)
@@ -58,23 +58,23 @@ final class AddressTests: XCTestCase {
     }
 
     func testMappedAddressV6() throws {
-        let m = Message()
+        var m = Message()
         let addr = MappedAddress(
             socketAddress: try SocketAddress(ipAddress: "::", port: 5412)
         )
 
         //"add_to"
-        try addr.addTo(m)
+        try addr.addTo(&m)
 
         //"GetFrom"
         var got = MappedAddress()
-        try got.getFrom(m)
+        try got.getFrom(&m)
         XCTAssertEqual(got.socketAddress.ipAddress, addr.socketAddress.ipAddress)
 
         //"Not found"
         do {
-            let message = Message()
-            try got.getFrom(message)
+            var message = Message()
+            try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errAttributeNotFound")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
@@ -82,23 +82,23 @@ final class AddressTests: XCTestCase {
     }
 
     func testAlternateServer() throws {
-        let m = Message()
+        var m = Message()
         let addr = MappedAddress(
             socketAddress: try SocketAddress(ipAddress: "122.12.34.5", port: 5412)
         )
 
         //"add_to"
-        try addr.addTo(m)
+        try addr.addTo(&m)
 
         //"GetFrom"
         var got = AlternateServer()
-        try got.getFrom(m)
+        try got.getFrom(&m)
         XCTAssertEqual(got.socketAddress.ipAddress, addr.socketAddress.ipAddress)
 
         //"Not found"
         do {
-            let message = Message()
-            try got.getFrom(message)
+            var message = Message()
+            try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errAttributeNotFound")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
@@ -107,23 +107,23 @@ final class AddressTests: XCTestCase {
     }
 
     func testOtherAddress() throws {
-        let m = Message()
+        var m = Message()
         let addr = MappedAddress(
             socketAddress: try SocketAddress(ipAddress: "122.12.34.5", port: 5412)
         )
 
         //"add_to"
-        try addr.addTo(m)
+        try addr.addTo(&m)
 
         //"GetFrom"
         var got = OtherAddress()
-        try got.getFrom(m)
+        try got.getFrom(&m)
         XCTAssertEqual(got.socketAddress.ipAddress, addr.socketAddress.ipAddress)
 
         //"Not found"
         do {
-            let message = Message()
-            try got.getFrom(message)
+            var message = Message()
+            try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errAttributeNotFound")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)

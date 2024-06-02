@@ -18,16 +18,16 @@ import XCTest
 
 final class FingerprintTests: XCTestCase {
     func testFingerprintUsesCRS32IsoHdlc() throws {
-        let m = Message()
+        var m = Message()
 
         let a = TextAttribute(
             attr: attrSoftware,
             text: "software"
         )
-        try a.addTo(m)
+        try a.addTo(&m)
         m.writeHeader()
 
-        try fingerprint.addTo(m)
+        try fingerprint.addTo(&m)
         m.writeHeader()
 
         let rawView = ByteBufferView(m.raw)

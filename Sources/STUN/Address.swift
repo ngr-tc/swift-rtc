@@ -36,7 +36,7 @@ public struct MappedAddress {
     }
 
     /// decodes MAPPED-ADDRESS value in message m as an attribute of type t.
-    public mutating func getFromAs(_ m: Message, _ t: AttrType) throws {
+    public mutating func getFromAs(_ m: inout Message, _ t: AttrType) throws {
         let b = try m.get(t)
         let v = ByteBufferView(b)
         if v.count <= 4 {
@@ -60,7 +60,7 @@ public struct MappedAddress {
     }
 
     /// adds MAPPED-ADDRESS value to m as t attribute.
-    public func addToAs(_ m: Message, _ t: AttrType) throws {
+    public func addToAs(_ m: inout Message, _ t: AttrType) throws {
         let family =
             switch self.socketAddress {
             case SocketAddress.v4(_):
@@ -91,15 +91,15 @@ extension MappedAddress: CustomStringConvertible {
 
 extension MappedAddress: Setter {
     /// adds MAPPED-ADDRESS to message.
-    public func addTo(_ m: Message) throws {
-        try self.addToAs(m, attrMappedAddress)
+    public func addTo(_ m: inout Message) throws {
+        try self.addToAs(&m, attrMappedAddress)
     }
 }
 
 extension MappedAddress: Getter {
     /// decodes MAPPED-ADDRESS from message.
-    public mutating func getFrom(_ m: Message) throws {
-        try self.getFromAs(m, attrMappedAddress)
+    public mutating func getFrom(_ m: inout Message) throws {
+        try self.getFromAs(&m, attrMappedAddress)
     }
 }
 

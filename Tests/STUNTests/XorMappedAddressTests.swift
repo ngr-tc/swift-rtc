@@ -51,7 +51,7 @@ final class XorMappedAddressTests: XCTestCase {
     }
 
     func testXorMappedAddressGetFrom() throws {
-        let m = Message()
+        var m = Message()
         let transactionId = try Base64.decode(string: "jxhBARZwX+rsC6er")
         m.transactionId.rawValue = ByteBuffer(bytes: transactionId)
 
@@ -59,7 +59,7 @@ final class XorMappedAddressTests: XCTestCase {
         m.add(attrXorMappedAddress, ByteBufferView(addrValue))
 
         var addr = XorMappedAddress()
-        try addr.getFrom(m)
+        try addr.getFrom(&m)
         XCTAssertEqual(
             addr.socketAddress.ipAddress?.description,
             "213.141.156.236"
@@ -68,12 +68,12 @@ final class XorMappedAddressTests: XCTestCase {
 
         //"UnexpectedEOF"
         do {
-            let m = Message()
+            var m = Message()
             // {0, 1} is correct addr family.
             m.add(attrXorMappedAddress, ByteBufferView([0, 1, 3, 4]))
             var addr = XorMappedAddress()
             do {
-                let _ = try addr.getFrom(m)
+                let _ = try addr.getFrom(&m)
                 XCTAssertTrue(false, "should error")
             } catch STUNError.errUnexpectedEof {
                 XCTAssertTrue(true)
@@ -84,14 +84,14 @@ final class XorMappedAddressTests: XCTestCase {
 
         //"AttrOverflowErr"
         do {
-            let m = Message()
+            var m = Message()
             // {0, 1} is correct addr family.
             m.add(
                 attrXorMappedAddress,
                 ByteBufferView([0, 1, 3, 4, 5, 6, 7, 8, 9, 1, 1, 1, 1, 1, 2, 3, 4]))
             var addr = XorMappedAddress()
             do {
-                let _ = try addr.getFrom(m)
+                let _ = try addr.getFrom(&m)
                 XCTAssertTrue(false, "should error")
             } catch STUNError.errAttributeSizeOverflow {
                 XCTAssertTrue(true)
@@ -102,7 +102,7 @@ final class XorMappedAddressTests: XCTestCase {
     }
 
     func testXorMappedAddressGetFromInvalid() throws {
-        let m = Message()
+        var m = Message()
         let transactionId = try Base64.decode(string: "jxhBARZwX+rsC6er")
         m.transactionId.rawValue = ByteBuffer(bytes: transactionId)
 
@@ -110,24 +110,24 @@ final class XorMappedAddressTests: XCTestCase {
         var addr = XorMappedAddress()
 
         do {
-            let _ = try addr.getFrom(m)
+            let _ = try addr.getFrom(&m)
             XCTAssertTrue(false, "should error")
         } catch {
             XCTAssertTrue(true)
         }
 
         addr.socketAddress = expectedAddress
-        try addr.addTo(m)
+        try addr.addTo(&m)
         m.writeHeader()
 
-        let mRes = Message()
+        var mRes = Message()
         m.raw.setRepeatingByte(0x21, count: 1, at: 20 + 4 + 1)
         try m.decode()
 
         let _ = try mRes.readFrom(ByteBufferView(m.raw))
 
         do {
-            let _ = try addr.getFrom(m)
+            let _ = try addr.getFrom(&m)
             XCTAssertTrue(false, "should error")
         } catch {
             XCTAssertTrue(true)
@@ -135,38 +135,38 @@ final class XorMappedAddressTests: XCTestCase {
     }
 
     func testXorMappedAddressAddTo() throws {
-        let m = Message()
+        var m = Message()
         let transactionId = try Base64.decode(string: "jxhBARZwX+rsC6er")
         m.transactionId.rawValue = ByteBuffer(bytes: transactionId)
 
         let expectedAddress = try SocketAddress(ipAddress: "213.141.156.236", port: 21254)
         var addr = XorMappedAddress(socketAddress: expectedAddress)
 
-        try addr.addTo(m)
+        try addr.addTo(&m)
         m.writeHeader()
 
-        let mRes = Message()
+        var mRes = Message()
         let _ = try mRes.write(ByteBufferView(m.raw))
-        try addr.getFrom(mRes)
+        try addr.getFrom(&mRes)
         XCTAssertEqual(addr.socketAddress, expectedAddress)
     }
 
     func testXorMappedAddressAddToIpV6() throws {
-        let m = Message()
+        var m = Message()
         let transactionId = try Base64.decode(string: "jxhBARZwX+rsC6er")
         m.transactionId.rawValue = ByteBuffer(bytes: transactionId)
 
         let expectedAddress = try SocketAddress(ipAddress: "fe80::dc2b:44ff:fe20:6009", port: 21254)
         let addr = XorMappedAddress(socketAddress: expectedAddress)
 
-        try addr.addTo(m)
+        try addr.addTo(&m)
         m.writeHeader()
 
-        let mRes = Message()
+        var mRes = Message()
         let _ = try mRes.readFrom(ByteBufferView(m.raw))
 
         var gotAddr = XorMappedAddress()
-        let _ = try gotAddr.getFrom(m)
+        let _ = try gotAddr.getFrom(&m)
 
         XCTAssertEqual(gotAddr.socketAddress, expectedAddress)
     }

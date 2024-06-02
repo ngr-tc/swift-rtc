@@ -41,7 +41,7 @@ let errorCodeModulo: UInt16 = 100
 
 extension ErrorCodeAttribute: Setter {
     /// addTo adds ERROR-CODE to m.
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         try checkOverflow(
             attrErrorCode,
             self.reason.count + errorCodeReasonStart,
@@ -63,7 +63,7 @@ extension ErrorCodeAttribute: Setter {
 
 extension ErrorCodeAttribute: Getter {
     /// getFrom decodes ERROR-CODE from m. Reason is valid until m.Raw is valid.
-    public mutating func getFrom(_ m: Message) throws {
+    public mutating func getFrom(_ m: inout Message) throws {
         let b = try m.get(attrErrorCode)
         let v = ByteBufferView(b)
         if v.count < errorCodeReasonStart {
@@ -97,13 +97,13 @@ public struct ErrorCode: Equatable, Hashable {
 extension ErrorCode: Setter {
     // add_to adds ERROR-CODE with default reason to m. If there
     // is no default reason, returns ErrNoDefaultReason.
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         if let reason = errorReasons[self] {
             let a = ErrorCodeAttribute(
                 code: self,
                 reason: reason
             )
-            try a.addTo(m)
+            try a.addTo(&m)
         } else {
             throw STUNError.errNoDefaultReason
         }

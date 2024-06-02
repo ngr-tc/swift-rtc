@@ -49,7 +49,7 @@ public struct TextAttribute {
     }
 
     // gets t attribute from m and appends its value to reseted v.
-    public static func getFromAs(_ m: Message, _ attr: AttrType) throws -> Self {
+    public static func getFromAs(_ m: inout Message, _ attr: AttrType) throws -> Self {
         if attr != attrUsername && attr != attrRealm && attr != attrSoftware && attr != attrNonce {
             throw STUNError.errUnsupportedAttrType(attr)
         }
@@ -72,7 +72,7 @@ extension TextAttribute: CustomStringConvertible {
 extension TextAttribute: Setter {
     /// adds attribute with type t to m, checking maximum length. If max_len
     /// is less than 0, no check is performed.
-    public func addTo(_ m: Message) throws {
+    public func addTo(_ m: inout Message) throws {
         let maxLen =
             switch self.attr {
             case attrUsername:
@@ -94,7 +94,7 @@ extension TextAttribute: Setter {
 }
 
 extension TextAttribute: Getter {
-    public mutating func getFrom(_ m: Message) throws {
-        self = try TextAttribute.getFromAs(m, self.attr)
+    public mutating func getFrom(_ m: inout Message) throws {
+        self = try TextAttribute.getFromAs(&m, self.attr)
     }
 }

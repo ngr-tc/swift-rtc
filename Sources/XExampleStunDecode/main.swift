@@ -28,7 +28,7 @@ guard let encodedData = arguments.first else {
 
 let decodedData = try Base64.decode(string: encodedData)
 
-let message = Message()
+var message = Message()
 message.raw = ByteBuffer(bytes: decodedData)
 
 do {

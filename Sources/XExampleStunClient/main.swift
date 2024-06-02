@@ -48,7 +48,7 @@ private final class StunClientHandler: ChannelInboundHandler {
             client = ClientBuilder().build(
                 local: localAddress, remote: remoteAddress, proto: TransportProtocol.udp)
 
-            let msg = Message()
+            var msg = Message()
             try msg.build([TransactionId(), bindingRequest])
             try client?.handleWrite(msg)
             while let transmit = client?.pollTransmit() {
@@ -71,11 +71,11 @@ private final class StunClientHandler: ChannelInboundHandler {
             try client?.handleRead(byteBuffer)
 
             if let event = client?.pollEvent() {
-                guard case .success(let msg) = event.result else {
+                guard case .success(var msg) = event.result else {
                     return
                 }
                 var xorAddr = XorMappedAddress()
-                try xorAddr.getFrom(msg)
+                try xorAddr.getFrom(&msg)
                 print("Got response: \(xorAddr)")
             }
 

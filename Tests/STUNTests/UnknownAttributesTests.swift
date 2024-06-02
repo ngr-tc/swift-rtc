@@ -18,24 +18,24 @@ import XCTest
 
 final class UnknownAttributesTests: XCTestCase {
     func testUnknownAttributes() throws {
-        let m = Message()
+        var m = Message()
         let a = UnknownAttributes(attributes: [attrDontFragment, attrChannelNumber])
         XCTAssertEqual(a.description, "DONT-FRAGMENT, CHANNEL-NUMBER")
         XCTAssertEqual(UnknownAttributes().description, "<nil>")
 
-        try a.addTo(m)
+        try a.addTo(&m)
 
         //"GetFrom"
         do {
             var attrs = UnknownAttributes()
-            try attrs.getFrom(m)
+            try attrs.getFrom(&m)
             for i in 0..<a.attributes.count {
                 XCTAssertEqual(a.attributes[i], attrs.attributes[i])
             }
 
-            let mBlank = Message()
+            var mBlank = Message()
             do {
-                let _ = try attrs.getFrom(mBlank)
+                let _ = try attrs.getFrom(&mBlank)
                 XCTAssertTrue(false, "should error")
             } catch {
                 XCTAssertTrue(true)
@@ -43,7 +43,7 @@ final class UnknownAttributesTests: XCTestCase {
 
             mBlank.add(attrUnknownAttributes, ByteBufferView([1, 2, 3]))
             do {
-                let _ = try attrs.getFrom(mBlank)
+                let _ = try attrs.getFrom(&mBlank)
                 XCTAssertTrue(false, "should error")
             } catch {
                 XCTAssertTrue(true)

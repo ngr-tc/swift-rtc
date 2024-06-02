@@ -18,15 +18,15 @@ import XCTest
 
 final class TextAttributeTests: XCTestCase {
     func testSoftwareGetFrom() throws {
-        let m = Message()
+        var m = Message()
         let v = "Client v0.0.1"
         m.add(attrSoftware, ByteBufferView(ByteBuffer(string: v)))
         m.writeHeader()
 
-        let m2 = Message()
+        var m2 = Message()
 
         let _ = try m2.readFrom(ByteBufferView(m.raw))
-        let software = try TextAttribute.getFromAs(m, attrSoftware)
+        let software = try TextAttribute.getFromAs(&m, attrSoftware)
         XCTAssertEqual(software.description, v)
 
         let (sAttr, ok) = m.attributes.get(attrSoftware)
@@ -37,14 +37,14 @@ final class TextAttributeTests: XCTestCase {
     }
 
     func testSoftwareAddToInvalid() throws {
-        let m = Message()
+        var m = Message()
         let s = TextAttribute(
             attr: attrSoftware,
             text: String(repeating: " ", count: 1024)
         )
 
         do {
-            let _ = try s.addTo(m)
+            let _ = try s.addTo(&m)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errAttributeSizeOverflow {
             XCTAssertTrue(true)
@@ -53,7 +53,7 @@ final class TextAttributeTests: XCTestCase {
         }
 
         do {
-            let _ = try TextAttribute.getFromAs(m, attrSoftware)
+            let _ = try TextAttribute.getFromAs(&m, attrSoftware)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
@@ -64,12 +64,12 @@ final class TextAttributeTests: XCTestCase {
 
     func testSoftwareAddToRegression() throws {
         // s.add_to checked len(m.Raw) instead of len(s.Raw).
-        let m = Message()
+        var m = Message()
         let s = TextAttribute(
             attr: attrSoftware,
             text: String(repeating: " ", count: 100)
         )
-        let _ = try s.addTo(m)
+        let _ = try s.addTo(&m)
     }
 
     func testUsername() throws {
@@ -78,7 +78,7 @@ final class TextAttributeTests: XCTestCase {
             attr: attrUsername,
             text: username
         )
-        let m = Message()
+        var m = Message()
         m.writeHeader()
 
         //"Bad length"
@@ -88,7 +88,7 @@ final class TextAttributeTests: XCTestCase {
                 text: String(repeating: " ", count: 600)
             )
             do {
-                let _ = try badU.addTo(m)
+                let _ = try badU.addTo(&m)
                 XCTAssertTrue(false, "should error")
             } catch STUNError.errAttributeSizeOverflow {
                 XCTAssertTrue(true)
@@ -98,11 +98,11 @@ final class TextAttributeTests: XCTestCase {
         }
         //"add_to"
         do {
-            let _ = try u.addTo(m)
+            let _ = try u.addTo(&m)
 
             //"GetFrom"
             do {
-                let got = try TextAttribute.getFromAs(m, attrUsername)
+                let got = try TextAttribute.getFromAs(&m, attrUsername)
                 XCTAssertEqual(
                     got.description,
                     username,
@@ -110,8 +110,8 @@ final class TextAttributeTests: XCTestCase {
                 )
                 //"Not found"
                 do {
-                    let m = Message()
-                    let _ = try TextAttribute.getFromAs(m, attrUsername)
+                    var m = Message()
+                    let _ = try TextAttribute.getFromAs(&m, attrUsername)
                     XCTAssertTrue(false, "should error")
                 } catch STUNError.errAttributeNotFound {
                     XCTAssertTrue(true)
@@ -123,27 +123,27 @@ final class TextAttributeTests: XCTestCase {
 
         //"No allocations"
         do {
-            let m = Message()
+            var m = Message()
             m.writeHeader()
             let u = TextAttribute(
                 attr: attrUsername,
                 text: "username")
 
-            let _ = try u.addTo(m)
+            let _ = try u.addTo(&m)
             m.reset()
         }
     }
 
     func testRealmGetFrom() throws {
-        let m = Message()
+        var m = Message()
         let v = "realm"
         m.add(attrRealm, ByteBufferView(ByteBuffer(string: v)))
         m.writeHeader()
 
-        let m2 = Message()
+        var m2 = Message()
 
         do {
-            let _ = try TextAttribute.getFromAs(m2, attrRealm)
+            let _ = try TextAttribute.getFromAs(&m2, attrRealm)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
@@ -153,7 +153,7 @@ final class TextAttributeTests: XCTestCase {
 
         let _ = try m2.readFrom(ByteBufferView(m.raw))
 
-        let r = try TextAttribute.getFromAs(m, attrRealm)
+        let r = try TextAttribute.getFromAs(&m, attrRealm)
         XCTAssertEqual(r.description, v)
 
         let (r_attr, ok) = m.attributes.get(attrRealm)
@@ -164,13 +164,13 @@ final class TextAttributeTests: XCTestCase {
     }
 
     func testRealmAddToInvalid() throws {
-        let m = Message()
+        var m = Message()
         let s = TextAttribute(
             attr: attrRealm,
             text: String(repeating: " ", count: 1024)
         )
         do {
-            let _ = try s.addTo(m)
+            let _ = try s.addTo(&m)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errAttributeSizeOverflow {
             XCTAssertTrue(true)
@@ -179,7 +179,7 @@ final class TextAttributeTests: XCTestCase {
         }
 
         do {
-            let _ = try TextAttribute.getFromAs(m, attrRealm)
+            let _ = try TextAttribute.getFromAs(&m, attrRealm)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
@@ -189,15 +189,15 @@ final class TextAttributeTests: XCTestCase {
     }
 
     func testNonceGetFrom() throws {
-        let m = Message()
+        var m = Message()
         let v = "example.org"
         m.add(attrNonce, ByteBufferView(ByteBuffer(string: v)))
         m.writeHeader()
 
-        let m2 = Message()
+        var m2 = Message()
 
         do {
-            let _ = try TextAttribute.getFromAs(m2, attrNonce)
+            let _ = try TextAttribute.getFromAs(&m2, attrNonce)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
@@ -207,7 +207,7 @@ final class TextAttributeTests: XCTestCase {
 
         let _ = try m2.readFrom(ByteBufferView(m.raw))
 
-        let r = try TextAttribute.getFromAs(m, attrNonce)
+        let r = try TextAttribute.getFromAs(&m, attrNonce)
         XCTAssertEqual(r.description, v)
 
         let (r_attr, ok) = m.attributes.get(attrNonce)
@@ -218,13 +218,13 @@ final class TextAttributeTests: XCTestCase {
     }
 
     func testNonceAddToInvalid() throws {
-        let m = Message()
+        var m = Message()
         let s = TextAttribute(
             attr: attrNonce,
             text: String(repeating: " ", count: 1024)
         )
         do {
-            let _ = try s.addTo(m)
+            let _ = try s.addTo(&m)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errAttributeSizeOverflow {
             XCTAssertTrue(true)
@@ -233,7 +233,7 @@ final class TextAttributeTests: XCTestCase {
         }
 
         do {
-            let _ = try TextAttribute.getFromAs(m, attrNonce)
+            let _ = try TextAttribute.getFromAs(&m, attrNonce)
             XCTAssertTrue(false, "should error")
         } catch STUNError.errAttributeNotFound {
             XCTAssertTrue(true)
@@ -243,12 +243,12 @@ final class TextAttributeTests: XCTestCase {
     }
 
     func testNonceAddTo() throws {
-        let m = Message()
+        var m = Message()
         let n = TextAttribute(
             attr: attrNonce,
             text: "example.org"
         )
-        let _ = try n.addTo(m)
+        let _ = try n.addTo(&m)
 
         let v = try m.get(attrNonce)
         XCTAssertEqual(v, ByteBuffer(string: "example.org"))
