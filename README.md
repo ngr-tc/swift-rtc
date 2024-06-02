@@ -1,5 +1,5 @@
 <h1 align="center">
- <a href="https://ngr.tc"><img src="https://raw.githubusercontent.com/webrtc-rs/sfu-rs.github.io/master/res/rtc.png" alt="ngr.tc"></a>
+ <a href="https://ngr.tc"><img src="https://raw.githubusercontent.com/ngr-tc/ngr-tc.github.io/master/res/swiftRTC.png" alt="ngr.tc"></a>
  <br>
 </h1>
 <p align="center">
