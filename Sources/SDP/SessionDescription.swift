@@ -603,10 +603,10 @@ public struct SessionDescription: Equatable {
     /// ```
     public static func unmarshal(input: String) throws -> SessionDescription {
         let desc = SessionDescription()
-        let lexer = Lexer(desc: desc, input: input)
+        var lexer = Lexer(desc: desc, input: input)
         var state: StateFn? = StateFn(f: s1)
         while let s = state {
-            state = try (s.f)(lexer)
+            state = try (s.f)(&lexer)
         }
         return lexer.desc
     }
@@ -619,7 +619,7 @@ extension SessionDescription: CustomStringConvertible {
 
 }
 
-func s1(lexer: Lexer) throws -> StateFn? {
+func s1(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key != "v=" {
         throw SDPError.sdpInvalidSyntax(key)
@@ -627,7 +627,7 @@ func s1(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: unmarshalProtocolVersion)
 }
 
-func s2(lexer: Lexer) throws -> StateFn? {
+func s2(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key != "o=" {
         throw SDPError.sdpInvalidSyntax(key)
@@ -635,7 +635,7 @@ func s2(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: unmarshalOrigin)
 }
 
-func s3(lexer: Lexer) throws -> StateFn? {
+func s3(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key != "s=" {
         throw SDPError.sdpInvalidSyntax(key)
@@ -643,7 +643,7 @@ func s3(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: unmarshalSessionName)
 }
 
-func s4(lexer: Lexer) throws -> StateFn? {
+func s4(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     switch key {
     case "i=":
@@ -665,7 +665,7 @@ func s4(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s5(lexer: Lexer) throws -> StateFn? {
+func s5(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     switch key {
     case "b=":
@@ -677,7 +677,7 @@ func s5(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s6(lexer: Lexer) throws -> StateFn? {
+func s6(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     switch key {
     case "p=":
@@ -693,7 +693,7 @@ func s6(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s7(lexer: Lexer) throws -> StateFn? {
+func s7(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     switch key {
     case "u=":
@@ -713,7 +713,7 @@ func s7(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s8(lexer: Lexer) throws -> StateFn? {
+func s8(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     switch key {
     case "c=":
@@ -727,7 +727,7 @@ func s8(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s9(lexer: Lexer) throws -> StateFn? {
+func s9(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key.isEmpty {
         return nil
@@ -751,7 +751,7 @@ func s9(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s10(lexer: Lexer) throws -> StateFn? {
+func s10(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     switch key {
     case "e=":
@@ -769,7 +769,7 @@ func s10(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s11(lexer: Lexer) throws -> StateFn? {
+func s11(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key.isEmpty {
         return nil
@@ -785,7 +785,7 @@ func s11(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s12(lexer: Lexer) throws -> StateFn? {
+func s12(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key.isEmpty {
         return nil
@@ -809,7 +809,7 @@ func s12(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s13(lexer: Lexer) throws -> StateFn? {
+func s13(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key.isEmpty {
         return nil
@@ -827,7 +827,7 @@ func s13(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s14(lexer: Lexer) throws -> StateFn? {
+func s14(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key.isEmpty {
         return nil
@@ -855,7 +855,7 @@ func s14(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s15(lexer: Lexer) throws -> StateFn? {
+func s15(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key.isEmpty {
         return nil
@@ -880,7 +880,7 @@ func s15(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func s16(lexer: Lexer) throws -> StateFn? {
+func s16(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key.isEmpty {
         return nil
@@ -905,7 +905,7 @@ func s16(lexer: Lexer) throws -> StateFn? {
     }
 }
 
-func unmarshalProtocolVersion(lexer: Lexer) throws -> StateFn? {
+func unmarshalProtocolVersion(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     guard let version = UInt32(value) else {
@@ -921,7 +921,7 @@ func unmarshalProtocolVersion(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s2)
 }
 
-func unmarshalOrigin(lexer: Lexer) throws -> StateFn? {
+func unmarshalOrigin(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
@@ -962,37 +962,37 @@ func unmarshalOrigin(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s3)
 }
 
-func unmarshalSessionName(lexer: Lexer) throws -> StateFn? {
+func unmarshalSessionName(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.sessionName = value
     return StateFn(f: s4)
 }
 
-func unmarshalSessionInformation(lexer: Lexer) throws -> StateFn? {
+func unmarshalSessionInformation(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.sessionInformation = value
     return StateFn(f: s7)
 }
 
-func unmarshalUri(lexer: Lexer) throws -> StateFn? {
+func unmarshalUri(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.uri = value
     return StateFn(f: s10)
 }
 
-func unmarshalEmail(lexer: Lexer) throws -> StateFn? {
+func unmarshalEmail(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.emailAddress = value
     return StateFn(f: s6)
 }
 
-func unmarshalPhone(lexer: Lexer) throws -> StateFn? {
+func unmarshalPhone(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.phoneNumber = value
     return StateFn(f: s8)
 }
 
-func unmarshalSessionConnectionInformation(lexer: Lexer) throws -> StateFn? {
+func unmarshalSessionConnectionInformation(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.connectionInformation = try unmarshalConnectionInformation(value: value)
     return StateFn(f: s5)
@@ -1034,7 +1034,7 @@ func unmarshalConnectionInformation(value: String) throws -> ConnectionInformati
     )
 }
 
-func unmarshalSessionBandwidth(lexer: Lexer) throws -> StateFn? {
+func unmarshalSessionBandwidth(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.bandwidth.append(try unmarshalBandwidth(value: value))
     return StateFn(f: s5)
@@ -1068,7 +1068,7 @@ func unmarshalBandwidth(value: String) throws -> Bandwidth {
         bandwidth: bandwidth)
 }
 
-func unmarshalTiming(lexer: Lexer) throws -> StateFn? {
+func unmarshalTiming(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
@@ -1091,7 +1091,7 @@ func unmarshalTiming(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s9)
 }
 
-func unmarshalRepeatTimes(lexer: Lexer) throws -> StateFn? {
+func unmarshalRepeatTimes(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
@@ -1119,7 +1119,7 @@ func unmarshalRepeatTimes(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s9)
 }
 
-func unmarshalTimeZones(lexer: Lexer) throws -> StateFn? {
+func unmarshalTimeZones(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     // These fields are transimitted in pairs
@@ -1145,13 +1145,13 @@ func unmarshalTimeZones(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s13)
 }
 
-func unmarshalSessionEncryptionKey(lexer: Lexer) throws -> StateFn? {
+func unmarshalSessionEncryptionKey(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
     lexer.desc.encryptionKey = value
     return StateFn(f: s11)
 }
 
-func unmarshalSessionAttribute(lexer: Lexer) throws -> StateFn? {
+func unmarshalSessionAttribute(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     let fields = value.split(separator: ":", maxSplits: 1).map { String($0) }
@@ -1170,7 +1170,7 @@ func unmarshalSessionAttribute(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s11)
 }
 
-func unmarshalMediaDescription(lexer: Lexer) throws -> StateFn? {
+func unmarshalMediaDescription(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
@@ -1242,7 +1242,7 @@ func unmarshalMediaDescription(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s12)
 }
 
-func unmarshalMediaTitle(lexer: Lexer) throws -> StateFn? {
+func unmarshalMediaTitle(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     if lexer.desc.mediaDescriptions.isEmpty {
@@ -1253,7 +1253,7 @@ func unmarshalMediaTitle(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s16)
 }
 
-func unmarshalMediaConnectionInformation(lexer: Lexer) throws -> StateFn? {
+func unmarshalMediaConnectionInformation(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     if lexer.desc.mediaDescriptions.isEmpty {
@@ -1266,7 +1266,7 @@ func unmarshalMediaConnectionInformation(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s15)
 }
 
-func unmarshalMediaBandwidth(lexer: Lexer) throws -> StateFn? {
+func unmarshalMediaBandwidth(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     if lexer.desc.mediaDescriptions.isEmpty {
@@ -1279,7 +1279,7 @@ func unmarshalMediaBandwidth(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s15)
 }
 
-func unmarshalMediaEncryptionKey(lexer: Lexer) throws -> StateFn? {
+func unmarshalMediaEncryptionKey(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     if lexer.desc.mediaDescriptions.isEmpty {
@@ -1290,7 +1290,7 @@ func unmarshalMediaEncryptionKey(lexer: Lexer) throws -> StateFn? {
     return StateFn(f: s14)
 }
 
-func unmarshalMediaAttribute(lexer: Lexer) throws -> StateFn? {
+func unmarshalMediaAttribute(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     let fields = value.split(separator: ":", maxSplits: 1).map { String($0) }

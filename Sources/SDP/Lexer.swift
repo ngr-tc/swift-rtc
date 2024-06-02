@@ -14,7 +14,7 @@
 
 public let endLine: String = "\r\n"
 
-class Lexer {
+struct Lexer {
     var desc: SessionDescription
     let input: String
     var index: String.Index
@@ -25,14 +25,14 @@ class Lexer {
         self.index = input.startIndex
     }
 
-    private func nextToken() -> Character? {
+    private mutating func nextToken() -> Character? {
         guard index < input.endIndex else { return nil }
         let token = input[index]
         index = input.index(after: index)
         return token
     }
 
-    private func skipWhitespace() {
+    private mutating func skipWhitespace() {
         while let char = peek(), char.isWhitespace {
             index = input.index(after: index)
         }
@@ -43,12 +43,12 @@ class Lexer {
         return input[index]
     }
 
-    private func consume() {
+    private mutating func consume() {
         guard index < input.endIndex else { return }
         index = input.index(after: index)
     }
 
-    private func readUntil(delim: Character) -> String {
+    private mutating func readUntil(delim: Character) -> String {
         var string = ""
         while let char = nextToken() {
             string.append(char)
@@ -57,7 +57,7 @@ class Lexer {
         return string
     }
 
-    func readKey() throws -> String {
+    mutating func readKey() throws -> String {
         while let char = peek() {
             if char == "\n" || char == "\r" || char == "\r\n" {
                 consume()
@@ -72,7 +72,7 @@ class Lexer {
         return ""
     }
 
-    private func readLine() -> String {
+    private mutating func readLine() -> String {
         var string = ""
         while let char = nextToken() {
             if char == "\n" || char == "\r\n" { break }
@@ -81,13 +81,13 @@ class Lexer {
         return String(string.trimmingNewline())
     }
 
-    func readValue() throws -> String {
+    mutating func readValue() throws -> String {
         return readLine()
     }
 }
 
 struct StateFn {
-    var f: (Lexer) throws -> StateFn?
+    var f: (inout Lexer) throws -> StateFn?
 }
 
 func indexOf(element: String, dataSet: [String]) -> Int? {
