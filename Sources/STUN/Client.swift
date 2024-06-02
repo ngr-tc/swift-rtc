@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 import NIOCore
-import Utils
+import Shared
 
 let defaultTimeoutRate: TimeAmount = TimeAmount.milliseconds(5)
 let defaultRto: TimeAmount = TimeAmount.milliseconds(300)

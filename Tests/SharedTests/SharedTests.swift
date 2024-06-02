@@ -14,7 +14,7 @@ import NIOCore
 //===----------------------------------------------------------------------===//
 import XCTest
 
-@testable import Utils
+@testable import Shared
 
 final class UtilsTests: XCTestCase {
     func testTrimmingWhitespace() throws {

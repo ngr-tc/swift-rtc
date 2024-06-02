@@ -13,7 +13,7 @@ import NIOCore
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
-import Utils
+import Shared
 
 /// Interfaces that are implemented by message attributes, shorthands for them,
 /// or helpers for message fields as type or transaction id.

@@ -31,9 +31,9 @@ let package = Package(
         .library(name: "RTP", targets: ["RTP"]),
         .library(name: "SCTP", targets: ["SCTP"]),
         .library(name: "SDP", targets: ["SDP"]),
+        .library(name: "Shared", targets: ["Shared"]),
         .library(name: "SRTP", targets: ["SRTP"]),
         .library(name: "STUN", targets: ["STUN"]),
-        .library(name: "Utils", targets: ["Utils"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
@@ -52,22 +52,22 @@ let package = Package(
         .target(
             name: "SDP",
             dependencies: [
-                "Utils",
+                "Shared",
                 .product(name: "NIOCore", package: "swift-nio"),
+            ]),
+        .target(name: "Shared",
+            dependencies: [
+                .product(name: "NIOCore", package: "swift-nio")
             ]),
         .target(name: "SRTP"),
         .target(name: "STUN",
             dependencies: [
-                "Utils",
+                "Shared",
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "WebURL", package: "swift-url"),
                 .product(name: "CRC", package: "swift-hash"),
                 .product(name: "ExtrasBase64", package: "swift-extras-base64"),
-            ]),
-        .target(name: "Utils",
-            dependencies: [
-                .product(name: "NIOCore", package: "swift-nio")
             ]),
 
         // MARK: - Tests
@@ -77,19 +77,19 @@ let package = Package(
         .testTarget(name: "RTPTests", dependencies: ["RTP"]),
         .testTarget(name: "SCTPTests", dependencies: ["SCTP"]),
         .testTarget(name: "SDPTests", dependencies: ["SDP"]),
+        .testTarget(name: "SharedTests", dependencies: ["Shared"]),
         .testTarget(name: "SRTPTests", dependencies: ["SRTP"]),
         .testTarget(name: "STUNTests", 
             dependencies: [
                 "STUN",
                 .product(name: "ExtrasBase64", package: "swift-extras-base64"),
             ]),
-        .testTarget(name: "UtilsTests", dependencies: ["Utils"]),
 
         // MARK: - Examples
         .executableTarget(name: "XExampleStunClient",
             dependencies: [
                 "STUN",
-                "Utils",
+                "Shared",
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
             ]

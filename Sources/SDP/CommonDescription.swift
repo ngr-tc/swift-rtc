@@ -11,7 +11,7 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
-import Utils
+import Shared
 
 /// Information describes the "i=" field which provides textual information
 /// about the session.

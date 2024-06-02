@@ -14,7 +14,7 @@
 import NIOCore
 import NIOPosix
 import STUN
-import Utils
+import Shared
 
 // swift run XExampleStunClient stun.l.google.com 19302 0
 // Local address: 0.0.0.0:58998

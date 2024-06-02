@@ -38,7 +38,7 @@
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/uncheck.png">ICE
     <br>
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/check.png">SDP
-    <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/check.png">Utils
+    <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/check.png">Shared
 </p>
 <p align="center">
  <img src="https://raw.githubusercontent.com/webrtc-rs/sfu-rs.github.io/master/res/rtc_crates_dep_graph.png" alt="RTC Crates Dependency Graph">
