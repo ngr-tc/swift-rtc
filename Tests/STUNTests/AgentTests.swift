@@ -18,8 +18,8 @@ import XCTest
 
 final class AgentTests: XCTestCase {
     func testAgentProcessInTransaction() throws {
-        let m = Message()
-        let a = Agent()
+        var m = Message()
+        var a = Agent()
         m.transactionId = TransactionId([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
         try a.start(m.transactionId, NIODeadline.now())
         try a.process(m)
@@ -36,8 +36,8 @@ final class AgentTests: XCTestCase {
     }
 
     func testAgentProcess() throws {
-        let m = Message()
-        let a = Agent()
+        var m = Message()
+        var a = Agent()
         m.transactionId = TransactionId([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
         try a.process(m)
         try a.close()
@@ -62,7 +62,7 @@ final class AgentTests: XCTestCase {
     }
 
     func testAgentStart() throws {
-        let a = Agent()
+        var a = Agent()
         let id1 = TransactionId()
         let deadline = NIODeadline.now() + TimeAmount.seconds(3600)
         try a.start(id1, deadline)
@@ -87,7 +87,7 @@ final class AgentTests: XCTestCase {
     }
 
     func testAgentStop() throws {
-        let a = Agent()
+        var a = Agent()
 
         do {
             try a.stop(TransactionId())

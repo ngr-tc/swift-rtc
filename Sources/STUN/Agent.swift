@@ -54,7 +54,7 @@ public enum ClientAgent {
 
 /// Agent is low-level abstraction over transaction list that
 /// handles concurrency and time outs (via Collect call).
-public class Agent {
+public struct Agent {
     /// transactions is map of transactions that are currently
     /// in progress. Event handling is done in such way when
     /// transaction is unregistered before AgentTransaction access,
@@ -73,7 +73,7 @@ public class Agent {
         self.eventsQueue = CircularBuffer()
     }
 
-    public func handleEvent(_ clientAgent: ClientAgent) throws {
+    public mutating func handleEvent(_ clientAgent: ClientAgent) throws {
         switch clientAgent {
         case .process(let message):
             try self.process(message)
@@ -98,12 +98,12 @@ public class Agent {
         return deadline
     }
 
-    public func pollEvent() -> Event? {
+    public mutating func pollEvent() -> Event? {
         self.eventsQueue.popFirst()
     }
 
     /// process incoming message, synchronously passing it to handler.
-    func process(_ message: Message) throws {
+    mutating func process(_ message: Message) throws {
         if self.closed {
             throw STUNError.errAgentClosed
         }
@@ -119,7 +119,7 @@ public class Agent {
 
     /// close terminates all transactions with ErrAgentClosed and renders Agent to
     /// closed state.
-    func close() throws {
+    mutating func close() throws {
         if self.closed {
             throw STUNError.errAgentClosed
         }
@@ -139,7 +139,7 @@ public class Agent {
     /// Could return ErrAgentClosed, ErrTransactionExists.
     ///
     /// Agent handler is guaranteed to be eventually called.
-    func start(_ id: TransactionId, _ deadline: NIODeadline) throws {
+    mutating func start(_ id: TransactionId, _ deadline: NIODeadline) throws {
         if self.closed {
             throw STUNError.errAgentClosed
         }
@@ -152,7 +152,7 @@ public class Agent {
 
     /// stop stops transaction by id with ErrTransactionStopped, blocking
     /// until handler returns.
-    func stop(_ id: TransactionId) throws {
+    mutating func stop(_ id: TransactionId) throws {
         if self.closed {
             throw STUNError.errAgentClosed
         }
@@ -174,7 +174,7 @@ public class Agent {
     /// Will return ErrAgentClosed if agent is already closed.
     ///
     /// It is safe to call Collect concurrently but makes no sense.
-    func collect(_ deadline: NIODeadline) throws {
+    mutating func collect(_ deadline: NIODeadline) throws {
         if self.closed {
             // Doing nothing if agent is closed.
             // All transactions should be already closed

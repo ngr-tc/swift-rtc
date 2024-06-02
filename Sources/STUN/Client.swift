@@ -116,7 +116,7 @@ public struct ClientBuilder {
 }
 
 /// Client simulates "connection" to STUN server.
-public class Client {
+public struct Client {
     var local: SocketAddress
     var remote: SocketAddress
     var proto: TransportProtocol
@@ -147,11 +147,11 @@ public class Client {
     /// - a call was made to `handle_read`
     /// - a call was made to `handle_write`
     /// - a call was made to `handle_timeout`
-    public func pollTransmit() -> Transmit<ByteBuffer>? {
+    public mutating func pollTransmit() -> Transmit<ByteBuffer>? {
         self.transmits.popFirst()
     }
 
-    public func pollEvent() -> Event? {
+    public mutating func pollEvent() -> Event? {
         while let event = self.agent.pollEvent() {
             guard var ct = self.transactions.removeValue(forKey: event.id) else {
                 continue
@@ -197,13 +197,13 @@ public class Client {
         return nil
     }
 
-    public func handleRead(_ buf: ByteBufferView) throws {
+    public mutating func handleRead(_ buf: ByteBufferView) throws {
         let msg = Message()
         let _ = try msg.readFrom(buf)
         try self.agent.handleEvent(ClientAgent.process(msg))
     }
 
-    public func handleWrite(_ m: Message) throws {
+    public mutating func handleWrite(_ m: Message) throws {
         if self.settings.closed {
             throw STUNError.errClientClosed
         }
@@ -239,11 +239,11 @@ public class Client {
         return self.agent.pollTimeout()
     }
 
-    public func handleTimeout(_ now: NIODeadline) throws {
+    public mutating func handleTimeout(_ now: NIODeadline) throws {
         try self.agent.handleEvent(ClientAgent.collect(now))
     }
 
-    public func handleClose() throws {
+    public mutating func handleClose() throws {
         if self.settings.closed {
             throw STUNError.errClientClosed
         }
