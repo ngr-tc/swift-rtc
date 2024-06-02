@@ -33,7 +33,7 @@
     <br>
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/uncheck.png">DTLS
     <br>
-    <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/uncheck.png">STUN
+    <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/check.png">STUN
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/uncheck.png">TURN
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/uncheck.png">ICE
     <br>
