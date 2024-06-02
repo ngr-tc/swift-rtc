@@ -21,7 +21,7 @@ import STUN
 // just to get an ArraySlice<String> from [String]
 let arguments = CommandLine.arguments.dropFirst()
 
-let encodedData = arguments.first!
+let encodedData = arguments.first ?? "AAEAHCESpEJML0JTQWsyVXkwcmGALwAWaHR0cDovL2xvY2FsaG9zdDozMDAwLwAA"
 
 let decodedData = try Base64.decode(string: encodedData)
 
