@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-public enum STUNError: Error, Equatable {
+public enum StunError: Error, Equatable {
     //STUN errors
     case errAttributeNotFound
     case errTransactionStopped
@@ -47,7 +47,7 @@ public enum STUNError: Error, Equatable {
     case errInvalidString
 }
 
-extension STUNError: CustomStringConvertible {
+extension StunError: CustomStringConvertible {
     public var description: String {
         switch self {
         case .errAttributeNotFound:

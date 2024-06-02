@@ -33,26 +33,26 @@ public struct Uri: Equatable {
     public static func parseUri(_ raw: String) throws -> Self {
         // work around for url crate
         if raw.contains("//") {
-            throw STUNError.errInvalidUrl
+            throw StunError.errInvalidUrl
         }
 
         var s = raw
         if let p = s.firstIndex(of: ":") {
             s.replaceSubrange(p..<s.index(after: p), with: "://")
         } else {
-            throw STUNError.errSchemeType
+            throw StunError.errSchemeType
         }
 
         guard let url = WebURL(s) else {
-            throw STUNError.errInvalidUrl
+            throw StunError.errInvalidUrl
         }
 
         if url.scheme != stunScheme && url.scheme != stunSchemeSecure {
-            throw STUNError.errSchemeType
+            throw StunError.errSchemeType
         }
 
         guard let hostname = url.hostname else {
-            throw STUNError.errHost
+            throw StunError.errHost
         }
 
         let host = hostname.trimmingWhitespace()

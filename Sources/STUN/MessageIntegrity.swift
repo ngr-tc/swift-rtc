@@ -83,7 +83,7 @@ public struct MessageIntegrity {
             messageHeaderSize + m.length - (attributeHeaderSize + messageIntegritySize)
         // data before integrity attribute
         guard let b = m.raw.viewBytes(at: 0, length: startOfHmac) else {
-            throw STUNError.errBufferTooSmall
+            throw StunError.errBufferTooSmall
         }
         let expected = newHmac(key: ByteBufferView(self.rawValue), message: b)
         m.length = length
@@ -123,7 +123,7 @@ extension MessageIntegrity: Setter {
             // Message should not contain FINGERPRINT attribute
             // before MESSAGE-INTEGRITY.
             if a.typ == attrFingerprint {
-                throw STUNError.errFingerprintBeforeIntegrity
+                throw StunError.errFingerprintBeforeIntegrity
             }
         }
         // The text used as input to HMAC is the STUN message,

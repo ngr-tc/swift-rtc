@@ -51,13 +51,13 @@ public struct TextAttribute {
     // gets t attribute from m and appends its value to reseted v.
     public static func getFromAs(_ m: inout Message, _ attr: AttrType) throws -> Self {
         if attr != attrUsername && attr != attrRealm && attr != attrSoftware && attr != attrNonce {
-            throw STUNError.errUnsupportedAttrType(attr)
+            throw StunError.errUnsupportedAttrType(attr)
         }
 
         let a = try m.get(attr)
         let aView = ByteBufferView(a)
         guard let text = a.getString(at: 0, length: aView.count) else {
-            throw STUNError.errInvalidTextAttribute
+            throw StunError.errInvalidTextAttribute
         }
         return TextAttribute(attr: attr, text: text)
     }
@@ -84,7 +84,7 @@ extension TextAttribute: Setter {
         case attrNonce:
             maxLen = maxNonceB
         default:
-            throw STUNError.errUnsupportedAttrType(self.attr)
+            throw StunError.errUnsupportedAttrType(self.attr)
         }
         let text = ByteBuffer(string: self.text)
         let textView = ByteBufferView(text)

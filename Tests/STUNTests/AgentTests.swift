@@ -54,7 +54,7 @@ final class AgentTests: XCTestCase {
         do {
             try a.process(m)
             XCTAssertTrue(false)
-        } catch STUNError.errAgentClosed {
+        } catch StunError.errAgentClosed {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false)
@@ -69,7 +69,7 @@ final class AgentTests: XCTestCase {
 
         do {
             try a.start(id1, deadline)
-        } catch STUNError.errTransactionExists {
+        } catch StunError.errTransactionExists {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false)
@@ -79,7 +79,7 @@ final class AgentTests: XCTestCase {
         let id2 = TransactionId()
         do {
             try a.start(id2, deadline)
-        } catch STUNError.errAgentClosed {
+        } catch StunError.errAgentClosed {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false)
@@ -91,7 +91,7 @@ final class AgentTests: XCTestCase {
 
         do {
             try a.stop(TransactionId())
-        } catch STUNError.errTransactionNotExists {
+        } catch StunError.errTransactionNotExists {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false)
@@ -103,7 +103,7 @@ final class AgentTests: XCTestCase {
         try a.stop(id)
 
         if case .failure(let err) = a.pollEvent()!.result {
-            XCTAssertEqual(err, STUNError.errTransactionStopped)
+            XCTAssertEqual(err, StunError.errTransactionStopped)
         } else {
             XCTAssertTrue(false)
         }
@@ -112,7 +112,7 @@ final class AgentTests: XCTestCase {
 
         do {
             try a.close()
-        } catch STUNError.errAgentClosed {
+        } catch StunError.errAgentClosed {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false)
@@ -120,7 +120,7 @@ final class AgentTests: XCTestCase {
 
         do {
             try a.stop(TransactionId())
-        } catch STUNError.errAgentClosed {
+        } catch StunError.errAgentClosed {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false)

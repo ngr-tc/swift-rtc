@@ -57,7 +57,7 @@ final class MessageIntegrityTests: XCTestCase {
             do {
                 try i.check(&dm)
                 XCTAssertTrue(false, "should error")
-            } catch STUNError.errIntegrityMismatch {
+            } catch StunError.errIntegrityMismatch {
                 XCTAssertTrue(true)
             } catch {
                 XCTAssertTrue(false, "should errIntegrityMismatch")
@@ -80,7 +80,7 @@ final class MessageIntegrityTests: XCTestCase {
 
         do {
             try i.check(&m)
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeNotFound")
@@ -95,7 +95,7 @@ final class MessageIntegrityTests: XCTestCase {
 
         do {
             try i.check(&m)
-        } catch STUNError.errIntegrityMismatch {
+        } catch StunError.errIntegrityMismatch {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errIntegrityMismatch")
@@ -118,7 +118,7 @@ final class MessageIntegrityTests: XCTestCase {
         do {
             try i.addTo(&m)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errFingerprintBeforeIntegrity {
+        } catch StunError.errFingerprintBeforeIntegrity {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errFingerprintBeforeIntegrity")

@@ -191,27 +191,27 @@ public struct ExtMap: Equatable {
     public static func unmarshal(line: String) throws -> ExtMap {
         let parts = line.trimmingWhitespace().split(separator: ":", maxSplits: 1)
         if parts.count != 2 {
-            throw SDPError.parseExtMap(line)
+            throw SdpError.parseExtMap(line)
         }
 
         let fields = parts[1].split(separator: " ", omittingEmptySubsequences: true)
         if fields.count < 2 {
-            throw SDPError.parseExtMap(line)
+            throw SdpError.parseExtMap(line)
         }
 
         let valdir = fields[0].split(separator: "/")
         guard let value = Int(valdir[0]) else {
-            throw SDPError.parseExtMap(line)
+            throw SdpError.parseExtMap(line)
         }
         if value < 1 || value > 246 {
-            throw SDPError.parseExtMap("\(valdir[0]) -- extmap key must be in the range 1-246")
+            throw SdpError.parseExtMap("\(valdir[0]) -- extmap key must be in the range 1-246")
         }
 
         var direction: Direction? = nil
         if valdir.count == 2 {
             direction = Direction(rawValue: String(valdir[1]))
             if direction == nil {
-                throw SDPError.parseExtMap("unknown direction from \(valdir[1])")
+                throw SdpError.parseExtMap("unknown direction from \(valdir[1])")
             }
         }
 
@@ -286,15 +286,15 @@ func parseRtpMap(rtpMap: String) throws -> Codec {
     // a=rtpmap:<payload type> <encoding name>/<clock rate>[/<encoding parameters>]
     let components = rtpMap.split(separator: " ", omittingEmptySubsequences: true)
     if components.count != 2 {
-        throw SDPError.codecNotFound
+        throw SdpError.codecNotFound
     }
 
     let ptSplit = components[0].split(separator: ":")
     if ptSplit.count != 2 {
-        throw SDPError.missingColon
+        throw SdpError.missingColon
     }
     guard let payloadType = UInt8(ptSplit[1]) else {
-        throw SDPError.parseInt(String(ptSplit[1]), rtpMap)
+        throw SdpError.parseInt(String(ptSplit[1]), rtpMap)
     }
 
     let split = components[1].split(separator: "/")
@@ -302,7 +302,7 @@ func parseRtpMap(rtpMap: String) throws -> Codec {
     let clockRate: UInt32 = try {
         if split.count > 1 {
             guard let clockRate = UInt32(split[1]) else {
-                throw SDPError.parseInt(String(split[1]), rtpMap)
+                throw SdpError.parseInt(String(split[1]), rtpMap)
             }
             return clockRate
         } else {
@@ -325,17 +325,17 @@ func parseFmtp(fmtp: String) throws -> Codec {
     // a=fmtp:<format> <format specific parameters>
     let components = fmtp.split(separator: " ", omittingEmptySubsequences: true)
     if components.count != 2 {
-        throw SDPError.missingWhitespace
+        throw SdpError.missingWhitespace
     }
 
     let fmtp = String(components[1])
 
     let split = components[0].split(separator: ":")
     if split.count != 2 {
-        throw SDPError.missingColon
+        throw SdpError.missingColon
     }
     guard let payloadType = UInt8(split[1]) else {
-        throw SDPError.parseInt(String(split[1]), fmtp)
+        throw SdpError.parseInt(String(split[1]), fmtp)
     }
 
     return Codec(
@@ -351,15 +351,15 @@ func parseRtcpFb(rtcpFb: String) throws -> Codec {
     // a=ftcp-fb:<payload type> <RTCP feedback type> [<RTCP feedback parameter>]
     let components = rtcpFb.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
     if components.count != 2 {
-        throw SDPError.missingWhitespace
+        throw SdpError.missingWhitespace
     }
 
     let ptSplit = components[0].split(separator: ":")
     if ptSplit.count != 2 {
-        throw SDPError.missingColon
+        throw SdpError.missingColon
     }
     guard let payloadType = UInt8(ptSplit[1]) else {
-        throw SDPError.parseInt(String(ptSplit[1]), rtcpFb)
+        throw SdpError.parseInt(String(ptSplit[1]), rtcpFb)
     }
 
     return Codec(

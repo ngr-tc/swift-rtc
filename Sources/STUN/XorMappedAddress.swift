@@ -62,11 +62,11 @@ public struct XorMappedAddress {
             family = familyIpV6
             ipLen = ipV6Len
         default:
-            throw STUNError.errInvalidFamilyIpValue(0)
+            throw StunError.errInvalidFamilyIpValue(0)
         }
 
         guard let port = self.socketAddress.port else {
-            throw STUNError.errInvalidFamilyIpValue(0)
+            throw StunError.errInvalidFamilyIpValue(0)
         }
 
         var xorValue = ByteBuffer()
@@ -91,12 +91,12 @@ public struct XorMappedAddress {
         let b = try m.get(t)
         let v = ByteBufferView(b)
         if v.count <= 4 {
-            throw STUNError.errUnexpectedEof
+            throw StunError.errUnexpectedEof
         }
 
         let family = UInt16.fromBeBytes(v[0], v[1])
         if family != familyIpV6 && family != familyIpV4 {
-            throw STUNError.errInvalidFamilyIpValue(family)
+            throw StunError.errInvalidFamilyIpValue(family)
         }
 
         let ipLen = family == familyIpV4 ? ipV4Len : ipV6Len

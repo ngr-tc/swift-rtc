@@ -67,7 +67,7 @@ extension ErrorCodeAttribute: Getter {
         let b = try m.get(attrErrorCode)
         let v = ByteBufferView(b)
         if v.count < errorCodeReasonStart {
-            throw STUNError.errUnexpectedEof
+            throw StunError.errUnexpectedEof
         }
 
         let classByte = UInt16(v[errorCodeClassByte])
@@ -79,7 +79,7 @@ extension ErrorCodeAttribute: Getter {
         {
             self.reason = reason
         } else {
-            throw STUNError.errInvalidString
+            throw StunError.errInvalidString
         }
     }
 }
@@ -104,7 +104,7 @@ extension ErrorCode: Setter {
             )
             try a.addTo(&m)
         } else {
-            throw STUNError.errNoDefaultReason
+            throw StunError.errNoDefaultReason
         }
     }
 }

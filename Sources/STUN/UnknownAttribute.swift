@@ -56,7 +56,7 @@ extension UnknownAttributes: Getter {
         let b = try m.get(attrUnknownAttributes)
         let v = ByteBufferView(b)
         if v.count % attrTypeSize != 0 {
-            throw STUNError.errBadUnknownAttrsSize
+            throw StunError.errBadUnknownAttrsSize
         }
         self.attributes = []
         var first = 0

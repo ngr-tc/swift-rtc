@@ -40,12 +40,12 @@ public struct MappedAddress {
         let b = try m.get(t)
         let v = ByteBufferView(b)
         if v.count <= 4 {
-            throw STUNError.errUnexpectedEof
+            throw StunError.errUnexpectedEof
         }
 
         let family = UInt16.fromBeBytes(v[0], v[1])
         if family != familyIpV6 && family != familyIpV4 {
-            throw STUNError.errInvalidFamilyIpValue(family)
+            throw StunError.errInvalidFamilyIpValue(family)
         }
         let port = UInt16.fromBeBytes(v[2], v[3])
 
@@ -63,11 +63,11 @@ public struct MappedAddress {
         case SocketAddress.v6(_):
             family = familyIpV6
         default:
-            throw STUNError.errInvalidFamilyIpValue(0)
+            throw StunError.errInvalidFamilyIpValue(0)
         }
 
         guard let port = self.socketAddress.port else {
-            throw STUNError.errInvalidFamilyIpValue(0)
+            throw StunError.errInvalidFamilyIpValue(0)
         }
         var value: ByteBuffer = ByteBuffer()
         value.writeBytes(family.toBeBytes())

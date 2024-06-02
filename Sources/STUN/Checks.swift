@@ -16,7 +16,7 @@ import NIOCore
 /// check_size returns ErrAttrSizeInvalid if got is not equal to expected.
 public func checkSize(_ at: AttrType, got: Int, expected: Int) throws {
     if got != expected {
-        throw STUNError.errAttributeSizeInvalid
+        throw StunError.errAttributeSizeInvalid
     }
 }
 
@@ -27,20 +27,20 @@ public func checkSize(_ at: AttrType, got: Int, expected: Int) throws {
 
 func checkHmac(got: ByteBufferView, expected: ByteBufferView) throws {
     if got != expected {
-        throw STUNError.errIntegrityMismatch
+        throw StunError.errIntegrityMismatch
     }
 }
 
 func checkFingerprint(got: UInt32, expected: UInt32) throws {
     if got != expected {
-        throw STUNError.errFingerprintMismatch
+        throw StunError.errFingerprintMismatch
     }
 }
 
 // checkOverflow returns ErrAttributeSizeOverflow if got is bigger that max.
 public func checkOverflow(_ at: AttrType, _ got: Int, _ max: Int) throws {
     if got > max {
-        throw STUNError.errAttributeSizeOverflow
+        throw StunError.errAttributeSizeOverflow
     }
 }
 

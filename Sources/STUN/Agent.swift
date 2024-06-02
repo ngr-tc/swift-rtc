@@ -17,7 +17,7 @@ import NIOCore
 /// Do not reuse outside Handler.
 public struct Event {
     public var id: TransactionId
-    public var result: Result<Message, STUNError>
+    public var result: Result<Message, StunError>
 
     public init() {
         self.id = TransactionId()
@@ -25,7 +25,7 @@ public struct Event {
         self.result = Result.success(message)
     }
 
-    public init(id: TransactionId, result: Result<Message, STUNError>) {
+    public init(id: TransactionId, result: Result<Message, StunError>) {
         self.id = id
         self.result = result
     }
@@ -105,7 +105,7 @@ public struct Agent {
     /// process incoming message, synchronously passing it to handler.
     mutating func process(_ message: Message) throws {
         if self.closed {
-            throw STUNError.errAgentClosed
+            throw StunError.errAgentClosed
         }
 
         self.transactions.removeValue(forKey: message.transactionId)
@@ -121,14 +121,14 @@ public struct Agent {
     /// closed state.
     mutating func close() throws {
         if self.closed {
-            throw STUNError.errAgentClosed
+            throw StunError.errAgentClosed
         }
 
         for id in self.transactions.keys {
             self.eventsQueue.append(
                 Event(
                     id: id,
-                    result: .failure(STUNError.errAgentClosed)
+                    result: .failure(StunError.errAgentClosed)
                 ))
         }
         self.transactions.removeAll()
@@ -141,10 +141,10 @@ public struct Agent {
     /// Agent handler is guaranteed to be eventually called.
     mutating func start(_ id: TransactionId, _ deadline: NIODeadline) throws {
         if self.closed {
-            throw STUNError.errAgentClosed
+            throw StunError.errAgentClosed
         }
         if let _ = self.transactions[id] {
-            throw STUNError.errTransactionExists
+            throw StunError.errTransactionExists
         }
 
         self.transactions[id] = AgentTransaction(id: id, deadline: deadline)
@@ -154,7 +154,7 @@ public struct Agent {
     /// until handler returns.
     mutating func stop(_ id: TransactionId) throws {
         if self.closed {
-            throw STUNError.errAgentClosed
+            throw StunError.errAgentClosed
         }
 
         let v = self.transactions.removeValue(forKey: id)
@@ -162,10 +162,10 @@ public struct Agent {
             self.eventsQueue.append(
                 Event(
                     id: t.id,
-                    result: .failure(STUNError.errTransactionStopped)
+                    result: .failure(StunError.errTransactionStopped)
                 ))
         } else {
-            throw STUNError.errTransactionNotExists
+            throw StunError.errTransactionNotExists
         }
     }
 
@@ -179,7 +179,7 @@ public struct Agent {
             // Doing nothing if agent is closed.
             // All transactions should be already closed
             // during Close() call.
-            throw STUNError.errAgentClosed
+            throw StunError.errAgentClosed
         }
 
         var toRemove: [TransactionId] = []
@@ -202,7 +202,7 @@ public struct Agent {
             self.eventsQueue.append(
                 Event(
                     id: id,
-                    result: .failure(STUNError.errTransactionTimeOut)
+                    result: .failure(StunError.errTransactionTimeOut)
                 ))
         }
     }

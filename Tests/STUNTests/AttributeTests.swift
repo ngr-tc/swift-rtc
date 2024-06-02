@@ -46,7 +46,7 @@ final class AttributeTests: XCTestCase {
         do {
             let _ = try m.get(attrOrigin)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         }
     }

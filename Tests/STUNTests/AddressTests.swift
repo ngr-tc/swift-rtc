@@ -37,7 +37,7 @@ final class AddressTests: XCTestCase {
             var message = Message()
             try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errAttributeNotFound")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         }
 
@@ -52,7 +52,7 @@ final class AddressTests: XCTestCase {
             message.add(attrMappedAddress, [1, 2, 3])
             try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errUnexpectedEof")
-        } catch STUNError.errUnexpectedEof {
+        } catch StunError.errUnexpectedEof {
             XCTAssertTrue(true)
         }
     }
@@ -76,7 +76,7 @@ final class AddressTests: XCTestCase {
             var message = Message()
             try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errAttributeNotFound")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         }
     }
@@ -100,7 +100,7 @@ final class AddressTests: XCTestCase {
             var message = Message()
             try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errAttributeNotFound")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         }
 
@@ -125,7 +125,7 @@ final class AddressTests: XCTestCase {
             var message = Message()
             try got.getFrom(&message)
             XCTAssertTrue(false, "should throw STUNError.errAttributeNotFound")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         }
     }

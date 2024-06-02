@@ -46,7 +46,7 @@ final class TextAttributeTests: XCTestCase {
         do {
             let _ = try s.addTo(&m)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeSizeOverflow {
+        } catch StunError.errAttributeSizeOverflow {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeSizeOverflow")
@@ -55,7 +55,7 @@ final class TextAttributeTests: XCTestCase {
         do {
             let _ = try TextAttribute.getFromAs(&m, attrSoftware)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeNotFound")
@@ -90,7 +90,7 @@ final class TextAttributeTests: XCTestCase {
             do {
                 let _ = try badU.addTo(&m)
                 XCTAssertTrue(false, "should error")
-            } catch STUNError.errAttributeSizeOverflow {
+            } catch StunError.errAttributeSizeOverflow {
                 XCTAssertTrue(true)
             } catch {
                 XCTAssertTrue(false, "should errAttributeSizeOverflow")
@@ -113,7 +113,7 @@ final class TextAttributeTests: XCTestCase {
                     var m = Message()
                     let _ = try TextAttribute.getFromAs(&m, attrUsername)
                     XCTAssertTrue(false, "should error")
-                } catch STUNError.errAttributeNotFound {
+                } catch StunError.errAttributeNotFound {
                     XCTAssertTrue(true)
                 } catch {
                     XCTAssertTrue(false, "should errAttributeNotFound")
@@ -145,7 +145,7 @@ final class TextAttributeTests: XCTestCase {
         do {
             let _ = try TextAttribute.getFromAs(&m2, attrRealm)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeNotFound")
@@ -172,7 +172,7 @@ final class TextAttributeTests: XCTestCase {
         do {
             let _ = try s.addTo(&m)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeSizeOverflow {
+        } catch StunError.errAttributeSizeOverflow {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeSizeOverflow")
@@ -181,7 +181,7 @@ final class TextAttributeTests: XCTestCase {
         do {
             let _ = try TextAttribute.getFromAs(&m, attrRealm)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeNotFound")
@@ -199,7 +199,7 @@ final class TextAttributeTests: XCTestCase {
         do {
             let _ = try TextAttribute.getFromAs(&m2, attrNonce)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeNotFound")
@@ -226,7 +226,7 @@ final class TextAttributeTests: XCTestCase {
         do {
             let _ = try s.addTo(&m)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeSizeOverflow {
+        } catch StunError.errAttributeSizeOverflow {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeSizeOverflow")
@@ -235,7 +235,7 @@ final class TextAttributeTests: XCTestCase {
         do {
             let _ = try TextAttribute.getFromAs(&m, attrNonce)
             XCTAssertTrue(false, "should error")
-        } catch STUNError.errAttributeNotFound {
+        } catch StunError.errAttributeNotFound {
             XCTAssertTrue(true)
         } catch {
             XCTAssertTrue(false, "should errAttributeNotFound")

@@ -621,7 +621,7 @@ final class SessionDescriptionTests: XCTestCase {
         do {
             let _ = try SessionDescription.unmarshal(input: repeatTimesOverflowSdp)
             XCTAssertTrue(false, "unmarshal should be failed")
-        } catch SDPError.sdpInvalidValue(let value) {
+        } catch SdpError.sdpInvalidValue(let value) {
             XCTAssertEqual("106751991167301d", value)
         } catch {
             XCTAssertTrue(false, "unexpected error")

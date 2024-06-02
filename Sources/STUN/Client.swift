@@ -205,7 +205,7 @@ public struct Client {
 
     public mutating func handleWrite(_ m: Message) throws {
         if self.settings.closed {
-            throw STUNError.errClientClosed
+            throw StunError.errClientClosed
         }
 
         let payload = m.raw
@@ -245,7 +245,7 @@ public struct Client {
 
     public mutating func handleClose() throws {
         if self.settings.closed {
-            throw STUNError.errClientClosed
+            throw StunError.errClientClosed
         }
         self.settings.closed = true
         try self.agent.handleEvent(ClientAgent.close)

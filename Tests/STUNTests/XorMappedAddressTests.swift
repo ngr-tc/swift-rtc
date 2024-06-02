@@ -75,7 +75,7 @@ final class XorMappedAddressTests: XCTestCase {
             do {
                 let _ = try addr.getFrom(&m)
                 XCTAssertTrue(false, "should error")
-            } catch STUNError.errUnexpectedEof {
+            } catch StunError.errUnexpectedEof {
                 XCTAssertTrue(true)
             } catch {
                 XCTAssertTrue(false, "should errAttributeNotFound")
@@ -93,7 +93,7 @@ final class XorMappedAddressTests: XCTestCase {
             do {
                 let _ = try addr.getFrom(&m)
                 XCTAssertTrue(false, "should error")
-            } catch STUNError.errAttributeSizeOverflow {
+            } catch StunError.errAttributeSizeOverflow {
                 XCTAssertTrue(true)
             } catch {
                 XCTAssertTrue(false, "should errAttributeSizeOverflow")

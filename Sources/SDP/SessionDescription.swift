@@ -622,7 +622,7 @@ extension SessionDescription: CustomStringConvertible {
 func s1(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key != "v=" {
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
     return StateFn(f: unmarshalProtocolVersion)
 }
@@ -630,7 +630,7 @@ func s1(lexer: inout Lexer) throws -> StateFn? {
 func s2(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key != "o=" {
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
     return StateFn(f: unmarshalOrigin)
 }
@@ -638,7 +638,7 @@ func s2(lexer: inout Lexer) throws -> StateFn? {
 func s3(lexer: inout Lexer) throws -> StateFn? {
     let key = try lexer.readKey()
     if key != "s=" {
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
     return StateFn(f: unmarshalSessionName)
 }
@@ -661,7 +661,7 @@ func s4(lexer: inout Lexer) throws -> StateFn? {
     case "t=":
         return StateFn(f: unmarshalTiming)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -673,7 +673,7 @@ func s5(lexer: inout Lexer) throws -> StateFn? {
     case "t=":
         return StateFn(f: unmarshalTiming)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -689,7 +689,7 @@ func s6(lexer: inout Lexer) throws -> StateFn? {
     case "t=":
         return StateFn(f: unmarshalTiming)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -709,7 +709,7 @@ func s7(lexer: inout Lexer) throws -> StateFn? {
     case "t=":
         return StateFn(f: unmarshalTiming)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -723,7 +723,7 @@ func s8(lexer: inout Lexer) throws -> StateFn? {
     case "t=":
         return StateFn(f: unmarshalTiming)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -747,7 +747,7 @@ func s9(lexer: inout Lexer) throws -> StateFn? {
     case "m=":
         return StateFn(f: unmarshalMediaDescription)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -765,7 +765,7 @@ func s10(lexer: inout Lexer) throws -> StateFn? {
     case "t=":
         return StateFn(f: unmarshalTiming)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -781,7 +781,7 @@ func s11(lexer: inout Lexer) throws -> StateFn? {
     case "m=":
         return StateFn(f: unmarshalMediaDescription)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -805,7 +805,7 @@ func s12(lexer: inout Lexer) throws -> StateFn? {
     case "m=":
         return StateFn(f: unmarshalMediaDescription)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -823,7 +823,7 @@ func s13(lexer: inout Lexer) throws -> StateFn? {
     case "m=":
         return StateFn(f: unmarshalMediaDescription)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -851,7 +851,7 @@ func s14(lexer: inout Lexer) throws -> StateFn? {
     case "m=":
         return StateFn(f: unmarshalMediaDescription)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -876,7 +876,7 @@ func s15(lexer: inout Lexer) throws -> StateFn? {
     case "m=":
         return StateFn(f: unmarshalMediaDescription)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -901,7 +901,7 @@ func s16(lexer: inout Lexer) throws -> StateFn? {
     case "m=":
         return StateFn(f: unmarshalMediaDescription)
     default:
-        throw SDPError.sdpInvalidSyntax(key)
+        throw SdpError.sdpInvalidSyntax(key)
     }
 }
 
@@ -909,13 +909,13 @@ func unmarshalProtocolVersion(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     guard let version = UInt32(value) else {
-        throw SDPError.parseInt(value, "unmarshalProtocolVersion")
+        throw SdpError.parseInt(value, "unmarshalProtocolVersion")
     }
 
     // As off the latest draft of the rfc this value is required to be 0.
     // https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-5.8.1
     if version != 0 {
-        throw SDPError.sdpInvalidSyntax(value)
+        throw SdpError.sdpInvalidSyntax(value)
     }
 
     return StateFn(f: s2)
@@ -926,26 +926,26 @@ func unmarshalOrigin(lexer: inout Lexer) throws -> StateFn? {
 
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
     if fields.count != 6 {
-        throw SDPError.sdpInvalidSyntax("`o=\(value)`")
+        throw SdpError.sdpInvalidSyntax("`o=\(value)`")
     }
 
     guard let sessionId = UInt64(fields[1]) else {
-        throw SDPError.parseInt(fields[1], "field 1 of unmarshalOrigin")
+        throw SdpError.parseInt(fields[1], "field 1 of unmarshalOrigin")
     }
     guard let sessionVersion = UInt64(fields[2]) else {
-        throw SDPError.parseInt(fields[2], "field 2 of unmarshalOrigin")
+        throw SdpError.parseInt(fields[2], "field 2 of unmarshalOrigin")
     }
 
     // Set according to currently registered with IANA
     // https://tools.ietf.org/html/rfc4566#section-8.2.6
     if indexOf(element: fields[3], dataSet: ["IN"]) == nil {
-        throw SDPError.sdpInvalidValue(fields[3])
+        throw SdpError.sdpInvalidValue(fields[3])
     }
 
     // Set according to currently registered with IANA
     // https://tools.ietf.org/html/rfc4566#section-8.2.7
     if indexOf(element: fields[4], dataSet: ["IP4", "IP6"]) == nil {
-        throw SDPError.sdpInvalidValue(fields[4])
+        throw SdpError.sdpInvalidValue(fields[4])
     }
 
     // TODO validated UnicastAddress
@@ -1001,19 +1001,19 @@ func unmarshalSessionConnectionInformation(lexer: inout Lexer) throws -> StateFn
 func unmarshalConnectionInformation(value: String) throws -> ConnectionInformation? {
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
     if fields.count < 2 {
-        throw SDPError.sdpInvalidSyntax("`c=\(value)`")
+        throw SdpError.sdpInvalidSyntax("`c=\(value)`")
     }
 
     // Set according to currently registered with IANA
     // https://tools.ietf.org/html/rfc4566#section-8.2.6
     if indexOf(element: fields[0], dataSet: ["IN"]) == nil {
-        throw SDPError.sdpInvalidValue(fields[0])
+        throw SdpError.sdpInvalidValue(fields[0])
     }
 
     // Set according to currently registered with IANA
     // https://tools.ietf.org/html/rfc4566#section-8.2.7
     if indexOf(element: fields[1], dataSet: ["IP4", "IP6"]) == nil {
-        throw SDPError.sdpInvalidValue(fields[1])
+        throw SdpError.sdpInvalidValue(fields[1])
     }
 
     let address: Address? =
@@ -1040,7 +1040,7 @@ func unmarshalSessionBandwidth(lexer: inout Lexer) throws -> StateFn? {
 func unmarshalBandwidth(value: String) throws -> Bandwidth {
     let parts = value.split(separator: ":").map { String($0) }
     if parts.count != 2 {
-        throw SDPError.sdpInvalidSyntax("`b=\(value)`")
+        throw SdpError.sdpInvalidSyntax("`b=\(value)`")
     }
 
     var bandwidthType = parts[0]
@@ -1051,12 +1051,12 @@ func unmarshalBandwidth(value: String) throws -> Bandwidth {
         // Set according to currently registered with IANA
         // https://tools.ietf.org/html/rfc4566#section-5.8
         if indexOf(element: bandwidthType, dataSet: ["CT", "AS"]) == nil {
-            throw SDPError.sdpInvalidValue(bandwidthType)
+            throw SdpError.sdpInvalidValue(bandwidthType)
         }
     }
 
     guard let bandwidth = UInt64(parts[1]) else {
-        throw SDPError.parseInt(parts[1], "\(value) of unmarshalBandwidth")
+        throw SdpError.parseInt(parts[1], "\(value) of unmarshalBandwidth")
     }
 
     return Bandwidth(
@@ -1070,14 +1070,14 @@ func unmarshalTiming(lexer: inout Lexer) throws -> StateFn? {
 
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
     if fields.count < 2 {
-        throw SDPError.sdpInvalidSyntax("`t=\(value)`")
+        throw SdpError.sdpInvalidSyntax("`t=\(value)`")
     }
 
     guard let startTime = UInt64(fields[0]) else {
-        throw SDPError.parseInt(fields[0], "field 0 of unmarshalTiming")
+        throw SdpError.parseInt(fields[0], "field 0 of unmarshalTiming")
     }
     guard let stopTime = UInt64(fields[1]) else {
-        throw SDPError.parseInt(fields[1], "field 1 of unmarshalTiming")
+        throw SdpError.parseInt(fields[1], "field 1 of unmarshalTiming")
     }
 
     lexer.desc.timeDescriptions.append(
@@ -1093,11 +1093,11 @@ func unmarshalRepeatTimes(lexer: inout Lexer) throws -> StateFn? {
 
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
     if fields.count < 3 {
-        throw SDPError.sdpInvalidSyntax("`r=\(value)`")
+        throw SdpError.sdpInvalidSyntax("`r=\(value)`")
     }
 
     if lexer.desc.timeDescriptions.isEmpty {
-        throw SDPError.sdpEmptyTimeDescription
+        throw SdpError.sdpEmptyTimeDescription
     }
 
     let interval = try parseTimeUnits(value: fields[0])
@@ -1124,12 +1124,12 @@ func unmarshalTimeZones(lexer: inout Lexer) throws -> StateFn? {
     // so we are making sure that there are actually multiple of 2 total.
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
     if fields.count % 2 != 0 {
-        throw SDPError.sdpInvalidSyntax("`t=\(value)`")
+        throw SdpError.sdpInvalidSyntax("`t=\(value)`")
     }
 
     for i in stride(from: 0, to: fields.count, by: 2) {
         guard let adjustmentTime = UInt64(fields[i]) else {
-            throw SDPError.parseInt(fields[i], "fileds[\(i)] of unmarshalTimeZones")
+            throw SdpError.parseInt(fields[i], "fileds[\(i)] of unmarshalTimeZones")
         }
         let offset = try parseTimeUnits(value: fields[i + 1])
 
@@ -1166,7 +1166,7 @@ func unmarshalMediaDescription(lexer: inout Lexer) throws -> StateFn? {
 
     let fields = value.split(separator: " ", omittingEmptySubsequences: true).map { String($0) }
     if fields.count < 4 {
-        throw SDPError.sdpInvalidSyntax("`m=\(value)`")
+        throw SdpError.sdpInvalidSyntax("`m=\(value)`")
     }
 
     // <media>
@@ -1176,18 +1176,18 @@ func unmarshalMediaDescription(lexer: inout Lexer) throws -> StateFn? {
         element: fields[0],
         dataSet: ["audio", "video", "text", "application", "message"]) == nil
     {
-        throw SDPError.sdpInvalidValue(fields[0])
+        throw SdpError.sdpInvalidValue(fields[0])
     }
 
     // <port>
     let parts = fields[1].split(separator: "/").map { String($0) }
     guard let portValue = Int(parts[0]) else {
-        throw SDPError.parseInt(parts[0], "parts[0] of unmarshalMediaDescription")
+        throw SdpError.parseInt(parts[0], "parts[0] of unmarshalMediaDescription")
     }
     var portRange: Int? = nil
     if parts.count > 1 {
         guard let range = Int(parts[1]) else {
-            throw SDPError.parseInt(parts[1], "parts[1] of unmarshalMediaDescription")
+            throw SdpError.parseInt(parts[1], "parts[1] of unmarshalMediaDescription")
         }
         portRange = range
     }
@@ -1203,7 +1203,7 @@ func unmarshalMediaDescription(lexer: inout Lexer) throws -> StateFn? {
                 "UDP", "RTP", "AVP", "SAVP", "SAVPF", "TLS", "DTLS", "SCTP", "AVPF",
             ]) == nil
         {
-            throw SDPError.sdpInvalidValue(fields[2])
+            throw SdpError.sdpInvalidValue(fields[2])
         }
         protos.append(proto)
     }
@@ -1237,7 +1237,7 @@ func unmarshalMediaTitle(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     if lexer.desc.mediaDescriptions.isEmpty {
-        throw SDPError.sdpEmptyTimeDescription
+        throw SdpError.sdpEmptyTimeDescription
     }
 
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].mediaTitle = value
@@ -1248,7 +1248,7 @@ func unmarshalMediaConnectionInformation(lexer: inout Lexer) throws -> StateFn? 
     let value = try lexer.readValue()
 
     if lexer.desc.mediaDescriptions.isEmpty {
-        throw SDPError.sdpEmptyTimeDescription
+        throw SdpError.sdpEmptyTimeDescription
     }
 
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].connectionInformation =
@@ -1261,7 +1261,7 @@ func unmarshalMediaBandwidth(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     if lexer.desc.mediaDescriptions.isEmpty {
-        throw SDPError.sdpEmptyTimeDescription
+        throw SdpError.sdpEmptyTimeDescription
     }
 
     let bandwidth = try unmarshalBandwidth(value: value)
@@ -1274,7 +1274,7 @@ func unmarshalMediaEncryptionKey(lexer: inout Lexer) throws -> StateFn? {
     let value = try lexer.readValue()
 
     if lexer.desc.mediaDescriptions.isEmpty {
-        throw SDPError.sdpEmptyTimeDescription
+        throw SdpError.sdpEmptyTimeDescription
     }
 
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].encryptionKey = value
@@ -1290,7 +1290,7 @@ func unmarshalMediaAttribute(lexer: inout Lexer) throws -> StateFn? {
         value: fields.count == 2 ? fields[1] : nil
     )
     if lexer.desc.mediaDescriptions.isEmpty {
-        throw SDPError.sdpEmptyTimeDescription
+        throw SdpError.sdpEmptyTimeDescription
     }
 
     lexer.desc.mediaDescriptions[lexer.desc.mediaDescriptions.count - 1].attributes.append(
@@ -1324,12 +1324,12 @@ func parseTimeUnits(value: String) throws -> Int64 {
     }
 
     guard let parsedNum = Int64(num) else {
-        throw SDPError.sdpInvalidValue(value)
+        throw SdpError.sdpInvalidValue(value)
     }
 
     let result = parsedNum.multipliedReportingOverflow(by: Int64(factor))
     if result.overflow {
-        throw SDPError.sdpInvalidValue(value)
+        throw SdpError.sdpInvalidValue(value)
     }
 
     return result.partialValue

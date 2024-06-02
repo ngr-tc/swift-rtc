@@ -260,7 +260,7 @@ public struct Message: Equatable {
         let rawView = ByteBufferView(self.raw)
         // decoding message header
         if rawView.count < messageHeaderSize {
-            throw STUNError.errUnexpectedHeaderEof
+            throw StunError.errUnexpectedHeaderEof
         }
 
         let t = UInt16.fromBeBytes(rawView[0], rawView[1])  // first 2 bytes
@@ -270,10 +270,10 @@ public struct Message: Equatable {
         let fullSize = messageHeaderSize + size  // len(m.Raw)
 
         if cookie != magicCookie {
-            throw STUNError.errInvalidMagicCookie(cookie)
+            throw StunError.errInvalidMagicCookie(cookie)
         }
         if rawView.count < fullSize {
-            throw STUNError.errBufferTooSmall
+            throw StunError.errBufferTooSmall
         }
 
         // saving header data
@@ -289,7 +289,7 @@ public struct Message: Equatable {
         while offset < size {
             // checking that we have enough bytes to read header
             if bCount < attributeHeaderSize {
-                throw STUNError.errBufferTooSmall
+                throw StunError.errBufferTooSmall
             }
 
             var a = RawAttribute(
@@ -306,7 +306,7 @@ public struct Message: Equatable {
 
             if bCount < abuffl {
                 // checking size
-                throw STUNError.errBufferTooSmall
+                throw StunError.errBufferTooSmall
             }
             a.value = ByteBuffer(rawView[b..<b + al])
             b += abuffl
@@ -369,7 +369,7 @@ public struct Message: Equatable {
     public func get(_ t: AttrType) throws -> ByteBuffer {
         let (v, ok) = self.attributes.get(t)
         if !ok {
-            throw STUNError.errAttributeNotFound
+            throw StunError.errAttributeNotFound
         }
         return v.value
     }
