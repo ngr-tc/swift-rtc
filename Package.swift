@@ -87,20 +87,6 @@ let package = Package(
             ]),
 
         // MARK: - Examples
-        .executableTarget(name: "XExampleStunClient",
-            dependencies: [
-                "STUN",
-                "Shared",
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOPosix", package: "swift-nio"),
-            ]
-        ),
-        .executableTarget(name: "XExampleStunDecode",
-            dependencies: [
-                "STUN",
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "ExtrasBase64", package: "swift-extras-base64"),
-            ]
-        ),
+        // https://github.com/ngr-tc/swift-rtc-examples
     ]
 )
