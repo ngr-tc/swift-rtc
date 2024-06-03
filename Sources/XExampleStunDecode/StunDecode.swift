@@ -18,19 +18,27 @@ import STUN
 // swift run XExampleStunDecode AAEAHCESpEJML0JTQWsyVXkwcmGALwAWaHR0cDovL2xvY2FsaG9zdDozMDAwLwAA
 // Binding request l=28 attrs=1 id=TC9CU0FrMlV5MHJh
 
-// just to get an ArraySlice<String> from [String]
-let arguments = CommandLine.arguments.dropFirst()
+@main
+struct StunDecoder {
+    static func main() throws {
+        // just to get an ArraySlice<String> from [String]
+        let arguments = CommandLine.arguments.dropFirst()
 
-let encodedData = arguments.first ?? "AAEAHCESpEJML0JTQWsyVXkwcmGALwAWaHR0cDovL2xvY2FsaG9zdDozMDAwLwAA"
+        guard let encodedData = arguments.first else {
+            print("missing base64 data")
+            return
+        }
 
-let decodedData = try Base64.decode(string: encodedData)
+        let decodedData = try Base64.decode(string: encodedData)
 
-var message = Message()
-message.raw = ByteBuffer(bytes: decodedData)
+        var message = Message()
+        message.raw = ByteBuffer(bytes: decodedData)
 
-do {
-    try message.decode()
-    print("\(message)")
-} catch let err {
-    print("Unable to decode message \(err)")
+        do {
+            try message.decode()
+            print("\(message)")
+        } catch let err {
+            print("Unable to decode message \(err)")
+        }
+    }
 }
