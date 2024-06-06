@@ -27,6 +27,7 @@ let package = Package(
     products: [
         .library(name: "DataChannel", targets: ["DataChannel"]),
         .library(name: "DTLS", targets: ["DTLS"]),
+        .library(name: "RTC", targets: ["RTC"]),
         .library(name: "RTCP", targets: ["RTCP"]),
         .library(name: "RTP", targets: ["RTP"]),
         .library(name: "SCTP", targets: ["SCTP"]),
@@ -47,6 +48,13 @@ let package = Package(
         // MARK: - Targets
         .target(name: "DataChannel"),
         .target(name: "DTLS"),
+        .target(
+            name: "RTC",
+            dependencies: [
+                "SDP",
+                "STUN",
+            ]
+        ),
         .target(name: "RTCP"),
         .target(name: "RTP"),
         .target(name: "SCTP"),
