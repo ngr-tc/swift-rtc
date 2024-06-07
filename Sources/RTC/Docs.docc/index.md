@@ -10,16 +10,16 @@ SwiftRTC is a cross-platform RTC protocols stack in Swift with Sans-IO style.
 
 SwiftRTC has a number of products that provide different functionality. This package includes the following products:
 
-- ``RTC``. This is an umbrella module exporting [SDP][module-sdp] and [STUN][module-stun].
+- ``RTC``. This is an umbrella module exporting the following modules.
 - [DataChannel][module-datachannel]. This provides the DataChannel protocol implementation.
-- [DTLS][module-dtls]. This provides the DTLS protocl implementation.
+- [DTLS][module-dtls]. This provides the DTLS protocol implementation.
 - [RTCP][module-rtcp]. This provides the RTCP protocol implementation.
-- [RTP][module-rtp]. This provides the RTP protocl implementation.
+- [RTP][module-rtp]. This provides the RTP protocol implementation.
 - [SCTP][module-sctp]. This provides the SCTP protocol implementation.
 - [SDP][module-sdp]. This provides the SDP protocol implementation.
 - [Shared][module-shared]. This provides shard library for SwiftRTC.
-- [SRTP][module-srtp]. This provides the SRTP protocl implementation.
-- [STUN][module-stun]. This provides the STUN protocl implementation.
+- [SRTP][module-srtp]. This provides the SRTP protocol implementation.
+- [STUN][module-stun]. This provides the STUN protocol implementation.
 
 <!-- links -->
 [module-datachannel]: ./DataChannel
