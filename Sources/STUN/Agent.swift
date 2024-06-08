@@ -15,7 +15,7 @@ import NIOCore
 
 /// Event is passed to Handler describing the transaction event.
 /// Do not reuse outside Handler.
-public struct Event {
+public struct AgentEvent {
     public var id: TransactionId
     public var result: Result<Message, StunError>
 
@@ -64,7 +64,7 @@ public struct Agent {
     /// all calls are invalid if true
     var closed: Bool
     /// events queue
-    var eventsQueue: CircularBuffer<Event>
+    var eventsQueue: CircularBuffer<AgentEvent>
 
     /// new initializes and returns new Agent with provided handler.
     public init() {
@@ -98,7 +98,7 @@ public struct Agent {
         return deadline
     }
 
-    public mutating func pollEvent() -> Event? {
+    public mutating func pollEvent() -> AgentEvent? {
         self.eventsQueue.popFirst()
     }
 
@@ -111,7 +111,7 @@ public struct Agent {
         self.transactions.removeValue(forKey: message.transactionId)
 
         self.eventsQueue.append(
-            Event(
+            AgentEvent(
                 id: message.transactionId,
                 result: .success(message)
             ))
@@ -126,7 +126,7 @@ public struct Agent {
 
         for id in self.transactions.keys {
             self.eventsQueue.append(
-                Event(
+                AgentEvent(
                     id: id,
                     result: .failure(StunError.errAgentClosed)
                 ))
@@ -160,7 +160,7 @@ public struct Agent {
         let v = self.transactions.removeValue(forKey: id)
         if let t = v {
             self.eventsQueue.append(
-                Event(
+                AgentEvent(
                     id: t.id,
                     result: .failure(StunError.errTransactionStopped)
                 ))
@@ -200,7 +200,7 @@ public struct Agent {
 
         for id in toRemove {
             self.eventsQueue.append(
-                Event(
+                AgentEvent(
                     id: id,
                     result: .failure(StunError.errTransactionTimeOut)
                 ))

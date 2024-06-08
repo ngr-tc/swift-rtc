@@ -139,25 +139,95 @@ public struct Client {
         self.transactions = [:]
         self.transmits = CircularBuffer()
     }
+}
 
-    /// Returns packets to transmit
-    ///
-    /// It should be polled for transmit after:
-    /// - the application performed some I/O
-    /// - a call was made to `handle_read`
-    /// - a call was made to `handle_write`
-    /// - a call was made to `handle_timeout`
-    public mutating func pollTransmit() -> Transmit<ByteBuffer>? {
+public enum Event {
+    case agentEvent(AgentEvent)
+    case timeout(NIODeadline)
+    case close
+}
+
+extension Client: RTCHandler {
+    public typealias Ein = Event
+    public typealias Eout = Event
+    public typealias Rin = ByteBuffer
+    public typealias Rout = Message
+    public typealias Win = Message
+    public typealias Wout = ByteBuffer
+
+    public mutating func handleRead(_ rin: Transmit<Rin>) throws {
+        var msg = Message()
+
+        let _ = try msg.readFrom(ByteBufferView(rin.message))
+        try self.agent.handleEvent(ClientAgent.process(msg))
+    }
+
+    public mutating func pollRead() -> Transmit<Rout>? {
+        return nil
+    }
+
+    public mutating func handleWrite(_ win: Transmit<Win>) throws {
+        if self.settings.closed {
+            throw StunError.errClientClosed
+        }
+
+        let payload = win.message.raw
+
+        let ct = ClientTransaction(
+            id: win.message.transactionId,
+            attempt: 0,
+            start: NIODeadline.now(),
+            rto: self.settings.rto,
+            raw: win.message.raw
+        )
+        let deadline = ct.nextTimeout(ct.start)
+        self.transactions[ct.id] = ct
+        try self.agent
+            .handleEvent(ClientAgent.start(win.message.transactionId, deadline))
+
+        self.transmits.append(
+            Transmit(
+                now: NIODeadline.now(),
+                transport: TransportContext(
+                    local: self.local,
+                    peer: self.remote,
+                    proto: self.proto,
+                    ecn: nil
+                ),
+                message: payload
+            ))
+    }
+
+    public mutating func pollWrite() -> Transmit<Wout>? {
         self.transmits.popFirst()
     }
 
-    public mutating func pollEvent() -> Event? {
+    public mutating func handleEvent(_ evt: Ein) throws {
+        switch evt {
+        case .agentEvent(_):
+            return
+        case .timeout(let now):
+            try self.agent.handleEvent(ClientAgent.collect(now))
+        case .close:
+            if self.settings.closed {
+                throw StunError.errClientClosed
+            }
+            self.settings.closed = true
+            try self.agent.handleEvent(ClientAgent.close)
+        }
+    }
+
+    public mutating func pollEvent() -> Eout? {
+        if let deadline = self.agent.pollTimeout() {
+            return Event.timeout(deadline)
+        }
+
         while let event = self.agent.pollEvent() {
             guard var ct = self.transactions.removeValue(forKey: event.id) else {
                 continue
             }
             if ct.attempt >= self.settings.maxAttempts || event.result.isSuccess() {
-                return event
+                return Event.agentEvent(event)
             }
 
             // Doing re-transmission.
@@ -177,7 +247,7 @@ public struct Client {
                     .handleEvent(ClientAgent.start(id, timeout))
             } catch {
                 self.transactions.removeValue(forKey: id)
-                return event
+                return Event.agentEvent(event)
             }
 
             // Writing message to connection again.
@@ -195,59 +265,5 @@ public struct Client {
         }
 
         return nil
-    }
-
-    public mutating func handleRead(_ buf: ByteBufferView) throws {
-        var msg = Message()
-        let _ = try msg.readFrom(buf)
-        try self.agent.handleEvent(ClientAgent.process(msg))
-    }
-
-    public mutating func handleWrite(_ m: Message) throws {
-        if self.settings.closed {
-            throw StunError.errClientClosed
-        }
-
-        let payload = m.raw
-
-        let ct = ClientTransaction(
-            id: m.transactionId,
-            attempt: 0,
-            start: NIODeadline.now(),
-            rto: self.settings.rto,
-            raw: m.raw
-        )
-        let deadline = ct.nextTimeout(ct.start)
-        self.transactions[ct.id] = ct
-        try self.agent
-            .handleEvent(ClientAgent.start(m.transactionId, deadline))
-
-        self.transmits.append(
-            Transmit(
-                now: NIODeadline.now(),
-                transport: TransportContext(
-                    local: self.local,
-                    peer: self.remote,
-                    proto: self.proto,
-                    ecn: nil
-                ),
-                message: payload
-            ))
-    }
-
-    public func pollTimeout() -> NIODeadline? {
-        return self.agent.pollTimeout()
-    }
-
-    public mutating func handleTimeout(_ now: NIODeadline) throws {
-        try self.agent.handleEvent(ClientAgent.collect(now))
-    }
-
-    public mutating func handleClose() throws {
-        if self.settings.closed {
-            throw StunError.errClientClosed
-        }
-        self.settings.closed = true
-        try self.agent.handleEvent(ClientAgent.close)
     }
 }
