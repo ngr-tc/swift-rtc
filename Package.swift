@@ -55,8 +55,16 @@ let package = Package(
                 "STUN",
             ]
         ),
-        .target(name: "RTCP"),
-        .target(name: "RTP"),
+        .target(name: "RTCP",
+            dependencies: [
+                "Shared",
+                .product(name: "NIOCore", package: "swift-nio"),
+            ]),
+        .target(name: "RTP",
+            dependencies: [
+                "Shared",
+                .product(name: "NIOCore", package: "swift-nio"),
+            ]),
         .target(name: "SCTP"),
         .target(
             name: "SDP",
