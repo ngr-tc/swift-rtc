@@ -180,7 +180,7 @@ extension Header: MarshalSize {
 
 extension Header: Marshal {
     /// Marshal serializes the header and writes to the buffer.
-    public func marshal(buf: inout ByteBuffer) throws -> Int {
+    public func marshal(_ buf: inout ByteBuffer) throws -> Int {
         /*
          *  0                   1                   2                   3
          *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -241,17 +241,17 @@ extension Header: Marshal {
             switch self.extensionProfile {
             // RFC 8285 RTP One Byte Header Extension
             case extensionProfileOneByte:
-                for var ext in self.extensions {
+                for ext in self.extensions {
                     buf.writeInteger((ext.id << 4) | (UInt8(ext.payload.readableBytes) - 1))
-                    buf.writeBuffer(&ext.payload)
+                    buf.writeImmutableBuffer(ext.payload)
                 }
 
             // RFC 8285 RTP Two Byte Header Extension
             case extensionProfileTwoByte:
-                for var ext in self.extensions {
+                for ext in self.extensions {
                     buf.writeInteger(ext.id)
                     buf.writeInteger(UInt8(ext.payload.readableBytes))
-                    buf.writeBuffer(&ext.payload)
+                    buf.writeImmutableBuffer(ext.payload)
                 }
 
             // RFC3550 Extension
@@ -260,12 +260,12 @@ extension Header: Marshal {
                     throw RtpError.errRfc3550headerIdrange
                 }
 
-                if var ext = self.extensions.first {
+                if let ext = self.extensions.first {
                     let extLen = ext.payload.readableBytes
                     if extLen % 4 != 0 {
                         throw RtpError.errHeaderExtensionPayloadNot32BitWords
                     }
-                    buf.writeBuffer(&ext.payload)
+                    buf.writeImmutableBuffer(ext.payload)
                 }
 
             }
@@ -282,8 +282,8 @@ extension Header: Marshal {
 
 extension Header: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
-    public init(bufView: ByteBufferView) throws {
-        let bufLen = bufView.count
+    public init(_ buf: inout ByteBuffer) throws {
+        let bufLen = buf.readableBytes
         if bufLen < headerLength {
             throw RtpError.errHeaderSizeInsufficient
         }
@@ -301,7 +301,6 @@ extension Header: Unmarshal {
          * |                             ....                              |
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
-        var buf = ByteBuffer(bufView)
         guard let b0: UInt8 = buf.readInteger() else {
             throw RtpError.errHeaderSizeInsufficient
         }

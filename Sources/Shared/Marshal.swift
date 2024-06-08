@@ -18,9 +18,9 @@ public protocol MarshalSize {
 }
 
 public protocol Marshal: MarshalSize {
-    func marshal(buf: inout ByteBuffer) throws -> Int
+    func marshal(_ buf: inout ByteBuffer) throws -> Int
 }
 
 public protocol Unmarshal: MarshalSize {
-    init(bufView: ByteBufferView) throws
+    init(_ buf: inout ByteBuffer) throws
 }
