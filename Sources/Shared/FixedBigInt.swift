@@ -15,11 +15,11 @@
 // FixedBigInt is the fix-sized multi-word integer.
 struct FixedBigInt {
     var bits: [UInt64]
-    var n: Int
+    var n: UInt
     var msbMask: UInt64
 
-    init(n: Int) {
-        var chunkSize = (n + 63) / 64
+    init(n: UInt) {
+        var chunkSize = Int((n + 63) / 64)
         if chunkSize == 0 {
             chunkSize = 1
         }
@@ -30,12 +30,12 @@ struct FixedBigInt {
     }
 
     // lsh is the left shift operation.
-    mutating func lsh(_ n: Int) {
+    mutating func lsh(_ n: UInt) {
         if n == 0 {
             return
         }
-        let nChunk = n / 64
-        let nN = n % 64
+        let nChunk = Int(n / 64)
+        let nN = Int(n % 64)
 
         for i in (0..<self.bits.count).reversed() {
             var carry: UInt64 = 0
@@ -53,22 +53,22 @@ struct FixedBigInt {
     }
 
     // bit returns i-th bit of the fixedBigInt.
-    func bit(_ i: Int) -> UInt64 {
+    func bit(_ i: UInt) -> UInt64 {
         if i >= self.n {
             return 0
         }
-        let chunk = i / 64
-        let pos = i % 64
+        let chunk = Int(i / 64)
+        let pos = Int(i % 64)
         return (self.bits[chunk] & (1 << pos)) != 0 ? 1 : 0
     }
 
     // set_bit sets i-th bit to 1.
-    mutating func setBit(_ i: Int) {
+    mutating func setBit(_ i: UInt) {
         if i >= self.n {
             return
         }
-        let chunk = i / 64
-        let pos = i % 64
+        let chunk = Int(i / 64)
+        let pos = Int(i % 64)
         self.bits[chunk] |= 1 << pos
     }
 }

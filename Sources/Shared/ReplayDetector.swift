@@ -26,19 +26,19 @@ public struct SlidingWindowDetector {
     var seq: UInt64
     var latestSeq: UInt64
     var maxSeq: UInt64
-    var windowSize: Int
+    var windowSize: UInt
     var mask: FixedBigInt
 
     /// Created ReplayDetector doesn't allow wrapping.
     /// It can handle monotonically increasing sequence number up to
     /// full 64bit number. It is suitable for DTLS replay protection.
-    public init(window_size: Int, max_seq: UInt64) {
+    public init(windowSize: UInt, maxSeq: UInt64) {
         self.accepted = false
         self.seq = 0
         self.latestSeq = 0
-        self.maxSeq = max_seq
-        self.windowSize = window_size
-        self.mask = FixedBigInt(n: window_size)
+        self.maxSeq = maxSeq
+        self.windowSize = windowSize
+        self.mask = FixedBigInt(n: windowSize)
     }
 }
 
@@ -55,7 +55,7 @@ extension SlidingWindowDetector: ReplayDetector {
             if self.latestSeq >= UInt64(self.windowSize) + seq {
                 return false
             }
-            if self.mask.bit(Int(self.latestSeq - seq)) != 0 {
+            if self.mask.bit(UInt(self.latestSeq - seq)) != 0 {
                 // The sequence number is duplicated.
                 return false
             }
@@ -73,11 +73,11 @@ extension SlidingWindowDetector: ReplayDetector {
 
         if self.seq > self.latestSeq {
             // Update the head of the window.
-            self.mask.lsh(Int(self.seq - self.latestSeq))
+            self.mask.lsh(UInt(self.seq - self.latestSeq))
             self.latestSeq = self.seq
         }
         let diff = (self.latestSeq - self.seq) % self.maxSeq
-        self.mask.setBit(Int(diff))
+        self.mask.setBit(UInt(diff))
     }
 }
 
@@ -86,19 +86,19 @@ public struct WrappedSlidingWindowDetector {
     var seq: UInt64
     var latestSeq: UInt64
     var maxSeq: UInt64
-    var windowSize: Int
+    var windowSize: UInt
     var mask: FixedBigInt
     var initValue: Bool
 
     /// WithWrap creates ReplayDetector allowing sequence wrapping.
     /// This is suitable for short bitwidth counter like SRTP and SRTCP.
-    public init(window_size: Int, max_seq: UInt64) {
+    public init(windowSize: UInt, maxSeq: UInt64) {
         self.accepted = false
         self.seq = 0
         self.latestSeq = 0
-        self.maxSeq = max_seq
-        self.windowSize = window_size
-        self.mask = FixedBigInt(n: window_size)
+        self.maxSeq = maxSeq
+        self.windowSize = windowSize
+        self.mask = FixedBigInt(n: windowSize)
         self.initValue = false
     }
 }
@@ -132,7 +132,7 @@ extension WrappedSlidingWindowDetector: ReplayDetector {
             // Too old.
             return false
         }
-        if diff >= 0 && self.mask.bit(Int(diff)) != 0 {
+        if diff >= 0 && self.mask.bit(UInt(diff)) != 0 {
             // The sequence number is duplicated.
             return false
         }
@@ -159,11 +159,11 @@ extension WrappedSlidingWindowDetector: ReplayDetector {
 
         if diff < 0 {
             // Update the head of the window.
-            self.mask.lsh(Int(-diff))
+            self.mask.lsh(UInt(-diff))
             self.latestSeq = self.seq
         }
         self.mask
-            .setBit(Int(self.latestSeq - self.seq))
+            .setBit(UInt(bitPattern: Int(self.latestSeq) - Int(self.seq)))
     }
 }
 
