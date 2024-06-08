@@ -183,7 +183,7 @@ extension TimeDescription: CustomStringConvertible {
 /// Session ID is recommended to be constructed by generating a 64-bit
 /// quantity with the highest bit set to zero and the remaining 63-bits
 /// being cryptographically random.
-public func newSessionId() -> UInt64 {
+func newSessionId() -> UInt64 {
     let c = UInt64.max ^ (UInt64(1) << 63)
     return UInt64.random(in: UInt64.min...UInt64.max) & c
 }

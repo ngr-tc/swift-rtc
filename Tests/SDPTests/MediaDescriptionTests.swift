@@ -1,4 +1,3 @@
-import SDP
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the SwiftRTC open source project
@@ -13,6 +12,8 @@ import SDP
 //
 //===----------------------------------------------------------------------===//
 import XCTest
+
+@testable import SDP
 
 final class MediaDescriptionTests: XCTestCase {
     func testAttributeMissing() throws {
