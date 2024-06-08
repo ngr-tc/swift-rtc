@@ -22,5 +22,5 @@ public protocol Marshal: MarshalSize {
 }
 
 public protocol Unmarshal: MarshalSize {
-    init(buf: ByteBufferView) throws
+    init(bufView: ByteBufferView) throws
 }
