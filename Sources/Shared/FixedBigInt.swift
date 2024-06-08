@@ -30,7 +30,7 @@ struct FixedBigInt {
     }
 
     // lsh is the left shift operation.
-    mutating func lsh(n: Int) {
+    mutating func lsh(_ n: Int) {
         if n == 0 {
             return
         }
@@ -42,10 +42,10 @@ struct FixedBigInt {
             if i - nChunk >= 0 {
                 carry = nN >= 64 ? 0 : self.bits[i - nChunk] << nN
                 if i - nChunk > 0 {
-                    carry |= nN == 0 ? 0 : self.bits[i - nChunk - 1] >> (64 - nN)
+                    carry |= nN == 0 ? 0 : (self.bits[i - nChunk - 1] >> (64 - nN))
                 }
             }
-            self.bits[i] = n >= 64 ? carry : (self.bits[i] << n) | carry
+            self.bits[i] = n >= 64 ? carry : ((self.bits[i] << n) | carry)
         }
 
         let last = self.bits.count - 1
@@ -53,7 +53,7 @@ struct FixedBigInt {
     }
 
     // bit returns i-th bit of the fixedBigInt.
-    func bit(i: Int) -> UInt64 {
+    func bit(_ i: Int) -> UInt64 {
         if i >= self.n {
             return 0
         }
@@ -63,7 +63,7 @@ struct FixedBigInt {
     }
 
     // set_bit sets i-th bit to 1.
-    mutating func setBit(i: Int) {
+    mutating func setBit(_ i: Int) {
         if i >= self.n {
             return
         }
@@ -77,7 +77,7 @@ extension FixedBigInt: CustomStringConvertible {
     var description: String {
         var out = String()
         for i in (0..<self.bits.count).reversed() {
-            out += String(format: "%016X", self.bits[i])
+            out += String(format: "%016llX", self.bits[i])
         }
         return out
     }

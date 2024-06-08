@@ -16,7 +16,7 @@ import XCTest
 
 @testable import Shared
 
-final class UtilsTests: XCTestCase {
+final class SocketAddressTests: XCTestCase {
     func testTrimmingWhitespace() throws {
         let str = "  Hello, World!  "
         let trimmed = str.trimmingWhitespace()
