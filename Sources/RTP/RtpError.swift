@@ -45,6 +45,9 @@ public enum RtpError: Error, Equatable {
     case errPayloadIsNotLargeEnough
     case errStapASizeLargerThanBuffer(Int, Int)
     case errNaluTypeIsNotHandled(UInt8)
+
+    case errInvalidCameraDirectionValue(UInt8)
+    case errInvalidVideoRotationValue(UInt8)
 }
 
 extension RtpError: CustomStringConvertible {
@@ -100,6 +103,10 @@ extension RtpError: CustomStringConvertible {
             return "STAP-A declared size(\(s1)) is larger than buffer(\(s2)"
         case .errNaluTypeIsNotHandled(let t):
             return "nalu type \(t) is currently not handled"
+        case .errInvalidCameraDirectionValue(let v):
+            return "invalid CameraDirection Value \(v)"
+        case .errInvalidVideoRotationValue(let v):
+            return "invalid VideoRotation Value \(v)"
         }
     }
 }
