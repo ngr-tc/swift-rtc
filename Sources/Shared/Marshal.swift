@@ -18,7 +18,15 @@ public protocol MarshalSize {
 }
 
 public protocol Marshal: MarshalSize {
-    func marshal(_ buf: inout ByteBuffer) throws -> Int
+    func marshalTo(_ buf: inout ByteBuffer) throws -> Int
+}
+
+extension Marshal {
+    public func marshal() throws -> ByteBuffer {
+        var buf = ByteBuffer()
+        let _ = try self.marshalTo(&buf)
+        return buf
+    }
 }
 
 public protocol Unmarshal: MarshalSize {

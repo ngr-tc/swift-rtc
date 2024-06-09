@@ -56,8 +56,8 @@ extension Packet: MarshalSize {
 
 extension Packet: Marshal {
     /// MarshalTo serializes the packet and writes to the buffer.
-    public func marshal(_ buf: inout ByteBuffer) throws -> Int {
-        let n = try self.header.marshal(&buf)
+    public func marshalTo(_ buf: inout ByteBuffer) throws -> Int {
+        let n = try self.header.marshalTo(&buf)
         buf.writeImmutableBuffer(self.payload)
         var paddingLen: Int
         if self.header.padding {

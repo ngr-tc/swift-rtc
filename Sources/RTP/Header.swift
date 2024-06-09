@@ -180,7 +180,7 @@ extension Header: MarshalSize {
 
 extension Header: Marshal {
     /// Marshal serializes the header and writes to the buffer.
-    public func marshal(_ buf: inout ByteBuffer) throws -> Int {
+    public func marshalTo(_ buf: inout ByteBuffer) throws -> Int {
         /*
          *  0                   1                   2                   3
          *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
