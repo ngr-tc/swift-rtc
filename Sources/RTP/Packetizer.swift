@@ -19,41 +19,27 @@ public protocol Payloader {
     mutating func payload(mtu: Int, buf: inout ByteBuffer) throws -> [ByteBuffer]
 }
 
-/*
-impl Clone for Box<dyn Payloader> {
-    fn clone(&self) -> Box<dyn Payloader> {
-        self.clone_to()
-    }
-}
-
 /// Packetizer packetizes a payload
-pub trait Packetizer: fmt::Debug {
-    fn enable_abs_send_time(&mut self, value: u8);
-    fn packetize(&mut self, payload: &Bytes, samples: u32) -> Result<Vec<Packet>>;
-    fn skip_samples(&mut self, skipped_samples: u32);
-    fn clone_to(&self) -> Box<dyn Packetizer>;
-}
-
-impl Clone for Box<dyn Packetizer> {
-    fn clone(&self) -> Box<dyn Packetizer> {
-        self.clone_to()
-    }
+public protocol Packetizer {
+    mutating func enableAbsSendTime(value: UInt8)
+    mutating func packetize(payload: inout ByteBuffer, samples: UInt32) throws -> [Packet]
+    mutating func skipSamples(skippedSamples: UInt32)
 }
 
 /// Depacketizer depacketizes a RTP payload, removing any RTP specific data from the payload
-pub trait Depacketizer {
-    fn depacketize(&mut self, b: &Bytes) -> Result<Bytes>;
+public protocol Depacketizer {
+    mutating func depacketize(buf: inout ByteBuffer) throws -> [ByteBuffer]
 
     /// Checks if the packet is at the beginning of a partition.  This
     /// should return false if the result could not be determined, in
     /// which case the caller will detect timestamp discontinuities.
-    fn is_partition_head(&self, payload: &Bytes) -> bool;
+    func isPartitionHead(payload: inout ByteBuffer) -> Bool
 
     /// Checks if the packet is at the end of a partition.  This should
     /// return false if the result could not be determined.
-    fn is_partition_tail(&self, marker: bool, payload: &Bytes) -> bool;
+    func isPartitionTail(marker: Bool, payload: inout ByteBuffer) -> Bool
 }
-
+/*
 //TODO: SystemTime vs Instant?
 // non-monotonic clock vs monotonically non-decreasing clock
 /// FnTimeGen provides current SystemTime
