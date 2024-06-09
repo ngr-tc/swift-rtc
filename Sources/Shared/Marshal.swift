@@ -13,6 +13,10 @@
 //===----------------------------------------------------------------------===//
 import NIOCore
 
+public protocol Unmarshal: MarshalSize {
+    init(_ buf: inout ByteBuffer) throws
+}
+
 public protocol MarshalSize {
     func marshalSize() -> Int
 }
@@ -27,8 +31,4 @@ extension Marshal {
         let _ = try self.marshalTo(&buf)
         return buf
     }
-}
-
-public protocol Unmarshal: MarshalSize {
-    init(_ buf: inout ByteBuffer) throws
 }

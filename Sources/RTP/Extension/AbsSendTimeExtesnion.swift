@@ -24,7 +24,7 @@ public struct AbsSendTimeExtension: Equatable {
     public init(timestamp: UInt64) {
         self.timestamp = timestamp
     }
-    
+
     /// makes new AbsSendTimeExtension from time.Time.
     public init(sendTime: NIODeadline) {
         self.timestamp = unix2ntp(sendTime) >> 14
@@ -44,6 +44,22 @@ public struct AbsSendTimeExtension: Equatable {
     }
 }
 
+extension AbsSendTimeExtension: Unmarshal {
+    /// Unmarshal parses the passed byte slice and stores the result in the members.
+    public init(_ buf: inout ByteBuffer) throws {
+        guard let b0: UInt8 = buf.readInteger() else {
+            throw RtpError.errBufferTooSmall
+        }
+        guard let b1: UInt8 = buf.readInteger() else {
+            throw RtpError.errBufferTooSmall
+        }
+        guard let b2: UInt8 = buf.readInteger() else {
+            throw RtpError.errBufferTooSmall
+        }
+        self.timestamp = UInt64(b0) << 16 | UInt64(b1) << 8 | UInt64(b2)
+    }
+}
+
 extension AbsSendTimeExtension: MarshalSize {
     /// MarshalSize returns the size of the AbsSendTimeExtension once marshaled.
     public func marshalSize() -> Int {
@@ -59,22 +75,6 @@ extension AbsSendTimeExtension: Marshal {
         buf.writeInteger(UInt8(self.timestamp & 0xFF))
 
         return absSendTimeExtensionSize
-    }
-}
-
-extension AbsSendTimeExtension: Unmarshal {
-    /// Unmarshal parses the passed byte slice and stores the result in the members.
-    public init(_ buf: inout ByteBuffer) throws {
-        guard let b0: UInt8 = buf.readInteger() else {
-            throw RtpError.errBufferTooSmall
-        }
-        guard let b1: UInt8 = buf.readInteger() else {
-            throw RtpError.errBufferTooSmall
-        }
-        guard let b2: UInt8 = buf.readInteger() else {
-            throw RtpError.errBufferTooSmall
-        }
-        self.timestamp = UInt64(b0) << 16 | UInt64(b1) << 8 | UInt64(b2)
     }
 }
 

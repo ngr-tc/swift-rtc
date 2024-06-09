@@ -165,120 +165,6 @@ public struct Header: Equatable {
     }
 }
 
-extension Header: MarshalSize {
-    /// MarshalSize returns the size of the packet once marshaled.
-    public func marshalSize() -> Int {
-        var headSize = 12 + (self.csrcs.count * csrcLength)
-        if self.ext {
-            let extensionPayloadLen = self.getExtensionPayloadLen()
-            let extensionPayloadSize = (extensionPayloadLen + 3) / 4
-            headSize += 4 + extensionPayloadSize * 4
-        }
-        return headSize
-    }
-}
-
-extension Header: Marshal {
-    /// Marshal serializes the header and writes to the buffer.
-    public func marshalTo(_ buf: inout ByteBuffer) throws -> Int {
-        /*
-         *  0                   1                   2                   3
-         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         * |V=2|P|X|  CC   |M|     PT      |       sequence number         |
-         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         * |                           timestamp                           |
-         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         * |           synchronization source (SSRC) identifier            |
-         * +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
-         * |            contributing source (CSRC) identifiers             |
-         * |                             ....                              |
-         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         */
-
-        // The first byte contains the version, padding bit, extension bit, and csrc size
-        var b0 = (self.version << versionShift) | UInt8(self.csrcs.count)
-        if self.padding {
-            b0 |= 1 << paddingShift
-        }
-
-        if self.ext {
-            b0 |= 1 << extensionShift
-        }
-        buf.writeRepeatingByte(b0, count: 1)
-
-        // The second byte contains the marker bit and payload type.
-        var b1 = self.payloadType
-        if self.marker {
-            b1 |= 1 << markerShift
-        }
-        buf.writeInteger(b1)
-
-        buf.writeInteger(self.sequenceNumber)
-        buf.writeInteger(self.timestamp)
-        buf.writeInteger(self.ssrc)
-
-        for csrc in self.csrcs {
-            buf.writeInteger(csrc)
-        }
-
-        if self.ext {
-            buf.writeInteger(self.extensionProfile)
-
-            // calculate extensions size and round to 4 bytes boundaries
-            let extensionPayloadLen = self.getExtensionPayloadLen()
-            if self.extensionProfile != extensionProfileOneByte
-                && self.extensionProfile != extensionProfileTwoByte
-                && extensionPayloadLen % 4 != 0
-            {
-                //the payload must be in 32-bit words.
-                throw RtpError.errHeaderExtensionPayloadNot32BitWords
-            }
-            let extensionPayloadSize = (UInt16(extensionPayloadLen) + 3) / 4
-            buf.writeInteger(extensionPayloadSize)
-
-            switch self.extensionProfile {
-            // RFC 8285 RTP One Byte Header Extension
-            case extensionProfileOneByte:
-                for ext in self.extensions {
-                    buf.writeInteger((ext.id << 4) | (UInt8(ext.payload.readableBytes) - 1))
-                    buf.writeImmutableBuffer(ext.payload)
-                }
-
-            // RFC 8285 RTP Two Byte Header Extension
-            case extensionProfileTwoByte:
-                for ext in self.extensions {
-                    buf.writeInteger(ext.id)
-                    buf.writeInteger(UInt8(ext.payload.readableBytes))
-                    buf.writeImmutableBuffer(ext.payload)
-                }
-
-            // RFC3550 Extension
-            default:
-                if self.extensions.count != 1 {
-                    throw RtpError.errRfc3550headerIdrange
-                }
-
-                if let ext = self.extensions.first {
-                    let extLen = ext.payload.readableBytes
-                    if extLen % 4 != 0 {
-                        throw RtpError.errHeaderExtensionPayloadNot32BitWords
-                    }
-                    buf.writeImmutableBuffer(ext.payload)
-                }
-
-            }
-
-            // add padding to reach 4 bytes boundaries
-            for _ in extensionPayloadLen..<Int(extensionPayloadSize) * 4 {
-                buf.writeInteger(UInt8(0))
-            }
-        }
-
-        return buf.readableBytes
-    }
-}
-
 extension Header: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
     public init(_ buf: inout ByteBuffer) throws {
@@ -457,5 +343,119 @@ extension Header: Unmarshal {
         self.csrcs = csrcs
         self.extensionProfile = extensionProfile
         self.extensions = extensions
+    }
+}
+
+extension Header: MarshalSize {
+    /// MarshalSize returns the size of the packet once marshaled.
+    public func marshalSize() -> Int {
+        var headSize = 12 + (self.csrcs.count * csrcLength)
+        if self.ext {
+            let extensionPayloadLen = self.getExtensionPayloadLen()
+            let extensionPayloadSize = (extensionPayloadLen + 3) / 4
+            headSize += 4 + extensionPayloadSize * 4
+        }
+        return headSize
+    }
+}
+
+extension Header: Marshal {
+    /// Marshal serializes the header and writes to the buffer.
+    public func marshalTo(_ buf: inout ByteBuffer) throws -> Int {
+        /*
+         *  0                   1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * |V=2|P|X|  CC   |M|     PT      |       sequence number         |
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * |                           timestamp                           |
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * |           synchronization source (SSRC) identifier            |
+         * +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+         * |            contributing source (CSRC) identifiers             |
+         * |                             ....                              |
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+
+        // The first byte contains the version, padding bit, extension bit, and csrc size
+        var b0 = (self.version << versionShift) | UInt8(self.csrcs.count)
+        if self.padding {
+            b0 |= 1 << paddingShift
+        }
+
+        if self.ext {
+            b0 |= 1 << extensionShift
+        }
+        buf.writeRepeatingByte(b0, count: 1)
+
+        // The second byte contains the marker bit and payload type.
+        var b1 = self.payloadType
+        if self.marker {
+            b1 |= 1 << markerShift
+        }
+        buf.writeInteger(b1)
+
+        buf.writeInteger(self.sequenceNumber)
+        buf.writeInteger(self.timestamp)
+        buf.writeInteger(self.ssrc)
+
+        for csrc in self.csrcs {
+            buf.writeInteger(csrc)
+        }
+
+        if self.ext {
+            buf.writeInteger(self.extensionProfile)
+
+            // calculate extensions size and round to 4 bytes boundaries
+            let extensionPayloadLen = self.getExtensionPayloadLen()
+            if self.extensionProfile != extensionProfileOneByte
+                && self.extensionProfile != extensionProfileTwoByte
+                && extensionPayloadLen % 4 != 0
+            {
+                //the payload must be in 32-bit words.
+                throw RtpError.errHeaderExtensionPayloadNot32BitWords
+            }
+            let extensionPayloadSize = (UInt16(extensionPayloadLen) + 3) / 4
+            buf.writeInteger(extensionPayloadSize)
+
+            switch self.extensionProfile {
+            // RFC 8285 RTP One Byte Header Extension
+            case extensionProfileOneByte:
+                for ext in self.extensions {
+                    buf.writeInteger((ext.id << 4) | (UInt8(ext.payload.readableBytes) - 1))
+                    buf.writeImmutableBuffer(ext.payload)
+                }
+
+            // RFC 8285 RTP Two Byte Header Extension
+            case extensionProfileTwoByte:
+                for ext in self.extensions {
+                    buf.writeInteger(ext.id)
+                    buf.writeInteger(UInt8(ext.payload.readableBytes))
+                    buf.writeImmutableBuffer(ext.payload)
+                }
+
+            // RFC3550 Extension
+            default:
+                if self.extensions.count != 1 {
+                    throw RtpError.errRfc3550headerIdrange
+                }
+
+                if let ext = self.extensions.first {
+                    let extLen = ext.payload.readableBytes
+                    if extLen % 4 != 0 {
+                        throw RtpError.errHeaderExtensionPayloadNot32BitWords
+                    }
+                    buf.writeImmutableBuffer(ext.payload)
+                }
+
+            }
+
+            // add padding to reach 4 bytes boundaries
+            for _ in extensionPayloadLen..<Int(extensionPayloadSize) * 4 {
+                buf.writeInteger(UInt8(0))
+            }
+        }
+
+        return buf.readableBytes
     }
 }

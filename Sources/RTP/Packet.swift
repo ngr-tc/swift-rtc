@@ -37,6 +37,38 @@ extension Packet: CustomStringConvertible {
     }
 }
 
+extension Packet: Unmarshal {
+    /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
+    public init(_ buf: inout ByteBuffer) throws {
+        let header = try Header(&buf)
+        let payloadLen = buf.readableBytes
+        guard var payload = buf.readSlice(length: payloadLen) else {
+            throw RtpError.errShortPacket
+        }
+        if header.padding {
+            if payloadLen > 0 {
+                guard let bytes = payload.getBytes(at: payloadLen - 1, length: 1) else {
+                    throw RtpError.errShortPacket
+                }
+                let paddingLen = Int(bytes[0])
+                if paddingLen <= payloadLen {
+                    guard let payloadSlice = payload.readSlice(length: payloadLen - paddingLen)
+                    else {
+                        throw RtpError.errShortPacket
+                    }
+                    payload = payloadSlice
+                } else {
+                    throw RtpError.errShortPacket
+                }
+            } else {
+                throw RtpError.errShortPacket
+            }
+        }
+        self.header = header
+        self.payload = payload
+    }
+}
+
 extension Packet: MarshalSize {
     /// MarshalSize returns the size of the packet once marshaled.
     public func marshalSize() -> Int {
@@ -77,38 +109,6 @@ extension Packet: Marshal {
         }
 
         return n + self.payload.readableBytes + paddingLen
-    }
-}
-
-extension Packet: Unmarshal {
-    /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
-    public init(_ buf: inout ByteBuffer) throws {
-        let header = try Header(&buf)
-        let payloadLen = buf.readableBytes
-        guard var payload = buf.readSlice(length: payloadLen) else {
-            throw RtpError.errShortPacket
-        }
-        if header.padding {
-            if payloadLen > 0 {
-                guard let bytes = payload.getBytes(at: payloadLen - 1, length: 1) else {
-                    throw RtpError.errShortPacket
-                }
-                let paddingLen = Int(bytes[0])
-                if paddingLen <= payloadLen {
-                    guard let payloadSlice = payload.readSlice(length: payloadLen - paddingLen)
-                    else {
-                        throw RtpError.errShortPacket
-                    }
-                    payload = payloadSlice
-                } else {
-                    throw RtpError.errShortPacket
-                }
-            } else {
-                throw RtpError.errShortPacket
-            }
-        }
-        self.header = header
-        self.payload = payload
     }
 }
 
