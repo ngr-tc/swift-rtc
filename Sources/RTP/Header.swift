@@ -195,7 +195,6 @@ extension Header: Marshal {
          * |                             ....                              |
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
-        buf.clear()
 
         // The first byte contains the version, padding bit, extension bit, and csrc size
         var b0 = (self.version << versionShift) | UInt8(self.csrcs.count)

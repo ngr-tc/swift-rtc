@@ -331,8 +331,8 @@ final class PacketTests: XCTestCase {
         XCTAssertEqual(ext3, ext3Expect)
 
         var dstBuf: [ByteBuffer] = [
-            ByteBuffer(repeating: 0, count: 1000), ByteBuffer(repeating: 0xFF, count: 1000),
-            ByteBuffer(repeating: 0xAA, count: 2),
+            ByteBuffer(), ByteBuffer(),
+            ByteBuffer(),
         ]
 
         let rawPkgMarshal = ByteBuffer(bytes: [
