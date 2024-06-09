@@ -151,7 +151,7 @@ public struct Message: Equatable {
     public mutating func grow(_ n: Int, _ resize: Bool) {
         if self.raw.readableBytes >= n {
             if resize {
-                self.raw = ByteBuffer(ByteBufferView(self.raw)[..<n])
+                self.raw = ByteBuffer(self.raw.readableBytesView[..<n])
             }
             return
         }
@@ -186,7 +186,7 @@ public struct Message: Equatable {
         let attr = RawAttribute(
             typ: t,  // T
             length: v.count,  // L
-            value: ByteBuffer(ByteBufferView(self.raw)[first + attributeHeaderSize..<last])  // V
+            value: ByteBuffer(self.raw.readableBytesView[first + attributeHeaderSize..<last])  // V
         )
 
         // Checking that attribute value needs padding.
@@ -231,7 +231,7 @@ public struct Message: Equatable {
     // WriteAttributes encodes all m.Attributes to m.
     public mutating func writeAttributes() {
         for a in self.attributes.rawAttributes {
-            self.add(a.typ, ByteBufferView(a.value))
+            self.add(a.typ, a.value.readableBytesView)
         }
     }
 
@@ -257,7 +257,7 @@ public struct Message: Equatable {
 
     // Decode decodes m.Raw into m.
     public mutating func decode() throws {
-        let rawView = ByteBufferView(self.raw)
+        let rawView = self.raw.readableBytesView
         // decoding message header
         if rawView.count < messageHeaderSize {
             throw StunError.errUnexpectedHeaderEof

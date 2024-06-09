@@ -58,7 +58,7 @@ public struct MessageIntegrity {
     /// CPU costly, see BenchmarkMessageIntegrity_Check.
     public func check(_ m: inout Message) throws {
         let b = try m.get(attrMessageIntegrity)
-        let v = ByteBufferView(b)
+        let v = b.readableBytesView
 
         // Adjusting length in header to match m.Raw that was
         // used when computing HMAC.
@@ -85,10 +85,10 @@ public struct MessageIntegrity {
         guard let b = m.raw.viewBytes(at: 0, length: startOfHmac) else {
             throw StunError.errBufferTooSmall
         }
-        let expected = newHmac(key: ByteBufferView(self.rawValue), message: b)
+        let expected = newHmac(key: self.rawValue.readableBytesView, message: b)
         m.length = length
         m.writeLength()  // writing length back
-        try checkHmac(got: v, expected: ByteBufferView(expected))
+        try checkHmac(got: v, expected: expected.readableBytesView)
     }
 }
 
@@ -135,9 +135,9 @@ extension MessageIntegrity: Setter {
         // writing length to m.Raw
         m.writeLength()
         // calculating HMAC for adjusted m.Raw
-        let v = newHmac(key: ByteBufferView(self.rawValue), message: ByteBufferView(m.raw))
+        let v = newHmac(key: self.rawValue.readableBytesView, message: m.raw.readableBytesView)
         m.length = length  // changing m.Length back
 
-        m.add(attrMessageIntegrity, ByteBufferView(v))
+        m.add(attrMessageIntegrity, v.readableBytesView)
     }
 }

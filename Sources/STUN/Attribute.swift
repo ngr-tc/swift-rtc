@@ -273,7 +273,7 @@ extension RawAttribute: Setter {
     /// implements Setter, adding attribute as a.Type with a.Value and ignoring
     /// the Length field.
     public func addTo(_ m: inout Message) throws {
-        m.add(self.typ, ByteBufferView(self.value))
+        m.add(self.typ, self.value.readableBytesView)
     }
 }
 

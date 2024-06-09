@@ -57,7 +57,7 @@ extension ErrorCodeAttribute: Setter {
         value.writeRepeatingByte(numberByte, count: 1)  //[ERROR_CODE_NUMBER_BYTE]
         value.writeString(self.reason)  //[ERROR_CODE_REASON_START:]
 
-        m.add(attrErrorCode, ByteBufferView(value))
+        m.add(attrErrorCode, value.readableBytesView)
     }
 }
 
@@ -65,7 +65,7 @@ extension ErrorCodeAttribute: Getter {
     /// getFrom decodes ERROR-CODE from m. Reason is valid until m.Raw is valid.
     public mutating func getFrom(_ m: inout Message) throws {
         let b = try m.get(attrErrorCode)
-        let v = ByteBufferView(b)
+        let v = b.readableBytesView
         if v.count < errorCodeReasonStart {
             throw StunError.errUnexpectedEof
         }

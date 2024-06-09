@@ -38,7 +38,7 @@ public struct MappedAddress {
     /// decodes MAPPED-ADDRESS value in message m as an attribute of type t.
     public mutating func getFromAs(_ m: inout Message, _ t: AttrType) throws {
         let b = try m.get(t)
-        let v = ByteBufferView(b)
+        let v = b.readableBytesView
         if v.count <= 4 {
             throw StunError.errUnexpectedEof
         }
@@ -74,7 +74,7 @@ public struct MappedAddress {
         value.writeBytes(UInt16(port).toBeBytes())
         value.writeBytes(socketAddress.octets())
 
-        m.add(t, ByteBufferView(value))
+        m.add(t, value.readableBytesView)
     }
 }
 

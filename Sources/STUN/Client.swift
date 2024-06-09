@@ -158,7 +158,7 @@ extension Client: RTCHandler {
     public mutating func handleRead(_ rin: Transmit<Rin>) throws {
         var msg = Message()
 
-        let _ = try msg.readFrom(ByteBufferView(rin.message))
+        let _ = try msg.readFrom(rin.message.readableBytesView)
         try self.agent.handleEvent(ClientAgent.process(msg))
     }
 

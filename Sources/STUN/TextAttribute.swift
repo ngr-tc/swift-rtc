@@ -55,7 +55,7 @@ public struct TextAttribute {
         }
 
         let a = try m.get(attr)
-        let aView = ByteBufferView(a)
+        let aView = a.readableBytesView
         guard let text = a.getString(at: 0, length: aView.count) else {
             throw StunError.errInvalidTextAttribute
         }
@@ -87,7 +87,7 @@ extension TextAttribute: Setter {
             throw StunError.errUnsupportedAttrType(self.attr)
         }
         let text = ByteBuffer(string: self.text)
-        let textView = ByteBufferView(text)
+        let textView = text.readableBytesView
         try checkOverflow(self.attr, textView.count, maxLen)
         m.add(self.attr, textView)
     }

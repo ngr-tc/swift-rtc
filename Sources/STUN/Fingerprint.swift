@@ -22,10 +22,10 @@ public struct FingerprintAttr {
     // Can return *AttrLengthErr, ErrAttributeNotFound, and *CRCMismatch.
     public func check(m: Message) throws {
         let b = try m.get(attrFingerprint)
-        let v = ByteBufferView(b)
+        let v = b.readableBytesView
         try checkSize(attrFingerprint, got: v.count, expected: fingerprintSize)
         let val = UInt32.fromBeBytes(v[0], v[1], v[2], v[3])
-        let rawView = ByteBufferView(m.raw)
+        let rawView = m.raw.readableBytesView
         let attrStart = rawView.count - (fingerprintSize + attributeHeaderSize)
         let expected = fingerprintValue(rawView[..<attrStart])
         try checkFingerprint(got: val, expected: expected)
@@ -60,7 +60,7 @@ extension FingerprintAttr: Setter {
         // length in header should include size of fingerprint attribute
         m.length += Int(fingerprintSize + attributeHeaderSize)  // increasing length
         m.writeLength()  // writing Length to Raw
-        let val = fingerprintValue(ByteBufferView(m.raw))
+        let val = fingerprintValue(m.raw.readableBytesView)
         m.length = l
         m.add(attrFingerprint, ByteBufferView(val.toBeBytes()))
     }

@@ -46,7 +46,7 @@ extension UnknownAttributes: Setter {
             v.writeBytes(t.value().toBeBytes())
         }
 
-        m.add(attrUnknownAttributes, ByteBufferView(v))
+        m.add(attrUnknownAttributes, v.readableBytesView)
     }
 }
 
@@ -54,7 +54,7 @@ extension UnknownAttributes: Getter {
     /// GetFrom parses UNKNOWN-ATTRIBUTES from message.
     public mutating func getFrom(_ m: inout Message) throws {
         let b = try m.get(attrUnknownAttributes)
-        let v = ByteBufferView(b)
+        let v = b.readableBytesView
         if v.count % attrTypeSize != 0 {
             throw StunError.errBadUnknownAttrsSize
         }

@@ -76,20 +76,20 @@ public struct XorMappedAddress {
         let ip = ByteBuffer(bytes: self.socketAddress.octets())
         var xorIp = ByteBuffer(repeating: 0, count: ipLen)
 
-        let _ = xorBytes(&xorIp, ByteBufferView(ip), ByteBufferView(xorValue))
+        let _ = xorBytes(&xorIp, ip.readableBytesView, xorValue.readableBytesView)
 
         var value = ByteBuffer()
         value.writeBytes(family.toBeBytes())
         value.writeBytes((UInt16(port) ^ UInt16(magicCookie >> 16)).toBeBytes())
         value.writeImmutableBuffer(xorIp)
-        m.add(t, ByteBufferView(value))
+        m.add(t, value.readableBytesView)
     }
 
     /// get_from_as decodes XOR-MAPPED-ADDRESS attribute value in message
     /// getting it as for t type.
     public mutating func getFromAs(_ m: inout Message, _ t: AttrType) throws {
         let b = try m.get(t)
-        let v = ByteBufferView(b)
+        let v = b.readableBytesView
         if v.count <= 4 {
             throw StunError.errUnexpectedEof
         }
@@ -106,7 +106,7 @@ public struct XorMappedAddress {
         var xorValue = ByteBuffer()
         xorValue.writeBytes(magicCookie.toBeBytes())
         xorValue.writeImmutableBuffer(m.transactionId.rawValue)
-        let xorValueView = ByteBufferView(xorValue)
+        let xorValueView = xorValue.readableBytesView
 
         if family == familyIpV6 {
             var ip = ByteBuffer(bytes: Array(repeating: 0, count: ipV6Len))
