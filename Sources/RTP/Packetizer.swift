@@ -39,114 +39,95 @@ public protocol Depacketizer {
     /// return false if the result could not be determined.
     func isPartitionTail(marker: Bool, payload: inout ByteBuffer) -> Bool
 }
-/*
-//TODO: SystemTime vs Instant?
+
 // non-monotonic clock vs monotonically non-decreasing clock
 /// FnTimeGen provides current SystemTime
-pub type FnTimeGen = Arc<dyn (Fn() -> SystemTime)>;
+public typealias FnTimeGen = () -> NIODeadline
 
-#[derive(Clone)]
-pub(crate) struct PacketizerImpl {
-    pub(crate) mtu: usize,
-    pub(crate) payload_type: u8,
-    pub(crate) ssrc: u32,
-    pub(crate) payloader: Box<dyn Payloader>,
-    pub(crate) sequencer: Box<dyn Sequencer>,
-    pub(crate) timestamp: u32,
-    pub(crate) clock_rate: u32,
-    pub(crate) abs_send_time: u8, //http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
-    pub(crate) time_gen: Option<FnTimeGen>,
+public func newPacketizer(
+    mtu: Int,
+    payloadType: UInt8,
+    ssrc: UInt32,
+    payloader: Payloader,
+    sequencer: Sequencer,
+    clockRate: UInt32
+) -> Packetizer {
+    return PacketizerImpl(
+        mtu: mtu,
+        payloadType: payloadType,
+        ssrc: ssrc,
+        payloader: payloader,
+        sequencer: sequencer,
+        timestamp: UInt32.random(in: UInt32.min...UInt32.max),
+        clockRate: clockRate,
+        absSendTime: 0,
+        timeGen: nil
+    )
 }
 
-impl fmt::Debug for PacketizerImpl {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("PacketizerImpl")
-            .field("mtu", &self.mtu)
-            .field("payload_type", &self.payload_type)
-            .field("ssrc", &self.ssrc)
-            .field("timestamp", &self.timestamp)
-            .field("clock_rate", &self.clock_rate)
-            .field("abs_send_time", &self.abs_send_time)
-            .finish()
-    }
+struct PacketizerImpl {
+    var mtu: Int
+    var payloadType: UInt8
+    var ssrc: UInt32
+    var payloader: Payloader
+    var sequencer: Sequencer
+    var timestamp: UInt32
+    var clockRate: UInt32
+    var absSendTime: UInt8  //http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+    var timeGen: FnTimeGen?
 }
 
-pub fn new_packetizer(
-    mtu: usize,
-    payload_type: u8,
-    ssrc: u32,
-    payloader: Box<dyn Payloader>,
-    sequencer: Box<dyn Sequencer>,
-    clock_rate: u32,
-) -> impl Packetizer {
-    PacketizerImpl {
-        mtu,
-        payload_type,
-        ssrc,
-        payloader,
-        sequencer,
-        timestamp: rand::random::<u32>(),
-        clock_rate,
-        abs_send_time: 0,
-        time_gen: None,
-    }
-}
-
-impl Packetizer for PacketizerImpl {
-    fn enable_abs_send_time(&mut self, value: u8) {
-        self.abs_send_time = value
+extension PacketizerImpl: Packetizer {
+    public mutating func enableAbsSendTime(value: UInt8) {
+        self.absSendTime = value
     }
 
-    fn packetize(&mut self, payload: &Bytes, samples: u32) -> Result<Vec<Packet>> {
-        let payloads = self.payloader.payload(self.mtu - 12, payload)?;
-        let payloads_len = payloads.len();
-        let mut packets = Vec::with_capacity(payloads_len);
-        for (i, payload) in payloads.into_iter().enumerate() {
-            packets.push(Packet {
-                header: Header {
-                    version: 2,
-                    padding: false,
-                    extension: false,
-                    marker: i == payloads_len - 1,
-                    payload_type: self.payload_type,
-                    sequence_number: self.sequencer.next_sequence_number(),
-                    timestamp: self.timestamp, //TODO: Figure out how to do timestamps
-                    ssrc: self.ssrc,
-                    ..Default::default()
-                },
-                payload,
-            });
+    public mutating func packetize(payload: inout ByteBuffer, samples: UInt32) throws -> [Packet] {
+        let payloads = try self.payloader.payload(mtu: self.mtu - 12, buf: &payload)
+        let payloadsLen = payloads.count
+        var packets: [Packet] = []
+        for (i, payload) in payloads.enumerated() {
+            packets.append(
+                Packet(
+                    header: Header(
+                        version: 2,
+                        padding: false,
+                        ext: false,
+                        marker: i == payloadsLen - 1,
+                        payloadType: self.payloadType,
+                        sequenceNumber: self.sequencer.nextSequenceNumber(),
+                        timestamp: self.timestamp,  //TODO: Figure out how to do timestamps
+                        ssrc: self.ssrc,
+                        csrcs: [],
+                        extensionProfile: 0,
+                        extensions: []
+                    ),
+                    payload: payload
+                ))
         }
 
-        self.timestamp = self.timestamp.wrapping_add(samples);
+        self.timestamp = self.timestamp &+ samples
 
-        if payloads_len != 0 && self.abs_send_time != 0 {
-            let st = if let Some(fn_time_gen) = &self.time_gen {
-                fn_time_gen()
-            } else {
-                SystemTime::now()
-            };
-            let send_time = AbsSendTimeExtension::new(st);
+        if payloadsLen != 0 && self.absSendTime != 0 {
+            var st = NIODeadline.now()
+            if let fnTimeGen = self.timeGen {
+                st = fnTimeGen()
+            }
+            let sendTime = AbsSendTimeExtension(sendTime: st)
             //apply http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
-            let mut raw = BytesMut::with_capacity(send_time.marshal_size());
-            raw.resize(send_time.marshal_size(), 0);
-            let _ = send_time.marshal_to(&mut raw)?;
-            packets[payloads_len - 1]
+            var raw = ByteBuffer()
+            let _ = try sendTime.marshalTo(&raw)
+            try packets[payloadsLen - 1]
                 .header
-                .set_extension(self.abs_send_time, raw.freeze())?;
+                .setExtension(id: self.absSendTime, payload: raw)
         }
 
-        Ok(packets)
+        return packets
     }
 
     /// skip_samples causes a gap in sample count between Packetize requests so the
     /// RTP payloads produced have a gap in timestamps
-    fn skip_samples(&mut self, skipped_samples: u32) {
-        self.timestamp = self.timestamp.wrapping_add(skipped_samples);
-    }
-
-    fn clone_to(&self) -> Box<dyn Packetizer> {
-        Box::new(self.clone())
+    public mutating func skipSamples(skippedSamples: UInt32) {
+        self.timestamp = self.timestamp &+ skippedSamples
     }
 }
-*/

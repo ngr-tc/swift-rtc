@@ -27,7 +27,7 @@ public func newRandomSequencer() -> Sequencer {
 
 /// NewFixedSequencer returns a new sequencer starting from a specific
 /// sequence number
-public func newFixedSequencer(s: UInt16) -> Sequencer {
+public func newFixedSequencer(_ s: UInt16) -> Sequencer {
     let sequenceNumber = s == 0 ? UInt16.max : s - 1
     return SequencerImpl(sequenceNumber: sequenceNumber, rollOverCount: 0)
 }
