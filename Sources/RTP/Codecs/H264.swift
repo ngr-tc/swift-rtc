@@ -40,6 +40,11 @@ public struct H264Payloader {
     var spsNalu: ByteBuffer?
     var ppsNalu: ByteBuffer?
 
+    public init(spsNalu: ByteBuffer? = nil, ppsNalu: ByteBuffer? = nil) {
+        self.spsNalu = spsNalu
+        self.ppsNalu = ppsNalu
+    }
+
     static func nextInd(nalu: ByteBufferView) -> (Int, Int) {
         var zeroCount = 0
         let start = nalu.startIndex
@@ -220,117 +225,133 @@ extension H264Payloader: Payloader {
         return payloads
     }
 }
-/*
+
 /// H264Packet represents the H264 header that is stored in the payload of an RTP Packet
-#[derive(PartialEq, Eq, Debug, Default, Clone)]
-pub struct H264Packet {
-    pub is_avc: bool,
-    fua_buffer: Option<BytesMut>,
+public struct H264Packet: Equatable {
+    public var isAvc: Bool
+    var fuaBuffer: ByteBuffer?
+
+    public init(isAvc: Bool, fuaBuffer: ByteBuffer? = nil) {
+        self.isAvc = isAvc
+        self.fuaBuffer = fuaBuffer
+    }
 }
 
-impl Depacketizer for H264Packet {
+extension H264Packet: Depacketizer {
     /// depacketize parses the passed byte slice and stores the result in the H264Packet this method is called upon
-    fn depacketize(&mut self, packet: &Bytes) -> Result<Bytes> {
-        if packet.len() <= 2 {
-            return Err(Error::ErrShortPacket);
+    public mutating func depacketize(buf: inout ByteBuffer) throws -> ByteBuffer {
+        guard let b = buf.getBytes(at: 0, length: 2) else {
+            throw RtpError.errShortPacket
         }
 
-        let mut payload = BytesMut::new();
+        var payload = ByteBuffer()
 
         // NALU Types
         // https://tools.ietf.org/html/rfc6184#section-5.4
-        let b0 = packet[0];
-        let nalu_type = b0 & NALU_TYPE_BITMASK;
+        let b0 = b[0]
+        let naluType = b0 & naluTypeBitmask
 
-        match nalu_type {
-            1..=23 => {
-                if self.is_avc {
-                    payload.put_u32(packet.len() as u32);
-                } else {
-                    payload.put(&*ANNEXB_NALUSTART_CODE);
-                }
-                payload.put(&*packet.clone());
-                Ok(payload.freeze())
+        switch naluType {
+        case 1...23:
+            if self.isAvc {
+                payload.writeInteger(UInt32(buf.readableBytes))
+            } else {
+                payload.writeImmutableBuffer(annexBNaluStartCode)
             }
-            STAPA_NALU_TYPE => {
-                let mut curr_offset = STAPA_HEADER_SIZE;
-                while curr_offset < packet.len() {
-                    let nalu_size =
-                        ((packet[curr_offset] as usize) << 8) | packet[curr_offset + 1] as usize;
-                    curr_offset += STAPA_NALU_LENGTH_SIZE;
+            payload.writeImmutableBuffer(buf.slice())
+            return payload
 
-                    if packet.len() < curr_offset + nalu_size {
-                        return Err(Error::StapASizeLargerThanBuffer(
-                            nalu_size,
-                            packet.len() - curr_offset,
-                        ));
-                    }
+        case stapaNaluType:
+            var currOffset = stapaHeaderSize
+            while currOffset < buf.readableBytes {
+                guard let p = buf.getBytes(at: currOffset, length: 2) else {
+                    throw RtpError.errShortPacket
+                }
+                let naluSize = (Int(p[0]) << 8) | Int(p[1])
+                currOffset += stapaNaluLengthSize
 
-                    if self.is_avc {
-                        payload.put_u32(nalu_size as u32);
+                if buf.readableBytes < currOffset + naluSize {
+                    throw RtpError.errStapASizeLargerThanBuffer(
+                        naluSize,
+                        buf.readableBytes - currOffset
+                    )
+                }
+
+                if self.isAvc {
+                    payload.writeInteger(UInt32(naluSize))
+                } else {
+                    payload.writeImmutableBuffer(annexBNaluStartCode)
+                }
+
+                guard let subBuf = buf.getSlice(at: currOffset, length: naluSize) else {
+                    throw RtpError.errShortPacket
+                }
+                payload.writeImmutableBuffer(subBuf)
+                currOffset += naluSize
+            }
+
+            return payload
+
+        case fuaNaluType:
+            if buf.readableBytes < fuaHeaderSize {
+                throw RtpError.errShortPacket
+            }
+
+            if self.fuaBuffer == nil {
+                self.fuaBuffer = ByteBuffer()
+            }
+
+            if var fuaBuffer = self.fuaBuffer {
+                guard
+                    let subBuf = buf.getSlice(
+                        at: fuaHeaderSize, length: buf.readableBytes - fuaHeaderSize)
+                else {
+                    throw RtpError.errShortPacket
+                }
+                fuaBuffer.writeImmutableBuffer(subBuf)
+            }
+
+            let b1 = b[1]
+            if b1 & fuEndBitmask != 0 {
+                let naluRefIdc = b0 & naluRefIdcBitmask
+                let fragmentedNaluType = b1 & naluTypeBitmask
+
+                if let fuaBuffer = self.fuaBuffer {
+                    if self.isAvc {
+                        payload.writeInteger(UInt32(fuaBuffer.readableBytes + 1))
                     } else {
-                        payload.put(&*ANNEXB_NALUSTART_CODE);
+                        payload.writeImmutableBuffer(annexBNaluStartCode)
                     }
-                    payload.put(&*packet.slice(curr_offset..curr_offset + nalu_size));
-                    curr_offset += nalu_size;
+                    payload.writeInteger(UInt8(naluRefIdc | fragmentedNaluType))
+                    payload.writeImmutableBuffer(fuaBuffer)
                 }
+                self.fuaBuffer = nil
 
-                Ok(payload.freeze())
+                return payload
+            } else {
+                return ByteBuffer()
             }
-            FUA_NALU_TYPE => {
-                if packet.len() < FUA_HEADER_SIZE {
-                    return Err(Error::ErrShortPacket);
-                }
-
-                if self.fua_buffer.is_none() {
-                    self.fua_buffer = Some(BytesMut::new());
-                }
-
-                if let Some(fua_buffer) = &mut self.fua_buffer {
-                    fua_buffer.put(&*packet.slice(FUA_HEADER_SIZE..));
-                }
-
-                let b1 = packet[1];
-                if b1 & FU_END_BITMASK != 0 {
-                    let nalu_ref_idc = b0 & NALU_REF_IDC_BITMASK;
-                    let fragmented_nalu_type = b1 & NALU_TYPE_BITMASK;
-
-                    if let Some(fua_buffer) = self.fua_buffer.take() {
-                        if self.is_avc {
-                            payload.put_u32((fua_buffer.len() + 1) as u32);
-                        } else {
-                            payload.put(&*ANNEXB_NALUSTART_CODE);
-                        }
-                        payload.put_UInt8(nalu_ref_idc | fragmented_nalu_type);
-                        payload.put(fua_buffer);
-                    }
-
-                    Ok(payload.freeze())
-                } else {
-                    Ok(Bytes::new())
-                }
-            }
-            _ => Err(Error::NaluTypeIsNotHandled(nalu_type)),
+        default:
+            throw RtpError.errNaluTypeIsNotHandled(naluType)
         }
     }
 
     /// is_partition_head checks if this is the head of a packetized nalu stream.
-    fn is_partition_head(&self, payload: &Bytes) -> bool {
-        if payload.len() < 2 {
-            return false;
+    public func isPartitionHead(payload: inout ByteBuffer) -> Bool {
+        guard let b = payload.getBytes(at: 0, length: 2) else {
+            return false
         }
 
-        if payload[0] & NALU_TYPE_BITMASK == FUA_NALU_TYPE
-            || payload[0] & NALU_TYPE_BITMASK == FUB_NALU_TYPE
+        if b[0] & naluTypeBitmask == fuaNaluType
+            || b[0] & naluTypeBitmask == fubNaluType
         {
-            (payload[1] & FU_START_BITMASK) != 0
+            return (b[1] & fuStartBitmask) != 0
         } else {
-            true
+            return true
         }
     }
 
-    fn is_partition_tail(&self, marker: bool, _payload: &Bytes) -> bool {
-        marker
+    public func isPartitionTail(marker: Bool, payload: inout ByteBuffer) -> Bool {
+        return marker
     }
 }
-*/

@@ -28,7 +28,7 @@ public protocol Packetizer {
 
 /// Depacketizer depacketizes a RTP payload, removing any RTP specific data from the payload
 public protocol Depacketizer {
-    mutating func depacketize(buf: inout ByteBuffer) throws -> [ByteBuffer]
+    mutating func depacketize(buf: inout ByteBuffer) throws -> ByteBuffer
 
     /// Checks if the packet is at the beginning of a partition.  This
     /// should return false if the result could not be determined, in
