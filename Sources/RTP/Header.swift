@@ -37,6 +37,11 @@ public let ssrcLength: Int = 4
 public let csrcOffset: Int = 12
 public let csrcLength: Int = 4
 
+/// A generic RTP header extension.
+public protocol HeaderExtension: Marshal {
+    func uri() -> String
+}
+
 public struct Extension: Equatable {
     public var id: UInt8
     public var payload: ByteBuffer

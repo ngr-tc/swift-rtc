@@ -61,3 +61,9 @@ extension TransportCcExtension: Marshal {
         return transportCcExtensionSize
     }
 }
+
+extension TransportCcExtension: HeaderExtension {
+    public func uri() -> String {
+        return "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+    }
+}

@@ -77,3 +77,9 @@ extension AudioLevelExtension: Marshal {
         return audioLevelExtensionSize
     }
 }
+
+extension AudioLevelExtension: HeaderExtension {
+    public func uri() -> String {
+        return "urn:ietf:params:rtp-hdrext:ssrc-audio-level"
+    }
+}

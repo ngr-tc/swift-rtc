@@ -15,7 +15,7 @@ import NIOCore
 import Shared
 
 // One byte header size
-public let VIDEO_ORIENTATION_EXTENSION_SIZE: Int = 1
+public let videoOrientationExtensionSize: Int = 1
 
 /// Coordination of Video Orientation in RTP streams.
 ///
@@ -27,10 +27,10 @@ public let VIDEO_ORIENTATION_EXTENSION_SIZE: Int = 1
 ///     stream. It can be used by the MTSI client in receiver to e.g. display
 ///     the received video differently depending on the source camera.
 ///
-/// 0: Front-facing camera, facing the user. If camera direction is
+/// 0: front-facing camera, facing the user. If camera direction is
 ///    unknown by the sending MTSI client in the terminal then this is the
 ///    default value used.
-/// 1: Back-facing camera, facing away from the user.
+/// 1: back-facing camera, facing away from the user.
 ///
 /// F = Flip: indicates a horizontal (left-right flip) mirror operation on
 ///     the video as sent on the link.
@@ -47,15 +47,15 @@ public struct VideoOrientationExtension: Equatable {
 }
 
 public enum CameraDirection: UInt8, Equatable {
-    case Front = 0
-    case Back = 1
+    case front = 0
+    case back = 1
 
     public init(value: UInt8) throws {
         switch value {
         case 0:
-            self = CameraDirection.Front
+            self = CameraDirection.front
         case 1:
-            self = CameraDirection.Back
+            self = CameraDirection.back
         default:
             throw RtpError.errInvalidCameraDirectionValue(value)
         }
@@ -63,21 +63,21 @@ public enum CameraDirection: UInt8, Equatable {
 }
 
 public enum VideoRotation: UInt8, Equatable {
-    case Degree0 = 0
-    case Degree90 = 1
-    case Degree180 = 2
-    case Degree270 = 3
+    case degree0 = 0
+    case degree90 = 1
+    case degree180 = 2
+    case degree270 = 3
 
     public init(value: UInt8) throws {
         switch value {
         case 0:
-            self = VideoRotation.Degree0
+            self = VideoRotation.degree0
         case 1:
-            self = VideoRotation.Degree90
+            self = VideoRotation.degree90
         case 2:
-            self = VideoRotation.Degree180
+            self = VideoRotation.degree180
         case 3:
-            self = VideoRotation.Degree270
+            self = VideoRotation.degree270
         default:
             throw RtpError.errInvalidVideoRotationValue(value)
         }
@@ -86,7 +86,7 @@ public enum VideoRotation: UInt8, Equatable {
 
 extension VideoOrientationExtension: Unmarshal {
     public init(_ buf: inout ByteBuffer) throws {
-        if buf.readableBytes < VIDEO_ORIENTATION_EXTENSION_SIZE {
+        if buf.readableBytes < videoOrientationExtensionSize {
             throw RtpError.errBufferTooSmall
         }
 
@@ -106,7 +106,7 @@ extension VideoOrientationExtension: Unmarshal {
 
 extension VideoOrientationExtension: MarshalSize {
     public func marshalSize() -> Int {
-        return VIDEO_ORIENTATION_EXTENSION_SIZE
+        return videoOrientationExtensionSize
     }
 }
 
@@ -118,6 +118,12 @@ extension VideoOrientationExtension: Marshal {
 
         buf.writeInteger(UInt8(c | f | r))
 
-        return VIDEO_ORIENTATION_EXTENSION_SIZE
+        return videoOrientationExtensionSize
+    }
+}
+
+extension VideoOrientationExtension: HeaderExtension {
+    public func uri() -> String {
+        return "urn:3gpp:video-orientation"
     }
 }

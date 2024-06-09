@@ -78,6 +78,12 @@ extension AbsSendTimeExtension: Marshal {
     }
 }
 
+extension AbsSendTimeExtension: HeaderExtension {
+    public func uri() -> String {
+        return "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
+    }
+}
+
 public func unix2ntp(_ st: NIODeadline) -> UInt64 {
     let u = st.uptimeNanoseconds
     var s = u / 1_000_000_000
