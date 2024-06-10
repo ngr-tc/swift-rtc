@@ -85,7 +85,9 @@ public struct H264Payloader {
             let ppsLen = UInt16(ppsNalu.readableBytes).toBeBytes()
 
             var stapANalu = ByteBuffer()
-            stapANalu.writeRepeatingByte(outputStapAHeader, count: 1)
+            stapANalu.reserveCapacity(
+                minimumWritableBytes: 1 + 2 + spsNalu.readableBytes + 2 + ppsNalu.readableBytes)
+            stapANalu.writeInteger(outputStapAHeader)
             stapANalu.writeBytes(spsLen)
             stapANalu.writeImmutableBuffer(spsNalu)
             stapANalu.writeBytes(ppsLen)
@@ -134,6 +136,7 @@ public struct H264Payloader {
             let currentFragmentSize = min(maxFragmentSize, naluDataRemaining)
             //out: = make([]byte, fuaHeaderSize + currentFragmentSize)
             var out = ByteBuffer()
+            out.reserveCapacity(minimumWritableBytes: fuaHeaderSize + currentFragmentSize)
             // +---------------+
             // |0|1|2|3|4|5|6|7|
             // +-+-+-+-+-+-+-+-+

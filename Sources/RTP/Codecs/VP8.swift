@@ -82,6 +82,7 @@ extension Vp8Payloader: Payloader {
         while payloadDataRemaining > 0 {
             let currentFragmentSize = min(maxFragmentSize, payloadDataRemaining)
             var out = ByteBuffer()
+            out.reserveCapacity(minimumWritableBytes: usingHeaderSize + currentFragmentSize)
             var b: [UInt8] = Array(repeating: 0, count: 4)
             if first {
                 b[0] = 0x10

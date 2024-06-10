@@ -70,6 +70,7 @@ public struct MappedAddress {
             throw StunError.errInvalidFamilyIpValue(0)
         }
         var value: ByteBuffer = ByteBuffer()
+        value.reserveCapacity(minimumWritableBytes: 4 + family == familyIpV4 ? 4 : 16)
         value.writeBytes(family.toBeBytes())
         value.writeBytes(UInt16(port).toBeBytes())
         value.writeBytes(socketAddress.octets())

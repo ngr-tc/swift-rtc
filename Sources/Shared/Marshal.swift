@@ -28,6 +28,7 @@ public protocol Marshal: MarshalSize {
 extension Marshal {
     public func marshal() throws -> ByteBuffer {
         var buf = ByteBuffer()
+        buf.reserveCapacity(minimumWritableBytes: self.marshalSize())
         let _ = try self.marshalTo(&buf)
         return buf
     }

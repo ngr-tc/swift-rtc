@@ -396,7 +396,7 @@ extension Header: Marshal {
         if self.ext {
             b0 |= 1 << extensionShift
         }
-        buf.writeRepeatingByte(b0, count: 1)
+        buf.writeInteger(b0)
 
         // The second byte contains the marker bit and payload type.
         var b1 = self.payloadType
@@ -404,7 +404,6 @@ extension Header: Marshal {
             b1 |= 1 << markerShift
         }
         buf.writeInteger(b1)
-
         buf.writeInteger(self.sequenceNumber)
         buf.writeInteger(self.timestamp)
         buf.writeInteger(self.ssrc)

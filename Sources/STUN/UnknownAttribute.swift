@@ -42,6 +42,7 @@ extension UnknownAttributes: Setter {
     public func addTo(_ m: inout Message) throws {
         var v = ByteBuffer()  //ATTR_TYPE_SIZE * 20); // 20 should be enough
         // If len(a.Types) > 20, there will be allocations.
+        v.reserveCapacity(minimumWritableBytes: attrTypeSize * 20)
         for t in self.attributes {
             v.writeBytes(t.value().toBeBytes())
         }

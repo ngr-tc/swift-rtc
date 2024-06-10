@@ -52,9 +52,10 @@ extension ErrorCodeAttribute: Setter {
         let classByte = UInt8(self.code.rawValue / errorCodeModulo)  // hundred digit
 
         var value = ByteBuffer()
+        value.reserveCapacity(minimumWritableBytes: 4 + self.reason.count)
         value.writeBytes([0, 0])
-        value.writeRepeatingByte(classByte, count: 1)  // [ERROR_CODE_CLASS_BYTE]
-        value.writeRepeatingByte(numberByte, count: 1)  //[ERROR_CODE_NUMBER_BYTE]
+        value.writeInteger(classByte)  // [ERROR_CODE_CLASS_BYTE]
+        value.writeInteger(numberByte)  //[ERROR_CODE_NUMBER_BYTE]
         value.writeString(self.reason)  //[ERROR_CODE_REASON_START:]
 
         m.add(attrErrorCode, value.readableBytesView)

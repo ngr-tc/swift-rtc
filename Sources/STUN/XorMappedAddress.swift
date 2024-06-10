@@ -70,6 +70,7 @@ public struct XorMappedAddress {
         }
 
         var xorValue = ByteBuffer()
+        xorValue.reserveCapacity(minimumWritableBytes: 4 + transactionIdSize)
         xorValue.writeBytes(magicCookie.toBeBytes())
         xorValue.writeImmutableBuffer(m.transactionId.rawValue)
 
@@ -79,6 +80,7 @@ public struct XorMappedAddress {
         let _ = xorBytes(&xorIp, ip.readableBytesView, xorValue.readableBytesView)
 
         var value = ByteBuffer()
+        value.reserveCapacity(minimumWritableBytes: 2 + 2 + ipLen)
         value.writeBytes(family.toBeBytes())
         value.writeBytes((UInt16(port) ^ UInt16(magicCookie >> 16)).toBeBytes())
         value.writeImmutableBuffer(xorIp)
@@ -104,6 +106,7 @@ public struct XorMappedAddress {
 
         let port = UInt16.fromBeBytes(v[2], v[3]) ^ UInt16(magicCookie >> 16)
         var xorValue = ByteBuffer()
+        xorValue.reserveCapacity(minimumWritableBytes: 4 + transactionIdSize)
         xorValue.writeBytes(magicCookie.toBeBytes())
         xorValue.writeImmutableBuffer(m.transactionId.rawValue)
         let xorValueView = xorValue.readableBytesView

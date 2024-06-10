@@ -115,6 +115,7 @@ extension PacketizerImpl: Packetizer {
             let sendTime = AbsSendTimeExtension(sendTime: st)
             //apply http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
             var raw = ByteBuffer()
+            raw.reserveCapacity(minimumWritableBytes: sendTime.marshalSize())
             let _ = try sendTime.marshalTo(&raw)
             try packets[payloadsLen - 1]
                 .header
