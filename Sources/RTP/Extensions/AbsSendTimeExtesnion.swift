@@ -46,7 +46,7 @@ public struct AbsSendTimeExtension: Equatable {
 
 extension AbsSendTimeExtension: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the members.
-    public init(_ buf: ByteBuffer) throws {
+    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
         var reader = buf.slice()
         guard let b0: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
@@ -57,7 +57,9 @@ extension AbsSendTimeExtension: Unmarshal {
         guard let b2: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
-        self.timestamp = UInt64(b0) << 16 | UInt64(b1) << 8 | UInt64(b2)
+
+        let timestamp = UInt64(b0) << 16 | UInt64(b1) << 8 | UInt64(b2)
+        return (AbsSendTimeExtension(timestamp: timestamp), reader.readerIndex)
     }
 }
 

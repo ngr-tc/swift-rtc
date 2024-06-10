@@ -39,13 +39,11 @@ extension Packet: CustomStringConvertible {
 
 extension Packet: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
-    public init(_ buf: ByteBuffer) throws {
-        let header = try Header(buf)
-        let headerLen = header.marshalSize()
-        let payloadLen = buf.readableBytes
-
+    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
+        let (header, headerLen) = try Header.unmarshal(buf)
         var reader = buf.slice()
         reader.moveReaderIndex(forwardBy: headerLen)
+        let payloadLen = reader.readableBytes
         guard var payload = reader.readSlice(length: payloadLen) else {
             throw RtpError.errShortPacket
         }
@@ -68,8 +66,8 @@ extension Packet: Unmarshal {
                 throw RtpError.errShortPacket
             }
         }
-        self.header = header
-        self.payload = payload
+
+        return (Packet(header: header, payload: payload), reader.readerIndex)
     }
 }
 

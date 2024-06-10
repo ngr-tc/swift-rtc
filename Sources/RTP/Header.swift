@@ -172,7 +172,7 @@ public struct Header: Equatable {
 
 extension Header: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
-    public init(_ buf: ByteBuffer) throws {
+    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
         let bufLen = buf.readableBytes
         if bufLen < headerLength {
             throw RtpError.errHeaderSizeInsufficient
@@ -338,17 +338,21 @@ extension Header: Unmarshal {
             extensions = []
         }
 
-        self.version = version
-        self.padding = padding
-        self.ext = ext
-        self.marker = marker
-        self.payloadType = payloadType
-        self.sequenceNumber = sequenceNumber
-        self.timestamp = timestamp
-        self.ssrc = ssrc
-        self.csrcs = csrcs
-        self.extensionProfile = extensionProfile
-        self.extensions = extensions
+        return (
+            Header(
+                version: version,
+                padding: padding,
+                ext: ext,
+                marker: marker,
+                payloadType: payloadType,
+                sequenceNumber: sequenceNumber,
+                timestamp: timestamp,
+                ssrc: ssrc,
+                csrcs: csrcs,
+                extensionProfile: extensionProfile,
+                extensions: extensions
+            ), reader.readerIndex
+        )
     }
 }
 

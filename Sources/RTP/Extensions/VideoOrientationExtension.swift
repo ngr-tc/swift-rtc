@@ -85,7 +85,7 @@ public enum VideoRotation: UInt8, Equatable {
 }
 
 extension VideoOrientationExtension: Unmarshal {
-    public init(_ buf: ByteBuffer) throws {
+    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
         if buf.readableBytes < videoOrientationExtensionSize {
             throw RtpError.errBufferTooSmall
         }
@@ -98,9 +98,13 @@ extension VideoOrientationExtension: Unmarshal {
         let f = b & 0b0100
         let r = b & 0b0011
 
-        self.direction = try CameraDirection(value: c)
-        self.flip = f > 0
-        self.rotation = try VideoRotation(value: r)
+        let direction = try CameraDirection(value: c)
+        let flip = f > 0
+        let rotation = try VideoRotation(value: r)
+        return (
+            VideoOrientationExtension(direction: direction, flip: flip, rotation: rotation),
+            reader.readerIndex
+        )
     }
 }
 

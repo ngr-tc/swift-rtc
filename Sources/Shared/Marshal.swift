@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 import NIOCore
 
-public protocol Unmarshal: MarshalSize {
-    init(_ buf: ByteBuffer) throws
+public protocol Unmarshal {
+    static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int)
 }
 
 public protocol MarshalSize {

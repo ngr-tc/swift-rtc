@@ -19,13 +19,13 @@ import XCTest
 final class TransportCcExtensionTests: XCTestCase {
     func test_transport_cc_extension_too_small() throws {
         let buf = ByteBuffer()
-        let result = try? TransportCcExtension(buf)
+        let result = try? TransportCcExtension.unmarshal(buf)
         XCTAssertTrue(result == nil)
     }
 
     func test_transport_cc_extension() throws {
         let raw = ByteBuffer(bytes: [0x00, 0x02])
-        let t1 = try TransportCcExtension(raw)
+        let (t1, _) = try TransportCcExtension.unmarshal(raw)
         let t2 = TransportCcExtension(
             transportSequence: 2
         )
@@ -38,7 +38,7 @@ final class TransportCcExtensionTests: XCTestCase {
 
     func test_transport_cc_extension_extra_bytes() throws {
         let raw = ByteBuffer(bytes: [0x00, 0x02, 0x00, 0xff, 0xff])
-        let t1 = try TransportCcExtension(raw)
+        let (t1, _) = try TransportCcExtension.unmarshal(raw)
         let t2 = TransportCcExtension(
             transportSequence: 2
         )

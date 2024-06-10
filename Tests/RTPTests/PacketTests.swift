@@ -19,7 +19,7 @@ import XCTest
 final class PacketTests: XCTestCase {
     func testBasic() throws {
         let emptyBytes = ByteBuffer()
-        let result = try? Packet(emptyBytes)
+        let result = try? Packet.unmarshal(emptyBytes)
         XCTAssertTrue(
             result == nil,
             "Unmarshal did not error on zero length packet"
@@ -27,8 +27,7 @@ final class PacketTests: XCTestCase {
 
         let rawPkt = ByteBuffer(bytes: [
             0x90, 0xe0, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82, 0x00, 0x01,
-            0x00,
-            0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x98, 0x36, 0xbe, 0x88, 0x9e,
+            0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x98, 0x36, 0xbe, 0x88, 0x9e,
         ])
         let parsedPacket = Packet(
             header: Header(
@@ -52,7 +51,7 @@ final class PacketTests: XCTestCase {
             payload: ByteBuffer(bytes: [0x98, 0x36, 0xbe, 0x88, 0x9e])
         )
 
-        let packet = try Packet(rawPkt)
+        let (packet, _) = try Packet.unmarshal(rawPkt)
 
         XCTAssertEqual(
             packet, parsedPacket,
@@ -80,7 +79,7 @@ final class PacketTests: XCTestCase {
         let missingExtensionPkt = ByteBuffer(bytes: [
             0x90, 0x60, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82,
         ])
-        var result = try? Packet(missingExtensionPkt)
+        var result = try? Packet.unmarshal(missingExtensionPkt)
         XCTAssertTrue(
             result == nil,
             "Unmarshal did not error on packet with missing extension data"
@@ -91,7 +90,7 @@ final class PacketTests: XCTestCase {
             0x99,
             0x99,
         ])
-        result = try? Packet(invalidExtensionLengthPkt)
+        result = try? Packet.unmarshal(invalidExtensionLengthPkt)
         XCTAssertTrue(
             result == nil,
             "Unmarshal did not error on packet with invalid extension length"
@@ -146,7 +145,7 @@ final class PacketTests: XCTestCase {
             0x03,
             0x03, 0xe8, 0x00, 0x00, 0xea, 0x60, 0x04, 0x00, 0x00, 0x03,
         ])
-        let packet = try Packet(rawPkt)
+        let (packet, _) = try Packet.unmarshal(rawPkt)
         XCTAssertEqual(packet.payload, rawPkt.getSlice(at: 12, length: 25)!)
 
         let raw = try packet.marshal()
@@ -179,7 +178,7 @@ final class PacketTests: XCTestCase {
             payload: ByteBuffer(bytes: Array(repeating: 0xFF, count: 15))
         )
         let raw = try pkt.marshal()
-        let p = try Packet(raw)
+        let (p, _) = try Packet.unmarshal(raw)
 
         XCTAssertEqual(pkt, p)
     }
@@ -190,7 +189,7 @@ final class PacketTests: XCTestCase {
             0x00,
             0x01, 0x50, 0xAA, 0x00, 0x00, 0x98, 0x36, 0xbe, 0x88, 0x9e,
         ])
-        let _ = try Packet(rawPkt)
+        let _ = try Packet.unmarshal(rawPkt)
 
         let p = Packet(
             header: Header(
@@ -232,7 +231,7 @@ final class PacketTests: XCTestCase {
             0x01, 0x10, 0xAA, 0x20, 0xBB,  // Payload
             0x98, 0x36, 0xbe, 0x88, 0x9e,
         ])
-        var p = try Packet(rawPkt)
+        var (p, _) = try Packet.unmarshal(rawPkt)
 
         let ext1 = p.header.getExtension(id: 1)
         let ext1Expect = ByteBuffer(bytes: [0xAA])
@@ -301,7 +300,7 @@ final class PacketTests: XCTestCase {
             // Payload
             0x98, 0x36, 0xbe, 0x88, 0x9e,
         ])
-        var packet = try Packet(rawPkt)
+        var (packet, _) = try Packet.unmarshal(rawPkt)
         let ext1 = packet
             .header
             .getExtension(id: 1)!
@@ -416,7 +415,7 @@ final class PacketTests: XCTestCase {
             0x98,
             0x36, 0xbe, 0x88, 0x9e,
         ])
-        let _ = try Packet(rawPkt)
+        let _ = try Packet.unmarshal(rawPkt)
 
         let p = Packet(
             header: Header(
@@ -468,7 +467,7 @@ final class PacketTests: XCTestCase {
             0x36,
             0xbe, 0x88, 0x9e,
         ])
-        let p = try Packet(rawPkt)
+        let (p, _) = try Packet.unmarshal(rawPkt)
 
         var ext = p.header.getExtension(id: 1)!
         var extExpect = ByteBuffer(bytes: [])
@@ -888,10 +887,9 @@ final class PacketTests: XCTestCase {
     func testRfc8285OneByteExtensionTerminateProcessingWhenReservedIdEncountered() throws {
         let reservedIdPkt = ByteBuffer(bytes: [
             0x90, 0xe0, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82, 0xBE, 0xDE,
-            0x00,
-            0x01, 0xF0, 0xAA, 0x98, 0x36, 0xbe, 0x88, 0x9e,
+            0x00, 0x01, 0xF0, 0xAA, 0x98, 0x36, 0xbe, 0x88, 0x9e,
         ])
-        let p = try Packet(reservedIdPkt)
+        let (p, _) = try Packet.unmarshal(reservedIdPkt)
 
         XCTAssertEqual(
             p.header.extensions.count,
@@ -1231,7 +1229,7 @@ final class PacketTests: XCTestCase {
 
         for (_, input, errExpected) in cases {
             do {
-                let _ = try Header(input)
+                let _ = try Header.unmarshal(input)
                 XCTAssertTrue(false, "should err")
             } catch let err {
                 if let rtpErr = err as? RtpError {
@@ -1252,7 +1250,7 @@ final class PacketTests: XCTestCase {
 
         let payload = rawPkt.getSlice(at: 12, length: rawPkt.readableBytes - 12)
 
-        let p = try Packet(rawPkt)
+        let (p, _) = try Packet.unmarshal(rawPkt)
 
         XCTAssertEqual(payload, p.payload)
 

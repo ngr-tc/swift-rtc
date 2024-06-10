@@ -32,7 +32,7 @@ public struct TransportCcExtension: Equatable {
 
 extension TransportCcExtension: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the members
-    public init(_ buf: ByteBuffer) throws {
+    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
         if buf.readableBytes < transportCcExtensionSize {
             throw RtpError.errBufferTooSmall
         }
@@ -44,7 +44,8 @@ extension TransportCcExtension: Unmarshal {
             throw RtpError.errBufferTooSmall
         }
 
-        self.transportSequence = (UInt16(b0) << 8) | UInt16(b1)
+        let transportSequence = (UInt16(b0) << 8) | UInt16(b1)
+        return (TransportCcExtension(transportSequence: transportSequence), reader.readerIndex)
     }
 }
 
