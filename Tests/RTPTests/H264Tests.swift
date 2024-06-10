@@ -84,195 +84,200 @@ final class H264Tests: XCTestCase {
         result = try pck.payload(mtu: 5, buf: &smallPayload2)
         XCTAssertEqual(result.count, 0, "Generated payload should be empty")
     }
-    /*
-    func testH264PacketUnmarshal() throws {
-        let single_payload = ByteBuffer(bytes: [0x90, 0x90, 0x90]);
-        let single_payload_unmarshaled =
-            ByteBuffer(bytes: [0x00, 0x00, 0x00, 0x01, 0x90, 0x90, 0x90]);
-        let single_payload_unmarshaled_avc =
-            ByteBuffer(bytes: [0x00, 0x00, 0x00, 0x03, 0x90, 0x90, 0x90]);
 
-        let large_payload = ByteBuffer(bytes: [
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10,
+    func testH264PacketUnmarshal() throws {
+        let singlePayload = ByteBuffer(bytes: [0x90, 0x90, 0x90])
+        let singlePayloadUnmarshaled =
+            ByteBuffer(bytes: [0x00, 0x00, 0x00, 0x01, 0x90, 0x90, 0x90])
+        let singlePayloadUnmarshaledAvc =
+            ByteBuffer(bytes: [0x00, 0x00, 0x00, 0x03, 0x90, 0x90, 0x90])
+
+        let largePayload = ByteBuffer(bytes: [
+            0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+            0x10,
             0x11, 0x12, 0x13, 0x14, 0x15,
-        ]);
-        let large_payload_avc = ByteBuffer(bytes: [
-            0x00, 0x00, 0x00, 0x10, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10,
+        ])
+        let largePayloadAvc = ByteBuffer(bytes: [
+            0x00, 0x00, 0x00, 0x10, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+            0x10,
             0x11, 0x12, 0x13, 0x14, 0x15,
-        ]);
-        let large_payload_packetized = vec![
+        ])
+        let largePayloadPacketized = [
             ByteBuffer(bytes: [0x1c, 0x80, 0x01, 0x02, 0x03]),
             ByteBuffer(bytes: [0x1c, 0x00, 0x04, 0x05, 0x06]),
             ByteBuffer(bytes: [0x1c, 0x00, 0x07, 0x08, 0x09]),
             ByteBuffer(bytes: [0x1c, 0x00, 0x10, 0x11, 0x12]),
             ByteBuffer(bytes: [0x1c, 0x40, 0x13, 0x14, 0x15]),
-        ];
+        ]
 
-        let single_payload_multi_nalu = ByteBuffer(bytes: [
-            0x78, 0x00, 0x0f, 0x67, 0x42, 0xc0, 0x1f, 0x1a, 0x32, 0x35, 0x01, 0x40, 0x7a, 0x40, 0x3c,
+        let singlePayloadMultiNalu = ByteBuffer(bytes: [
+            0x78, 0x00, 0x0f, 0x67, 0x42, 0xc0, 0x1f, 0x1a, 0x32, 0x35, 0x01, 0x40, 0x7a, 0x40,
+            0x3c,
             0x22, 0x11, 0xa8, 0x00, 0x05, 0x68, 0x1a, 0x34, 0xe3, 0xc8,
-        ]);
-        let single_payload_multi_nalu_unmarshaled = ByteBuffer(bytes: [
-            0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0xc0, 0x1f, 0x1a, 0x32, 0x35, 0x01, 0x40, 0x7a, 0x40,
+        ])
+        let singlePayloadMultiNaluUnmarshaled = ByteBuffer(bytes: [
+            0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0xc0, 0x1f, 0x1a, 0x32, 0x35, 0x01, 0x40, 0x7a,
+            0x40,
             0x3c, 0x22, 0x11, 0xa8, 0x00, 0x00, 0x00, 0x01, 0x68, 0x1a, 0x34, 0xe3, 0xc8,
-        ]);
-        let single_payload_multi_nalu_unmarshaled_avc = ByteBuffer(bytes: [
-            0x00, 0x00, 0x00, 0x0f, 0x67, 0x42, 0xc0, 0x1f, 0x1a, 0x32, 0x35, 0x01, 0x40, 0x7a, 0x40,
+        ])
+        let singlePayloadMultiNaluUnmarshaledAvc = ByteBuffer(bytes: [
+            0x00, 0x00, 0x00, 0x0f, 0x67, 0x42, 0xc0, 0x1f, 0x1a, 0x32, 0x35, 0x01, 0x40, 0x7a,
+            0x40,
             0x3c, 0x22, 0x11, 0xa8, 0x00, 0x00, 0x00, 0x05, 0x68, 0x1a, 0x34, 0xe3, 0xc8,
-        ]);
+        ])
 
-        let incomplete_single_payload_multi_nalu = ByteBuffer(bytes: [
-            0x78, 0x00, 0x0f, 0x67, 0x42, 0xc0, 0x1f, 0x1a, 0x32, 0x35, 0x01, 0x40, 0x7a, 0x40, 0x3c,
+        let incompleteSinglePayloadMultiNalu = ByteBuffer(bytes: [
+            0x78, 0x00, 0x0f, 0x67, 0x42, 0xc0, 0x1f, 0x1a, 0x32, 0x35, 0x01, 0x40, 0x7a, 0x40,
+            0x3c,
             0x22, 0x11,
-        ]);
+        ])
 
-        let mut pkt = H264Packet::default();
-        let mut avc_pkt = H264Packet {
-            is_avc: true,
-            ..Default::default()
-        };
+        var pkt = H264Packet(isAvc: false)
+        var avcPkt = H264Packet(isAvc: true)
 
-        let data = ByteBuffer(bytes: []);
-        let result = pkt.depacketize(&data);
-        XCTAssertTrue(result.is_err(), "Unmarshal did not fail on nil payload");
+        var data = ByteBuffer()
+        var result = try? pkt.depacketize(buf: &data)
+        XCTAssertTrue(result == nil, "Unmarshal did not fail on nil payload")
 
-        let data = ByteBuffer(bytes: [0x00, 0x00]);
-        let result = pkt.depacketize(&data);
+        data = ByteBuffer(bytes: [0x00, 0x00])
+        result = try? pkt.depacketize(buf: &data)
         XCTAssertTrue(
-            result.is_err(),
+            result == nil,
             "Unmarshal accepted a packet that is too small for a payload and header"
-        );
+        )
 
-        let data = ByteBuffer(bytes: [0xFF, 0x00, 0x00]);
-        let result = pkt.depacketize(&data);
+        data = ByteBuffer(bytes: [0xFF, 0x00, 0x00])
+        result = try? pkt.depacketize(buf: &data)
         XCTAssertTrue(
-            result.is_err(),
+            result == nil,
             "Unmarshal accepted a packet with a NALU Type we don't handle"
-        );
+        )
 
-        let result = pkt.depacketize(&incomplete_single_payload_multi_nalu);
+        data = incompleteSinglePayloadMultiNalu.slice()
+        result = try? pkt.depacketize(buf: &data)
         XCTAssertTrue(
-            result.is_err(),
+            result == nil,
             "Unmarshal accepted a STAP-A packet with insufficient data"
-        );
+        )
 
-        let payload = pkt.depacketize(&single_payload)?;
+        data = singlePayload.slice()
+        var payload = try pkt.depacketize(buf: &data)
         XCTAssertEqual(
-            payload, single_payload_unmarshaled,
+            payload, singlePayloadUnmarshaled,
             "Unmarshaling a single payload shouldn't modify the payload"
-        );
+        )
 
-        let payload = avc_pkt.depacketize(&single_payload)?;
+        data = singlePayload.slice()
+        payload = try avcPkt.depacketize(buf: &data)
         XCTAssertEqual(
-            payload, single_payload_unmarshaled_avc,
+            payload, singlePayloadUnmarshaledAvc,
             "Unmarshaling a single payload into avc stream shouldn't modify the payload"
-        );
+        )
 
-        let mut large_payload_result = BytesMut::new();
-        for p in &large_payload_packetized {
-            let payload = pkt.depacketize(p)?;
-            large_payload_result.put(&*payload.clone());
+        var largePayloadResult = ByteBuffer()
+        for p in largePayloadPacketized {
+            data = p.slice()
+            let payload = try pkt.depacketize(buf: &data)
+            largePayloadResult.writeImmutableBuffer(payload)
         }
         XCTAssertEqual(
-            large_payload_result.freeze(),
-            large_payload,
+            largePayloadResult,
+            largePayload,
             "Failed to unmarshal a large payload"
-        );
+        )
 
-        let mut large_payload_result_avc = BytesMut::new();
-        for p in &large_payload_packetized {
-            let payload = avc_pkt.depacketize(p)?;
-            large_payload_result_avc.put(&*payload.clone());
+        var largePayloadResultAvc = ByteBuffer()
+        for p in largePayloadPacketized {
+            data = p.slice()
+            let payload = try avcPkt.depacketize(buf: &data)
+            largePayloadResultAvc.writeImmutableBuffer(payload)
         }
         XCTAssertEqual(
-            large_payload_result_avc.freeze(),
-            large_payload_avc,
+            largePayloadResultAvc,
+            largePayloadAvc,
             "Failed to unmarshal a large payload into avc stream"
-        );
+        )
 
-        let payload = pkt.depacketize(&single_payload_multi_nalu)?;
+        data = singlePayloadMultiNalu.slice()
+        payload = try pkt.depacketize(buf: &data)
         XCTAssertEqual(
-            payload, single_payload_multi_nalu_unmarshaled,
+            payload, singlePayloadMultiNaluUnmarshaled,
             "Failed to unmarshal a single packet with multiple NALUs"
-        );
+        )
 
-        let payload = avc_pkt.depacketize(&single_payload_multi_nalu)?;
+        data = singlePayloadMultiNalu.slice()
+        payload = try avcPkt.depacketize(buf: &data)
         XCTAssertEqual(
-            payload, single_payload_multi_nalu_unmarshaled_avc,
+            payload, singlePayloadMultiNaluUnmarshaledAvc,
             "Failed to unmarshal a single packet with multiple NALUs into avc stream"
-        );
-
-        Ok(())
+        )
     }
 
     func testH264PartitionHeadCheckerIsPartitionHead() throws {
-        let h264 = H264Packet::default();
-        let empty_nalu = ByteBuffer(bytes: []);
+        let h264 = H264Packet(isAvc: false)
+        var emptyNalu = ByteBuffer()
         XCTAssertTrue(
-            !h264.is_partition_head(&empty_nalu),
+            !h264.isPartitionHead(payload: &emptyNalu),
             "empty nalu must not be a partition head"
-        );
+        )
 
-        let single_nalu = ByteBuffer(bytes: [1, 0]);
+        var singleNalu = ByteBuffer(bytes: [1, 0])
         XCTAssertTrue(
-            h264.is_partition_head(&single_nalu),
+            h264.isPartitionHead(payload: &singleNalu),
             "single nalu must be a partition head"
-        );
+        )
 
-        let stapa_nalu = ByteBuffer(bytes: [STAPA_NALU_TYPE, 0]);
+        var stapaNalu = ByteBuffer(bytes: [stapaNaluType, 0])
         XCTAssertTrue(
-            h264.is_partition_head(&stapa_nalu),
+            h264.isPartitionHead(payload: &stapaNalu),
             "stapa nalu must be a partition head"
-        );
+        )
 
-        let fua_start_nalu = ByteBuffer(bytes: [FUA_NALU_TYPE, FU_START_BITMASK]);
+        var fuaStartNalu = ByteBuffer(bytes: [fuaNaluType, fuStartBitmask])
         XCTAssertTrue(
-            h264.is_partition_head(&fua_start_nalu),
+            h264.isPartitionHead(payload: &fuaStartNalu),
             "fua start nalu must be a partition head"
-        );
+        )
 
-        let fua_end_nalu = ByteBuffer(bytes: [FUA_NALU_TYPE, FU_END_BITMASK]);
+        var fuaEndNalu = ByteBuffer(bytes: [fuaNaluType, fuEndBitmask])
         XCTAssertTrue(
-            !h264.is_partition_head(&fua_end_nalu),
+            !h264.isPartitionHead(payload: &fuaEndNalu),
             "fua end nalu must not be a partition head"
-        );
+        )
 
-        let fub_start_nalu = ByteBuffer(bytes: [FUB_NALU_TYPE, FU_START_BITMASK]);
+        var fubStartNalu = ByteBuffer(bytes: [fubNaluType, fuStartBitmask])
         XCTAssertTrue(
-            h264.is_partition_head(&fub_start_nalu),
+            h264.isPartitionHead(payload: &fubStartNalu),
             "fub start nalu must be a partition head"
-        );
+        )
 
-        let fub_end_nalu = ByteBuffer(bytes: [FUB_NALU_TYPE, FU_END_BITMASK]);
+        var fubEndNalu = ByteBuffer(bytes: [fubNaluType, fuEndBitmask])
         XCTAssertTrue(
-            !h264.is_partition_head(&fub_end_nalu),
+            !h264.isPartitionHead(payload: &fubEndNalu),
             "fub end nalu must not be a partition head"
-        );
-
-        Ok(())
+        )
     }
 
-    #[test]
-    fn test_h264_payloader_payload_sps_and_pps_handling() -> Result<()> {
-        let mut pck = H264Payloader();
-        let expected = vec![
+    func test_h264_payloader_payload_sps_and_pps_handling() throws {
+        var pck = H264Payloader()
+        let expected = [
             ByteBuffer(bytes: [
                 0x78, 0x00, 0x03, 0x07, 0x00, 0x01, 0x00, 0x03, 0x08, 0x02, 0x03,
             ]),
             ByteBuffer(bytes: [0x05, 0x04, 0x05]),
-        ];
+        ]
 
         // When packetizing SPS and PPS are emitted with following NALU
-        let res = pck.payload(1500, &ByteBuffer(bytes: [0x07, 0x00, 0x01]))?;
-        XCTAssertTrue(res.is_empty(), "Generated payload should be empty");
+        var buf = ByteBuffer(bytes: [0x07, 0x00, 0x01])
+        var res = try pck.payload(mtu: 1500, buf: &buf)
+        XCTAssertTrue(res.isEmpty, "Generated payload should be empty")
 
-        let res = pck.payload(1500, &ByteBuffer(bytes: [0x08, 0x02, 0x03]))?;
-        XCTAssertTrue(res.is_empty(), "Generated payload should be empty");
+        buf = ByteBuffer(bytes: [0x08, 0x02, 0x03])
+        res = try pck.payload(mtu: 1500, buf: &buf)
+        XCTAssertTrue(res.isEmpty, "Generated payload should be empty")
 
-        let actual = pck.payload(1500, &ByteBuffer(bytes: [0x05, 0x04, 0x05]))?;
-        XCTAssertEqual(actual, expected, "SPS and PPS aren't packed together");
-
-        Ok(())
+        buf = ByteBuffer(bytes: [0x05, 0x04, 0x05])
+        let actual = try pck.payload(mtu: 1500, buf: &buf)
+        XCTAssertEqual(actual, expected, "SPS and PPS aren't packed together")
     }
-    */
 }

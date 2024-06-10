@@ -301,15 +301,13 @@ extension H264Packet: Depacketizer {
                 self.fuaBuffer = ByteBuffer()
             }
 
-            if var fuaBuffer = self.fuaBuffer {
-                guard
-                    let subBuf = buf.getSlice(
-                        at: fuaHeaderSize, length: buf.readableBytes - fuaHeaderSize)
-                else {
-                    throw RtpError.errShortPacket
-                }
-                fuaBuffer.writeImmutableBuffer(subBuf)
+            guard
+                let subBuf = buf.getSlice(
+                    at: fuaHeaderSize, length: buf.readableBytes - fuaHeaderSize)
+            else {
+                throw RtpError.errShortPacket
             }
+            self.fuaBuffer?.writeImmutableBuffer(subBuf)
 
             let b1 = b[1]
             if b1 & fuEndBitmask != 0 {
