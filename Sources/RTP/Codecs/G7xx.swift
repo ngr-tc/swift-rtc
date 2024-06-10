@@ -46,3 +46,25 @@ extension G7xxPayloader: Payloader {
         return payloads
     }
 }
+
+/// G7xxPacket represents the G7xx header that is stored in the payload of an RTP Packet
+public struct G7xxPacket {
+}
+
+extension G7xxPacket: Depacketizer {
+    public mutating func depacketize(buf: inout ByteBuffer) throws -> ByteBuffer {
+        if buf.readableBytes == 0 {
+            throw RtpError.errShortPacket
+        } else {
+            return buf.slice()
+        }
+    }
+
+    public func isPartitionHead(payload: inout ByteBuffer) -> Bool {
+        return true
+    }
+
+    public func isPartitionTail(marker: Bool, payload: inout ByteBuffer) -> Bool {
+        return true
+    }
+}

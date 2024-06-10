@@ -20,12 +20,12 @@ public let vp8HeaderSize: Int = 1
 public struct Vp8Payloader {
     public var enablePictureId: Bool
     var pictureId: UInt16
-    
+
     public init() {
         self.enablePictureId = false
         self.pictureId = 0
     }
-    
+
     public init(enablePictureId: Bool, pictureId: UInt16) {
         self.enablePictureId = enablePictureId
         self.pictureId = pictureId

@@ -40,8 +40,7 @@ public protocol Depacketizer {
     func isPartitionTail(marker: Bool, payload: inout ByteBuffer) -> Bool
 }
 
-// non-monotonic clock vs monotonically non-decreasing clock
-/// FnTimeGen provides current SystemTime
+/// FnTimeGen provides current NIODeadline
 public typealias FnTimeGen = () -> NIODeadline
 
 public func newPacketizer(

@@ -17,7 +17,7 @@ import Shared
 // transport-wide sequence
 public let transportCcExtensionSize: Int = 2
 
-/// TransportCCExtension is a extension payload format in
+/// TransportCcExtension is a extension payload format in
 /// https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01
 /// 0                   1                   2                   3
 /// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
