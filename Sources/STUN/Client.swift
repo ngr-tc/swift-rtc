@@ -143,7 +143,6 @@ public struct Client {
 
 public enum Event {
     case agentEvent(AgentEvent)
-    case timeout(NIODeadline)
     case close
 }
 
@@ -206,8 +205,6 @@ extension Client: RTCHandler {
         switch evt {
         case .agentEvent(_):
             return
-        case .timeout(let now):
-            try self.agent.handleEvent(ClientAgent.collect(now))
         case .close:
             if self.settings.closed {
                 throw StunError.errClientClosed
@@ -218,10 +215,6 @@ extension Client: RTCHandler {
     }
 
     public mutating func pollEvent() -> Eout? {
-        if let deadline = self.agent.pollTimeout() {
-            return Event.timeout(deadline)
-        }
-
         while let event = self.agent.pollEvent() {
             guard var ct = self.transactions.removeValue(forKey: event.id) else {
                 continue
@@ -265,5 +258,15 @@ extension Client: RTCHandler {
         }
 
         return nil
+    }
+
+    /// Handle timeout
+    public mutating func handleTimeout(_ now: NIODeadline) throws {
+        try self.agent.handleEvent(ClientAgent.collect(now))
+    }
+
+    /// Polls timeout
+    public mutating func pollTimeout() -> NIODeadline? {
+        return self.agent.pollTimeout()
     }
 }

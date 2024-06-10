@@ -107,9 +107,15 @@ public protocol RTCHandler {
     /// Polls Wout from internal queue for next outbound handler handling
     mutating func pollWrite() -> Transmit<Wout>?
 
-    /// Handle event, i.e., Timeout, Close, etc
+    /// Handle event
     mutating func handleEvent(_ evt: Ein) throws
 
-    /// Polls event, i.e., Timeout, Drain, etc
+    /// Polls event
     mutating func pollEvent() -> Eout?
+
+    /// Handle timeout
+    mutating func handleTimeout(_ now: NIODeadline) throws
+
+    /// Polls timeout
+    mutating func pollTimeout() -> NIODeadline?
 }
