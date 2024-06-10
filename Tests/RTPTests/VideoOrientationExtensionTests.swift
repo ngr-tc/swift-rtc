@@ -18,15 +18,14 @@ import XCTest
 
 final class VideoOrientationExtensionTests: XCTestCase {
     func testVideoOrientationExtensionTooSmall() throws {
-        var buf = ByteBuffer()
-        let result = try? VideoOrientationExtension(&buf)
+        let buf = ByteBuffer()
+        let result = try? VideoOrientationExtension(buf)
         XCTAssertTrue(result == nil)
     }
 
     func testVideoOrientationExtensionBackFacingCamera() throws {
         let raw = ByteBuffer(bytes: [0b1000])
-        var buf = raw.slice()
-        let a1 = try? VideoOrientationExtension(&buf)
+        let a1 = try? VideoOrientationExtension(raw)
         let a2 = VideoOrientationExtension(
             direction: CameraDirection.back,
             flip: false,
@@ -41,8 +40,7 @@ final class VideoOrientationExtensionTests: XCTestCase {
 
     func testVideoOrientationExtensionFlipTrue() throws {
         let raw = ByteBuffer(bytes: [0b0100])
-        var buf = raw.slice()
-        let a1 = try? VideoOrientationExtension(&buf)
+        let a1 = try? VideoOrientationExtension(raw)
         let a2 = VideoOrientationExtension(
             direction: CameraDirection.front,
             flip: true,
@@ -56,8 +54,7 @@ final class VideoOrientationExtensionTests: XCTestCase {
 
     func testVideoOrientationExtensionDegree90() throws {
         let raw = ByteBuffer(bytes: [0b0001])
-        var buf = raw.slice()
-        let a1 = try? VideoOrientationExtension(&buf)
+        let a1 = try? VideoOrientationExtension(raw)
         let a2 = VideoOrientationExtension(
             direction: CameraDirection.front,
             flip: false,
@@ -71,8 +68,7 @@ final class VideoOrientationExtensionTests: XCTestCase {
 
     func testVideoOrientationExtensionDegree180() throws {
         let raw = ByteBuffer(bytes: [0b0010])
-        var buf = raw.slice()
-        let a1 = try? VideoOrientationExtension(&buf)
+        let a1 = try? VideoOrientationExtension(raw)
         let a2 = VideoOrientationExtension(
             direction: CameraDirection.front,
             flip: false,
@@ -86,8 +82,7 @@ final class VideoOrientationExtensionTests: XCTestCase {
 
     func testVideoOrientationExtensionDegree270() throws {
         let raw = ByteBuffer(bytes: [0b0011])
-        var buf = raw.slice()
-        let a1 = try? VideoOrientationExtension(&buf)
+        let a1 = try? VideoOrientationExtension(raw)
         let a2 = VideoOrientationExtension(
             direction: CameraDirection.front,
             flip: false,

@@ -18,7 +18,7 @@ public struct OpusPayloader {
 }
 
 extension OpusPayloader: Payloader {
-    public mutating func payload(mtu: Int, buf: inout ByteBuffer) throws -> [ByteBuffer] {
+    public mutating func payload(mtu: Int, buf: ByteBuffer) throws -> [ByteBuffer] {
         if buf.readableBytes == 0 || mtu == 0 {
             return []
         }
@@ -32,7 +32,7 @@ public struct OpusPacket {
 }
 
 extension OpusPacket: Depacketizer {
-    public mutating func depacketize(buf: inout ByteBuffer) throws -> ByteBuffer {
+    public mutating func depacketize(buf: ByteBuffer) throws -> ByteBuffer {
         if buf.readableBytes == 0 {
             throw RtpError.errShortPacket
         } else {
@@ -40,11 +40,11 @@ extension OpusPacket: Depacketizer {
         }
     }
 
-    public func isPartitionHead(payload: inout ByteBuffer) -> Bool {
+    public func isPartitionHead(payload: ByteBuffer) -> Bool {
         return true
     }
 
-    public func isPartitionTail(marker: Bool, payload: inout ByteBuffer) -> Bool {
+    public func isPartitionTail(marker: Bool, payload: ByteBuffer) -> Bool {
         return true
     }
 }

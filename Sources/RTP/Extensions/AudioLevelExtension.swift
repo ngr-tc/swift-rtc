@@ -43,12 +43,12 @@ public struct AudioLevelExtension: Equatable {
 
 extension AudioLevelExtension: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the members
-    public init(_ buf: inout ByteBuffer) throws {
+    public init(_ buf: ByteBuffer) throws {
         if buf.readableBytes < audioLevelExtensionSize {
             throw RtpError.errBufferTooSmall
         }
-
-        guard let b: UInt8 = buf.readInteger() else {
+        var reader = buf.slice()
+        guard let b: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
 

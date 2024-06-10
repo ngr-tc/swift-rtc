@@ -32,8 +32,7 @@ final class G7xxTests: XCTestCase {
         let samplesIn = ByteBuffer(bytes: samples)
 
         //split our samples into payloads
-        var buf = samplesIn.slice()
-        let payloads = try pck.payload(mtu: testMtu, buf: &buf)
+        let payloads = try pck.payload(mtu: testMtu, buf: samplesIn)
 
         let outcnt = Int(ceil(Double(testLen) / Double(testMtu)))
         XCTAssertEqual(
@@ -53,18 +52,15 @@ final class G7xxTests: XCTestCase {
         let payload = ByteBuffer(bytes: [0x90, 0x90, 0x90])
 
         // Positive MTU, empty payload
-        buf = empty.slice()
-        var result = try pck.payload(mtu: 1, buf: &buf)
+        var result = try pck.payload(mtu: 1, buf: empty)
         XCTAssertTrue(result.isEmpty, "Generated payload should be empty")
 
         // 0 MTU, small payload
-        buf = payload.slice()
-        result = try pck.payload(mtu: 0, buf: &buf)
+        result = try pck.payload(mtu: 0, buf: payload)
         XCTAssertEqual(result.count, 0, "Generated payload should be empty")
 
         // Positive MTU, small payload
-        buf = payload.slice()
-        result = try pck.payload(mtu: 10, buf: &buf)
+        result = try pck.payload(mtu: 10, buf: payload)
         XCTAssertEqual(result.count, 1, "Generated payload should be the 1")
     }
 }

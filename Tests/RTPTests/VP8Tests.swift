@@ -21,28 +21,28 @@ final class VP8Tests: XCTestCase {
         var pck = Vp8Packet()
 
         // Empty packet
-        var emptyBytes = ByteBuffer(bytes: [])
-        var result = try? pck.depacketize(buf: &emptyBytes)
+        let emptyBytes = ByteBuffer(bytes: [])
+        var result = try? pck.depacketize(buf: emptyBytes)
         XCTAssertTrue(result == nil, "Result should be err in case of error")
 
         // Payload smaller than header size
         var smallBytes = ByteBuffer(bytes: [0x00, 0x11, 0x22])
-        result = try? pck.depacketize(buf: &smallBytes)
+        result = try? pck.depacketize(buf: smallBytes)
         XCTAssertTrue(result == nil, "Result should be err in case of error")
 
         // Payload smaller than header size
         smallBytes = ByteBuffer(bytes: [0x00, 0x11])
-        result = try? pck.depacketize(buf: &smallBytes)
+        result = try? pck.depacketize(buf: smallBytes)
         XCTAssertTrue(result == nil, "Result should be err in case of error")
 
         // Normal packet
         var rawBytes = ByteBuffer(bytes: [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x90])
-        var payload = try pck.depacketize(buf: &rawBytes)
+        var payload = try pck.depacketize(buf: rawBytes)
         XCTAssertTrue(payload.readableBytes != 0, "Payload must be not empty")
 
         // Header size, only X
         rawBytes = ByteBuffer(bytes: [0x80, 0x00, 0x00, 0x00])
-        payload = try pck.depacketize(buf: &rawBytes)
+        payload = try pck.depacketize(buf: rawBytes)
         XCTAssertTrue(payload.readableBytes != 0, "Payload must be not empty")
         XCTAssertEqual(pck.x, 1, "X must be 1")
         XCTAssertEqual(pck.i, 0, "I must be 0")
@@ -52,7 +52,7 @@ final class VP8Tests: XCTestCase {
 
         // Header size, X and I, PID 16bits
         rawBytes = ByteBuffer(bytes: [0x80, 0x80, 0x81, 0x00, 0x00])
-        payload = try pck.depacketize(buf: &rawBytes)
+        payload = try pck.depacketize(buf: rawBytes)
         XCTAssertTrue(payload.readableBytes != 0, "Payload must be not empty")
         XCTAssertEqual(pck.x, 1, "X must be 1")
         XCTAssertEqual(pck.i, 1, "I must be 1")
@@ -62,7 +62,7 @@ final class VP8Tests: XCTestCase {
 
         // Header size, X and L
         rawBytes = ByteBuffer(bytes: [0x80, 0x40, 0x00, 0x00])
-        payload = try pck.depacketize(buf: &rawBytes)
+        payload = try pck.depacketize(buf: rawBytes)
         XCTAssertTrue(payload.readableBytes != 0, "Payload must be not empty")
         XCTAssertEqual(pck.x, 1, "X must be 1")
         XCTAssertEqual(pck.i, 0, "I must be 0")
@@ -72,7 +72,7 @@ final class VP8Tests: XCTestCase {
 
         // Header size, X and T
         rawBytes = ByteBuffer(bytes: [0x80, 0x20, 0x00, 0x00])
-        payload = try pck.depacketize(buf: &rawBytes)
+        payload = try pck.depacketize(buf: rawBytes)
         XCTAssertTrue(payload.readableBytes != 0, "Payload must be not empty")
         XCTAssertEqual(pck.x, 1, "X must be 1")
         XCTAssertEqual(pck.i, 0, "I must be 0")
@@ -82,7 +82,7 @@ final class VP8Tests: XCTestCase {
 
         // Header size, X and K
         rawBytes = ByteBuffer(bytes: [0x80, 0x10, 0x00, 0x00])
-        payload = try pck.depacketize(buf: &rawBytes)
+        payload = try pck.depacketize(buf: rawBytes)
         XCTAssertTrue(payload.readableBytes != 0, "Payload must be not empty")
         XCTAssertEqual(pck.x, 1, "X must be 1")
         XCTAssertEqual(pck.i, 0, "I must be 0")
@@ -92,7 +92,7 @@ final class VP8Tests: XCTestCase {
 
         // Header size, all flags and 8bit picture_id
         rawBytes = ByteBuffer(bytes: [0xff, 0xff, 0x00, 0x00, 0x00, 0x00])
-        payload = try pck.depacketize(buf: &rawBytes)
+        payload = try pck.depacketize(buf: rawBytes)
         XCTAssertTrue(payload.readableBytes != 0, "Payload must be not empty")
         XCTAssertEqual(pck.x, 1, "X must be 1")
         XCTAssertEqual(pck.i, 1, "I must be 1")
@@ -102,7 +102,7 @@ final class VP8Tests: XCTestCase {
 
         // Header size, all flags and 16bit picture_id
         rawBytes = ByteBuffer(bytes: [0xff, 0xff, 0x80, 0x00, 0x00, 0x00, 0x00])
-        payload = try pck.depacketize(buf: &rawBytes)
+        payload = try pck.depacketize(buf: rawBytes)
         XCTAssertTrue(payload.readableBytes != 0, "Payload must be not empty")
         XCTAssertEqual(pck.x, 1, "X must be 1")
         XCTAssertEqual(pck.i, 1, "I must be 1")
@@ -174,8 +174,8 @@ final class VP8Tests: XCTestCase {
         ]
 
         for (_, var pck, mtu, payloads, expected) in tests {
-            for (i, var payload) in payloads.enumerated() {
-                let actual = try pck.payload(mtu: mtu, buf: &payload)
+            for (i, payload) in payloads.enumerated() {
+                let actual = try pck.payload(mtu: mtu, buf: payload)
                 XCTAssertEqual(expected[i], actual)
             }
         }
@@ -183,21 +183,19 @@ final class VP8Tests: XCTestCase {
 
     func test_vp8_payload_eror() throws {
         var pck = Vp8Payloader()
-        var empty = ByteBuffer()
+        let empty = ByteBuffer()
         let payload = ByteBuffer(bytes: [0x90, 0x90, 0x90])
 
         // Positive MTU, empty payload
-        var result = try pck.payload(mtu: 1, buf: &empty)
+        var result = try pck.payload(mtu: 1, buf: empty)
         XCTAssertTrue(result.isEmpty, "Generated payload should be empty")
 
         // Positive MTU, small payload
-        var buf = payload.slice()
-        result = try pck.payload(mtu: 1, buf: &buf)
+        result = try pck.payload(mtu: 1, buf: payload)
         XCTAssertEqual(result.count, 0, "Generated payload should be empty")
 
         // Positive MTU, small payload
-        buf = payload.slice()
-        result = try pck.payload(mtu: 2, buf: &buf)
+        result = try pck.payload(mtu: 2, buf: payload)
         XCTAssertEqual(
             result.count,
             payload.readableBytes,
@@ -211,21 +209,21 @@ final class VP8Tests: XCTestCase {
         //"SmallPacket"
         var buf = ByteBuffer(bytes: [0x00])
         XCTAssertTrue(
-            !vp8.isPartitionHead(payload: &buf),
+            !vp8.isPartitionHead(payload: buf),
             "Small packet should not be the head of a new partition"
         )
 
         //"SFlagON",
         buf = ByteBuffer(bytes: [0x10, 0x00, 0x00, 0x00])
         XCTAssertTrue(
-            vp8.isPartitionHead(payload: &buf),
+            vp8.isPartitionHead(payload: buf),
             "Packet with S flag should be the head of a new partition"
         )
 
         //"SFlagOFF"
         buf = ByteBuffer(bytes: [0x00, 0x00, 0x00, 0x00])
         XCTAssertTrue(
-            !vp8.isPartitionHead(payload: &buf),
+            !vp8.isPartitionHead(payload: buf),
             "Packet without S flag should not be the head of a new partition"
         )
     }

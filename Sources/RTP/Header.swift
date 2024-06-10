@@ -172,7 +172,7 @@ public struct Header: Equatable {
 
 extension Header: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
-    public init(_ buf: inout ByteBuffer) throws {
+    public init(_ buf: ByteBuffer) throws {
         let bufLen = buf.readableBytes
         if bufLen < headerLength {
             throw RtpError.errHeaderSizeInsufficient
@@ -191,7 +191,8 @@ extension Header: Unmarshal {
          * |                             ....                              |
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
-        guard let b0: UInt8 = buf.readInteger() else {
+        var reader = buf.slice()
+        guard let b0: UInt8 = reader.readInteger() else {
             throw RtpError.errHeaderSizeInsufficient
         }
         let version = b0 >> versionShift & versionMask
@@ -204,25 +205,25 @@ extension Header: Unmarshal {
             throw RtpError.errHeaderSizeInsufficient
         }
 
-        guard let b1: UInt8 = buf.readInteger() else {
+        guard let b1: UInt8 = reader.readInteger() else {
             throw RtpError.errHeaderSizeInsufficient
         }
         let marker = (b1 >> markerShift & markerMask) > 0
         let payloadType = b1 & ptMask
 
-        guard let sequenceNumber: UInt16 = buf.readInteger() else {
+        guard let sequenceNumber: UInt16 = reader.readInteger() else {
             throw RtpError.errHeaderSizeInsufficient
         }
-        guard let timestamp: UInt32 = buf.readInteger() else {
+        guard let timestamp: UInt32 = reader.readInteger() else {
             throw RtpError.errHeaderSizeInsufficient
         }
-        guard let ssrc: UInt32 = buf.readInteger() else {
+        guard let ssrc: UInt32 = reader.readInteger() else {
             throw RtpError.errHeaderSizeInsufficient
         }
 
         var csrcs: [UInt32] = []
         for _ in 0..<cc {
-            guard let csrc: UInt32 = buf.readInteger() else {
+            guard let csrc: UInt32 = reader.readInteger() else {
                 throw RtpError.errHeaderSizeInsufficient
             }
             csrcs.append(csrc)
@@ -235,11 +236,11 @@ extension Header: Unmarshal {
             if bufLen < expected {
                 throw RtpError.errHeaderSizeInsufficientForExtension
             }
-            guard let profile: UInt16 = buf.readInteger() else {
+            guard let profile: UInt16 = reader.readInteger() else {
                 throw RtpError.errHeaderSizeInsufficient
             }
             currOffset += 2
-            guard let length: UInt16 = buf.readInteger() else {
+            guard let length: UInt16 = reader.readInteger() else {
                 throw RtpError.errHeaderSizeInsufficient
             }
             let extensionLength = Int(length) * 4
@@ -256,7 +257,7 @@ extension Header: Unmarshal {
             case extensionProfileOneByte:
                 let end = currOffset + extensionLength
                 while currOffset < end {
-                    guard let b: UInt8 = buf.readInteger() else {
+                    guard let b: UInt8 = reader.readInteger() else {
                         throw RtpError.errHeaderSizeInsufficient
                     }
                     if b == 0x00 {
@@ -273,7 +274,7 @@ extension Header: Unmarshal {
                         break
                     }
 
-                    guard let payload = buf.readSlice(length: len) else {
+                    guard let payload = reader.readSlice(length: len) else {
                         throw RtpError.errHeaderSizeInsufficient
                     }
                     exts.append(
@@ -287,7 +288,7 @@ extension Header: Unmarshal {
             case extensionProfileTwoByte:
                 let end = currOffset + extensionLength
                 while currOffset < end {
-                    guard let b: UInt8 = buf.readInteger() else {
+                    guard let b: UInt8 = reader.readInteger() else {
                         throw RtpError.errHeaderSizeInsufficient
                     }
                     if b == 0x00 {
@@ -299,12 +300,12 @@ extension Header: Unmarshal {
                     let extid = b
                     currOffset += 1
 
-                    guard let len: UInt8 = buf.readInteger() else {
+                    guard let len: UInt8 = reader.readInteger() else {
                         throw RtpError.errHeaderSizeInsufficient
                     }
                     currOffset += 1
 
-                    guard let payload = buf.readSlice(length: Int(len)) else {
+                    guard let payload = reader.readSlice(length: Int(len)) else {
                         throw RtpError.errHeaderSizeInsufficient
                     }
                     exts.append(
@@ -320,7 +321,7 @@ extension Header: Unmarshal {
                 if bufLen < currOffset + extensionLength {
                     throw RtpError.errHeaderSizeInsufficientForExtension
                 }
-                guard let payload = buf.readSlice(length: extensionLength) else {
+                guard let payload = reader.readSlice(length: extensionLength) else {
                     throw RtpError.errHeaderSizeInsufficient
                 }
                 exts.append(

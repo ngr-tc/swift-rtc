@@ -14,7 +14,7 @@
 import NIOCore
 
 public protocol Unmarshal: MarshalSize {
-    init(_ buf: inout ByteBuffer) throws
+    init(_ buf: ByteBuffer) throws
 }
 
 public protocol MarshalSize {

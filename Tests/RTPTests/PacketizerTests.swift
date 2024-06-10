@@ -18,7 +18,7 @@ import XCTest
 
 final class PacketizerTests: XCTestCase {
     func testPacketizer() throws {
-        var multiplePayload = ByteBuffer(bytes: Array(repeating: 0, count: 128))
+        let multiplePayload = ByteBuffer(bytes: Array(repeating: 0, count: 128))
         let g722 = G722Payloader()
         let seq = newRandomSequencer()
 
@@ -30,7 +30,7 @@ final class PacketizerTests: XCTestCase {
             payloader: g722,
             sequencer: seq,
             clockRate: 90000)
-        let packets = try packetizer.packetize(payload: &multiplePayload, samples: 2000)
+        let packets = try packetizer.packetize(payload: multiplePayload, samples: 2000)
 
         if packets.count != 2 {
             var packetLengths = ""
@@ -66,8 +66,8 @@ final class PacketizerTests: XCTestCase {
         )
         pktizer.enableAbsSendTime(value: 1)
 
-        var payload = ByteBuffer(bytes: [0x11, 0x12, 0x13, 0x14])
-        let packets = try pktizer.packetize(payload: &payload, samples: 2000)
+        let payload = ByteBuffer(bytes: [0x11, 0x12, 0x13, 0x14])
+        let packets = try pktizer.packetize(payload: payload, samples: 2000)
 
         let expected = Packet(
             header: Header(
@@ -109,10 +109,8 @@ final class PacketizerTests: XCTestCase {
             sequencer: seq,
             clockRate: 90000)
 
-        var buf1 = payload.slice()
-        let _ = try packetizer.packetize(payload: &buf1, samples: 10)
-        var buf2 = payload.slice()
-        let _ = try packetizer.packetize(payload: &buf2, samples: UInt32.max)
+        let _ = try packetizer.packetize(payload: payload, samples: 10)
+        let _ = try packetizer.packetize(payload: payload, samples: UInt32.max)
 
         packetizer.skipSamples(skippedSamples: UInt32.max)
     }

@@ -18,7 +18,7 @@ import XCTest
 
 final class H264Tests: XCTestCase {
     func testH264Payload() throws {
-        var empty = ByteBuffer()
+        let empty = ByteBuffer()
         let smallPayload = ByteBuffer(bytes: [0x90, 0x90, 0x90])
         let multiplePayload = ByteBuffer(bytes: [0x00, 0x00, 0x01, 0x90, 0x00, 0x00, 0x01, 0x90])
         let largePayload = ByteBuffer(bytes: [
@@ -37,22 +37,19 @@ final class H264Tests: XCTestCase {
         var pck = H264Payloader()
 
         // Positive MTU, empty payload
-        var result = try pck.payload(mtu: 1, buf: &empty)
+        var result = try pck.payload(mtu: 1, buf: empty)
         XCTAssertTrue(result.isEmpty, "Generated payload should be empty")
 
         // 0 MTU, small payload
-        var buf = smallPayload.slice()
-        result = try pck.payload(mtu: 0, buf: &buf)
+        result = try pck.payload(mtu: 0, buf: smallPayload)
         XCTAssertEqual(result.count, 0, "Generated payload should be empty")
 
         // Positive MTU, small payload
-        buf = smallPayload.slice()
-        result = try pck.payload(mtu: 1, buf: &buf)
+        result = try pck.payload(mtu: 1, buf: smallPayload)
         XCTAssertEqual(result.count, 0, "Generated payload should be empty")
 
         // Positive MTU, small payload
-        buf = smallPayload.slice()
-        result = try pck.payload(mtu: 5, buf: &buf)
+        result = try pck.payload(mtu: 5, buf: smallPayload)
         XCTAssertEqual(result.count, 1, "Generated payload should be the 1")
         XCTAssertEqual(
             result[0].readableBytes,
@@ -61,8 +58,7 @@ final class H264Tests: XCTestCase {
         )
 
         // Multiple NALU in a single payload
-        buf = multiplePayload.slice()
-        result = try pck.payload(mtu: 5, buf: &buf)
+        result = try pck.payload(mtu: 5, buf: multiplePayload)
         XCTAssertEqual(result.count, 2, "2 nal units should be broken out")
         for i in 0..<2 {
             XCTAssertEqual(
@@ -72,16 +68,15 @@ final class H264Tests: XCTestCase {
         }
 
         // Large Payload split across multiple RTP Packets
-        buf = largePayload.slice()
-        result = try pck.payload(mtu: 5, buf: &buf)
+        result = try pck.payload(mtu: 5, buf: largePayload)
         XCTAssertEqual(
             result, largePayloadPacketized,
             "FU-A packetization failed"
         )
 
         // Nalu type 9 or 12
-        var smallPayload2 = ByteBuffer(bytes: [0x09, 0x00, 0x00])
-        result = try pck.payload(mtu: 5, buf: &smallPayload2)
+        let smallPayload2 = ByteBuffer(bytes: [0x09, 0x00, 0x00])
+        result = try pck.payload(mtu: 5, buf: smallPayload2)
         XCTAssertEqual(result.count, 0, "Generated payload should be empty")
     }
 
@@ -135,40 +130,34 @@ final class H264Tests: XCTestCase {
         var pkt = H264Packet(isAvc: false)
         var avcPkt = H264Packet(isAvc: true)
 
-        var data = ByteBuffer()
-        var result = try? pkt.depacketize(buf: &data)
+        var result = try? pkt.depacketize(buf: ByteBuffer())
         XCTAssertTrue(result == nil, "Unmarshal did not fail on nil payload")
 
-        data = ByteBuffer(bytes: [0x00, 0x00])
-        result = try? pkt.depacketize(buf: &data)
+        result = try? pkt.depacketize(buf: ByteBuffer(bytes: [0x00, 0x00]))
         XCTAssertTrue(
             result == nil,
             "Unmarshal accepted a packet that is too small for a payload and header"
         )
 
-        data = ByteBuffer(bytes: [0xFF, 0x00, 0x00])
-        result = try? pkt.depacketize(buf: &data)
+        result = try? pkt.depacketize(buf: ByteBuffer(bytes: [0xFF, 0x00, 0x00]))
         XCTAssertTrue(
             result == nil,
             "Unmarshal accepted a packet with a NALU Type we don't handle"
         )
 
-        data = incompleteSinglePayloadMultiNalu.slice()
-        result = try? pkt.depacketize(buf: &data)
+        result = try? pkt.depacketize(buf: incompleteSinglePayloadMultiNalu)
         XCTAssertTrue(
             result == nil,
             "Unmarshal accepted a STAP-A packet with insufficient data"
         )
 
-        data = singlePayload.slice()
-        var payload = try pkt.depacketize(buf: &data)
+        var payload = try pkt.depacketize(buf: singlePayload)
         XCTAssertEqual(
             payload, singlePayloadUnmarshaled,
             "Unmarshaling a single payload shouldn't modify the payload"
         )
 
-        data = singlePayload.slice()
-        payload = try avcPkt.depacketize(buf: &data)
+        payload = try avcPkt.depacketize(buf: singlePayload)
         XCTAssertEqual(
             payload, singlePayloadUnmarshaledAvc,
             "Unmarshaling a single payload into avc stream shouldn't modify the payload"
@@ -176,8 +165,7 @@ final class H264Tests: XCTestCase {
 
         var largePayloadResult = ByteBuffer()
         for p in largePayloadPacketized {
-            data = p.slice()
-            let payload = try pkt.depacketize(buf: &data)
+            let payload = try pkt.depacketize(buf: p)
             largePayloadResult.writeImmutableBuffer(payload)
         }
         XCTAssertEqual(
@@ -188,8 +176,7 @@ final class H264Tests: XCTestCase {
 
         var largePayloadResultAvc = ByteBuffer()
         for p in largePayloadPacketized {
-            data = p.slice()
-            let payload = try avcPkt.depacketize(buf: &data)
+            let payload = try avcPkt.depacketize(buf: p)
             largePayloadResultAvc.writeImmutableBuffer(payload)
         }
         XCTAssertEqual(
@@ -198,15 +185,13 @@ final class H264Tests: XCTestCase {
             "Failed to unmarshal a large payload into avc stream"
         )
 
-        data = singlePayloadMultiNalu.slice()
-        payload = try pkt.depacketize(buf: &data)
+        payload = try pkt.depacketize(buf: singlePayloadMultiNalu)
         XCTAssertEqual(
             payload, singlePayloadMultiNaluUnmarshaled,
             "Failed to unmarshal a single packet with multiple NALUs"
         )
 
-        data = singlePayloadMultiNalu.slice()
-        payload = try avcPkt.depacketize(buf: &data)
+        payload = try avcPkt.depacketize(buf: singlePayloadMultiNalu)
         XCTAssertEqual(
             payload, singlePayloadMultiNaluUnmarshaledAvc,
             "Failed to unmarshal a single packet with multiple NALUs into avc stream"
@@ -215,45 +200,45 @@ final class H264Tests: XCTestCase {
 
     func testH264PartitionHeadCheckerIsPartitionHead() throws {
         let h264 = H264Packet(isAvc: false)
-        var emptyNalu = ByteBuffer()
+        let emptyNalu = ByteBuffer()
         XCTAssertTrue(
-            !h264.isPartitionHead(payload: &emptyNalu),
+            !h264.isPartitionHead(payload: emptyNalu),
             "empty nalu must not be a partition head"
         )
 
-        var singleNalu = ByteBuffer(bytes: [1, 0])
+        let singleNalu = ByteBuffer(bytes: [1, 0])
         XCTAssertTrue(
-            h264.isPartitionHead(payload: &singleNalu),
+            h264.isPartitionHead(payload: singleNalu),
             "single nalu must be a partition head"
         )
 
-        var stapaNalu = ByteBuffer(bytes: [stapaNaluType, 0])
+        let stapaNalu = ByteBuffer(bytes: [stapaNaluType, 0])
         XCTAssertTrue(
-            h264.isPartitionHead(payload: &stapaNalu),
+            h264.isPartitionHead(payload: stapaNalu),
             "stapa nalu must be a partition head"
         )
 
-        var fuaStartNalu = ByteBuffer(bytes: [fuaNaluType, fuStartBitmask])
+        let fuaStartNalu = ByteBuffer(bytes: [fuaNaluType, fuStartBitmask])
         XCTAssertTrue(
-            h264.isPartitionHead(payload: &fuaStartNalu),
+            h264.isPartitionHead(payload: fuaStartNalu),
             "fua start nalu must be a partition head"
         )
 
-        var fuaEndNalu = ByteBuffer(bytes: [fuaNaluType, fuEndBitmask])
+        let fuaEndNalu = ByteBuffer(bytes: [fuaNaluType, fuEndBitmask])
         XCTAssertTrue(
-            !h264.isPartitionHead(payload: &fuaEndNalu),
+            !h264.isPartitionHead(payload: fuaEndNalu),
             "fua end nalu must not be a partition head"
         )
 
-        var fubStartNalu = ByteBuffer(bytes: [fubNaluType, fuStartBitmask])
+        let fubStartNalu = ByteBuffer(bytes: [fubNaluType, fuStartBitmask])
         XCTAssertTrue(
-            h264.isPartitionHead(payload: &fubStartNalu),
+            h264.isPartitionHead(payload: fubStartNalu),
             "fub start nalu must be a partition head"
         )
 
-        var fubEndNalu = ByteBuffer(bytes: [fubNaluType, fuEndBitmask])
+        let fubEndNalu = ByteBuffer(bytes: [fubNaluType, fuEndBitmask])
         XCTAssertTrue(
-            !h264.isPartitionHead(payload: &fubEndNalu),
+            !h264.isPartitionHead(payload: fubEndNalu),
             "fub end nalu must not be a partition head"
         )
     }
@@ -268,16 +253,13 @@ final class H264Tests: XCTestCase {
         ]
 
         // When packetizing SPS and PPS are emitted with following NALU
-        var buf = ByteBuffer(bytes: [0x07, 0x00, 0x01])
-        var res = try pck.payload(mtu: 1500, buf: &buf)
+        var res = try pck.payload(mtu: 1500, buf: ByteBuffer(bytes: [0x07, 0x00, 0x01]))
         XCTAssertTrue(res.isEmpty, "Generated payload should be empty")
 
-        buf = ByteBuffer(bytes: [0x08, 0x02, 0x03])
-        res = try pck.payload(mtu: 1500, buf: &buf)
+        res = try pck.payload(mtu: 1500, buf: ByteBuffer(bytes: [0x08, 0x02, 0x03]))
         XCTAssertTrue(res.isEmpty, "Generated payload should be empty")
 
-        buf = ByteBuffer(bytes: [0x05, 0x04, 0x05])
-        let actual = try pck.payload(mtu: 1500, buf: &buf)
+        let actual = try pck.payload(mtu: 1500, buf: ByteBuffer(bytes: [0x05, 0x04, 0x05]))
         XCTAssertEqual(actual, expected, "SPS and PPS aren't packed together")
     }
 }

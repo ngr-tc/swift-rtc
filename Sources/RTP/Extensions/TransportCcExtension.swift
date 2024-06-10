@@ -32,14 +32,15 @@ public struct TransportCcExtension: Equatable {
 
 extension TransportCcExtension: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the members
-    public init(_ buf: inout ByteBuffer) throws {
+    public init(_ buf: ByteBuffer) throws {
         if buf.readableBytes < transportCcExtensionSize {
             throw RtpError.errBufferTooSmall
         }
-        guard let b0: UInt8 = buf.readInteger() else {
+        var reader = buf.slice()
+        guard let b0: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
-        guard let b1: UInt8 = buf.readInteger() else {
+        guard let b1: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
 

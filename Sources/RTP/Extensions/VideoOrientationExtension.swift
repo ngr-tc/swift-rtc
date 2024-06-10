@@ -85,12 +85,12 @@ public enum VideoRotation: UInt8, Equatable {
 }
 
 extension VideoOrientationExtension: Unmarshal {
-    public init(_ buf: inout ByteBuffer) throws {
+    public init(_ buf: ByteBuffer) throws {
         if buf.readableBytes < videoOrientationExtensionSize {
             throw RtpError.errBufferTooSmall
         }
-
-        guard let b: UInt8 = buf.readInteger() else {
+        var reader = buf.slice()
+        guard let b: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
 

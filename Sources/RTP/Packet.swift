@@ -39,10 +39,14 @@ extension Packet: CustomStringConvertible {
 
 extension Packet: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the Header this method is called upon
-    public init(_ buf: inout ByteBuffer) throws {
-        let header = try Header(&buf)
+    public init(_ buf: ByteBuffer) throws {
+        let header = try Header(buf)
+        let headerLen = header.marshalSize()
         let payloadLen = buf.readableBytes
-        guard var payload = buf.readSlice(length: payloadLen) else {
+
+        var reader = buf.slice()
+        reader.moveReaderIndex(forwardBy: headerLen)
+        guard var payload = reader.readSlice(length: payloadLen) else {
             throw RtpError.errShortPacket
         }
         if header.padding {

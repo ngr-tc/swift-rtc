@@ -21,14 +21,13 @@ final class OpusTests: XCTestCase {
         var pck = OpusPacket()
 
         // Empty packet
-        var emptyBytes = ByteBuffer()
-        let result = try? pck.depacketize(buf: &emptyBytes)
+        let emptyBytes = ByteBuffer()
+        let result = try? pck.depacketize(buf: emptyBytes)
         XCTAssertTrue(result == nil, "Result should be err in case of error")
 
         // Normal packet
         let rawBytes = ByteBuffer(bytes: [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x90])
-        var buf = rawBytes.slice()
-        let payload = try pck.depacketize(buf: &buf)
+        let payload = try pck.depacketize(buf: rawBytes)
         XCTAssertEqual(rawBytes, payload, "Payload must be same")
     }
 
@@ -38,27 +37,24 @@ final class OpusTests: XCTestCase {
         let payload = ByteBuffer(bytes: [0x90, 0x90, 0x90])
 
         // Positive MTU, empty payload
-        var buf = empty.slice()
-        var result = try pck.payload(mtu: 1, buf: &buf)
+        var result = try pck.payload(mtu: 1, buf: empty)
         XCTAssertTrue(result.isEmpty, "Generated payload should be empty")
 
         // Positive MTU, small payload
-        buf = payload.slice()
-        result = try pck.payload(mtu: 1, buf: &buf)
+        result = try pck.payload(mtu: 1, buf: payload)
         XCTAssertEqual(result.count, 1, "Generated payload should be the 1")
 
         // Positive MTU, small payload
-        buf = payload.slice()
-        result = try pck.payload(mtu: 2, buf: &buf)
+        result = try pck.payload(mtu: 2, buf: payload)
         XCTAssertEqual(result.count, 1, "Generated payload should be the 1")
     }
 
     func testOpusIsPartitionHead() throws {
         let opus = OpusPacket()
         //"NormalPacket"
-        var buf = ByteBuffer(bytes: [0x00, 0x00])
+        let buf = ByteBuffer(bytes: [0x00, 0x00])
         XCTAssertTrue(
-            opus.isPartitionHead(payload: &buf),
+            opus.isPartitionHead(payload: buf),
             "All OPUS RTP packet should be the head of a new partition"
         )
     }

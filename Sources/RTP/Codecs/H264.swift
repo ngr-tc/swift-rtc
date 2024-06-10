@@ -61,7 +61,7 @@ public struct H264Payloader {
         return (-1, -1)
     }
 
-    mutating func emit(nalu: inout ByteBuffer, mtu: Int, payloads: inout [ByteBuffer]) throws {
+    mutating func emit(nalu: ByteBuffer, mtu: Int, payloads: inout [ByteBuffer]) throws {
         if nalu.readableBytes == 0 {
             return
         }
@@ -175,7 +175,7 @@ public struct H264Payloader {
 
 extension H264Payloader: Payloader {
     /// Payload fragments a H264 packet across one or more byte arrays
-    public mutating func payload(mtu: Int, buf: inout ByteBuffer) throws -> [ByteBuffer] {
+    public mutating func payload(mtu: Int, buf: ByteBuffer) throws -> [ByteBuffer] {
         if buf.readableBytes == 0 || mtu == 0 {
             return []
         }
@@ -184,7 +184,7 @@ extension H264Payloader: Payloader {
 
         var (nextIndStart, nextIndLen) = H264Payloader.nextInd(nalu: buf.readableBytesView)
         if nextIndStart == -1 {
-            try self.emit(nalu: &buf, mtu: mtu, payloads: &payloads)
+            try self.emit(nalu: buf, mtu: mtu, payloads: &payloads)
         } else {
             while nextIndStart != -1 {
                 let prevStart = nextIndStart + nextIndLen
@@ -199,25 +199,25 @@ extension H264Payloader: Payloader {
                 nextIndLen = nextIndLen2
                 if nextIndStart != -1 {
                     guard
-                        var subBuf = buf.getSlice(
+                        let subBuf = buf.getSlice(
                             at: prevStart, length: nextIndStart - prevStart)
                     else {
                         throw RtpError.errBufferTooSmall
                     }
                     try self.emit(
-                        nalu: &subBuf,
+                        nalu: subBuf,
                         mtu: mtu,
                         payloads: &payloads
                     )
                 } else {
                     // Emit until end of stream, no end indicator found
                     guard
-                        var subBuf = buf.getSlice(
+                        let subBuf = buf.getSlice(
                             at: prevStart, length: buf.readableBytes - prevStart)
                     else {
                         throw RtpError.errBufferTooSmall
                     }
-                    try self.emit(nalu: &subBuf, mtu: mtu, payloads: &payloads)
+                    try self.emit(nalu: subBuf, mtu: mtu, payloads: &payloads)
                 }
             }
         }
@@ -239,7 +239,7 @@ public struct H264Packet: Equatable {
 
 extension H264Packet: Depacketizer {
     /// depacketize parses the passed byte slice and stores the result in the H264Packet this method is called upon
-    public mutating func depacketize(buf: inout ByteBuffer) throws -> ByteBuffer {
+    public mutating func depacketize(buf: ByteBuffer) throws -> ByteBuffer {
         guard let b = buf.getBytes(at: 0, length: 2) else {
             throw RtpError.errShortPacket
         }
@@ -335,7 +335,7 @@ extension H264Packet: Depacketizer {
     }
 
     /// is_partition_head checks if this is the head of a packetized nalu stream.
-    public func isPartitionHead(payload: inout ByteBuffer) -> Bool {
+    public func isPartitionHead(payload: ByteBuffer) -> Bool {
         guard let b = payload.getBytes(at: 0, length: 2) else {
             return false
         }
@@ -349,7 +349,7 @@ extension H264Packet: Depacketizer {
         }
     }
 
-    public func isPartitionTail(marker: Bool, payload: inout ByteBuffer) -> Bool {
+    public func isPartitionTail(marker: Bool, payload: ByteBuffer) -> Bool {
         return marker
     }
 }

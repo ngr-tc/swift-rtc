@@ -69,8 +69,7 @@ final class AbsSendTimeExtensionTests: XCTestCase {
         for test in tests {
             var raw = ByteBuffer()
             let _ = try test.marshalTo(&raw)
-            var buf = raw.slice()
-            let out = try AbsSendTimeExtension(&buf)
+            let out = try AbsSendTimeExtension(raw)
             XCTAssertEqual(test.timestamp, out.timestamp)
         }
     }
@@ -89,8 +88,7 @@ final class AbsSendTimeExtensionTests: XCTestCase {
             )
             var raw = ByteBuffer()
             let _ = try send.marshalTo(&raw)
-            var buf = raw.slice()
-            let receive = try AbsSendTimeExtension(&buf)
+            let receive = try AbsSendTimeExtension(raw)
 
             let estimated = receive.estimate(ntp2unix(receive_ntp))
             let diff: TimeAmount = estimated - inTime

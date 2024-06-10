@@ -18,15 +18,14 @@ import XCTest
 
 final class AudioLevelExtensionTests: XCTestCase {
     func testAudioLevelExtensionTooSmall() throws {
-        var buf = ByteBuffer()
-        let result = try? AudioLevelExtension(&buf)
+        let buf = ByteBuffer()
+        let result = try? AudioLevelExtension(buf)
         XCTAssertTrue(result == nil)
     }
 
     func testAudioLevelExtensionVoiceTrue() throws {
         let raw = ByteBuffer(bytes: [0x88])
-        var buf = raw.slice()
-        let a1 = try AudioLevelExtension(&buf)
+        let a1 = try AudioLevelExtension(raw)
         let a2 = AudioLevelExtension(
             level: 8,
             voice: true
@@ -40,8 +39,7 @@ final class AudioLevelExtensionTests: XCTestCase {
 
     func testAudioLevelExtensionVoiceFalse() throws {
         let raw = ByteBuffer(bytes: [0x8])
-        var buf = raw.slice()
-        let a1 = try AudioLevelExtension(&buf)
+        let a1 = try AudioLevelExtension(raw)
         let a2 = AudioLevelExtension(
             level: 8,
             voice: false

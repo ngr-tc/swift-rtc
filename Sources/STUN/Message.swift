@@ -127,7 +127,7 @@ public struct Message: Equatable {
     }
 
     // unmarshal_binary implements the encoding.BinaryUnmarshaler interface.
-    public mutating func unmarshalBinary(data: inout ByteBuffer) throws {
+    public mutating func unmarshalBinary(data: ByteBuffer) throws {
         // We can't retain data, copy is expected by interface contract.
         self.raw = data
         try self.decode()
@@ -320,9 +320,7 @@ public struct Message: Equatable {
     // WriteTo implements WriterTo via calling Write(m.Raw) on w and returning
     // call result.
     public mutating func writeTo(writer: inout ByteBuffer) throws -> Int {
-        let readerIndexBefore = self.raw.readerIndex
         writer.writeImmutableBuffer(self.raw)
-        self.raw.moveReaderIndex(to: readerIndexBefore)
         return self.raw.readableBytes
     }
 

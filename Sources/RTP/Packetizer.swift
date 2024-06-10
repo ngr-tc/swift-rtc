@@ -16,28 +16,28 @@ import Shared
 
 /// Payloader payloads a byte array for use as rtp.Packet payloads
 public protocol Payloader {
-    mutating func payload(mtu: Int, buf: inout ByteBuffer) throws -> [ByteBuffer]
+    mutating func payload(mtu: Int, buf: ByteBuffer) throws -> [ByteBuffer]
 }
 
 /// Packetizer packetizes a payload
 public protocol Packetizer {
     mutating func enableAbsSendTime(value: UInt8)
-    mutating func packetize(payload: inout ByteBuffer, samples: UInt32) throws -> [Packet]
+    mutating func packetize(payload: ByteBuffer, samples: UInt32) throws -> [Packet]
     mutating func skipSamples(skippedSamples: UInt32)
 }
 
 /// Depacketizer depacketizes a RTP payload, removing any RTP specific data from the payload
 public protocol Depacketizer {
-    mutating func depacketize(buf: inout ByteBuffer) throws -> ByteBuffer
+    mutating func depacketize(buf: ByteBuffer) throws -> ByteBuffer
 
     /// Checks if the packet is at the beginning of a partition.  This
     /// should return false if the result could not be determined, in
     /// which case the caller will detect timestamp discontinuities.
-    func isPartitionHead(payload: inout ByteBuffer) -> Bool
+    func isPartitionHead(payload: ByteBuffer) -> Bool
 
     /// Checks if the packet is at the end of a partition.  This should
     /// return false if the result could not be determined.
-    func isPartitionTail(marker: Bool, payload: inout ByteBuffer) -> Bool
+    func isPartitionTail(marker: Bool, payload: ByteBuffer) -> Bool
 }
 
 /// FnTimeGen provides current NIODeadline
@@ -81,8 +81,8 @@ extension PacketizerImpl: Packetizer {
         self.absSendTime = value
     }
 
-    public mutating func packetize(payload: inout ByteBuffer, samples: UInt32) throws -> [Packet] {
-        let payloads = try self.payloader.payload(mtu: self.mtu - 12, buf: &payload)
+    public mutating func packetize(payload: ByteBuffer, samples: UInt32) throws -> [Packet] {
+        let payloads = try self.payloader.payload(mtu: self.mtu - 12, buf: payload)
         let payloadsLen = payloads.count
         var packets: [Packet] = []
         for (i, payload) in payloads.enumerated() {
