@@ -113,12 +113,3 @@ extension Packet: Marshal {
         return n + self.payload.readableBytes + paddingLen
     }
 }
-
-/// getPadding Returns the padding required to make the length a multiple of 4
-func getPadding(_ len: Int) -> Int {
-    if len % 4 == 0 {
-        return 0
-    } else {
-        return 4 - (len % 4)
-    }
-}
