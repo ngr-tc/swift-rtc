@@ -51,6 +51,7 @@ let package = Package(
         .target(
             name: "RTC",
             dependencies: [
+                "RTP",
                 "SDP",
                 "STUN",
             ]
@@ -76,7 +77,13 @@ let package = Package(
             dependencies: [
                 .product(name: "NIOCore", package: "swift-nio")
             ]),
-        .target(name: "SRTP"),
+        .target(name: "SRTP",
+            dependencies: [
+                "RTCP",
+                "RTP",
+                "Shared",
+                .product(name: "NIOCore", package: "swift-nio"),
+            ]),
         .target(name: "STUN",
             dependencies: [
                 "Shared",

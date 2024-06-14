@@ -11,5 +11,7 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
+
+@_exported import RTP
 @_exported import SDP
 @_exported import STUN
