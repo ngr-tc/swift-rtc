@@ -118,6 +118,20 @@ public struct Header: Equatable {
     /// The length of this RTCP packet in 32-bit words minus one,
     /// including the header and any padding.
     public var length: UInt16
+
+    public init() {
+        self.padding = false
+        self.count = 0
+        self.packetType = PacketType.unsupported
+        self.length = 0
+    }
+
+    public init(padding: Bool, count: UInt8, packetType: PacketType, length: UInt16) {
+        self.padding = padding
+        self.count = count
+        self.packetType = packetType
+        self.length = length
+    }
 }
 
 extension Header: Unmarshal {
