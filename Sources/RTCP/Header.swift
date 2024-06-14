@@ -33,6 +33,7 @@ public let formatTcc: UInt8 = 15
 /// PacketType specifies the type of an RTCP packet
 /// RTCP packet types registered with IANA. See: https://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
 public enum PacketType: UInt8, Equatable {
+    case unsupported = 0
     case senderReport = 200  // RFC 3550, 6.4.1
     case receiverReport = 201  // RFC 3550, 6.4.2
     case sourceDescription = 202  // RFC 3550, 6.5
@@ -41,11 +42,36 @@ public enum PacketType: UInt8, Equatable {
     case transportSpecificFeedback = 205  // RFC 4585, 6051
     case payloadSpecificFeedback = 206  // RFC 4585, 6.3
     case extendedReport = 207  // RFC 3611
+
+    public init(rawValue: UInt8) {
+        switch rawValue {
+        case 200:
+            self = PacketType.senderReport  // RFC 3550, 6.4.1
+        case 201:
+            self = PacketType.receiverReport  // RFC 3550, 6.4.2
+        case 202:
+            self = PacketType.sourceDescription  // RFC 3550, 6.5
+        case 203:
+            self = PacketType.goodbye  // RFC 3550, 6.6
+        case 204:
+            self = PacketType.applicationDefined  // RFC 3550, 6.7 (unimplemented)
+        case 205:
+            self = PacketType.transportSpecificFeedback  // RFC 4585, 6051
+        case 206:
+            self = PacketType.payloadSpecificFeedback  // RFC 4585, 6.3
+        case 207:
+            self = PacketType.extendedReport  // RFC 3611
+        default:
+            self = PacketType.unsupported
+        }
+    }
 }
 
 extension PacketType: CustomStringConvertible {
     public var description: String {
         switch self {
+        case .unsupported:
+            return "Unsupported"
         case .senderReport:
             return "SR"
         case .receiverReport:
@@ -94,51 +120,11 @@ public struct Header: Equatable {
     public var length: UInt16
 }
 
-/// Marshal encodes the Header in binary
-extension Header: MarshalSize {
-    public func marshalSize() -> Int {
-        return headerLength
-    }
-}
-
-/*
-extension Header: Marshal{
-    public func marshalTo(_ buf: inout ByteBuffer) throws -> Int {
-        if self.count > 31 {
-            throud Rtcp.InvalidHeader
-        }
-        if buf.remaining_mut() < HEADER_LENGTH {
-            throud Rtcp.BufferTooShort)
-        }
-
-        /*
-         *  0                   1                   2                   3
-         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         * |V=2|P|    RC   |   PT=SR=200   |             length            |
-         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-         */
-        let b0 = (RTP_VERSION << VERSION_SHIFT)
-            | ((self.padding as UInt8) << PADDING_SHIFT)
-            | (self.count << COUNT_SHIFT);
-
-        buf.put_UInt8(b0);
-        buf.put_UInt8(self.packet_type as UInt8);
-        buf.put_u16(self.length);
-
-        Ok(HEADER_LENGTH)
-    }
-}
-
-impl Unmarshal for Header {
+extension Header: Unmarshal {
     /// Unmarshal decodes the Header from binary
-    fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
-    where
-        Self: Sized,
-        B: Buf,
-    {
-        if raw_packet.remaining() < HEADER_LENGTH {
-            return Err(Error::PacketTooShort);
+    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
+        if buf.readableBytes < headerLength {
+            throw RtcpError.errPacketTooShort
         }
 
         /*
@@ -148,165 +134,60 @@ impl Unmarshal for Header {
          * |V=2|P|    RC   |      PT       |             length            |
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
-        let b0 = raw_packet.get_UInt8();
-        let version = (b0 >> VERSION_SHIFT) & VERSION_MASK;
-        if version != RTP_VERSION {
-            return Err(Error::BadVersion);
+        var reader = buf.slice()
+        guard let b0: UInt8 = reader.readInteger() else {
+            throw RtcpError.errPacketTooShort
+        }
+        let version = (b0 >> versionShift) & versionMask
+        if version != rtpVersion {
+            throw RtcpError.errBadVersion
         }
 
-        let padding = ((b0 >> PADDING_SHIFT) & PADDING_MASK) > 0;
-        let count = (b0 >> COUNT_SHIFT) & COUNT_MASK;
-        let packet_type = PacketType::from(raw_packet.get_UInt8());
-        let length = raw_packet.get_u16();
+        let padding = ((b0 >> paddingShift) & paddingMask) > 0
+        let count = (b0 >> countShift) & countMask
+        guard let b1: UInt8 = reader.readInteger() else {
+            throw RtcpError.errPacketTooShort
+        }
+        let packetType = PacketType(rawValue: b1)
+        guard let length: UInt16 = reader.readInteger() else {
+            throw RtcpError.errPacketTooShort
+        }
 
-        Ok(Header {
-            padding,
-            count,
-            packet_type,
-            length,
-        })
+        return (
+            Header(padding: padding, count: count, packetType: packetType, length: length),
+            reader.readerIndex
+        )
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-    use bytes::Bytes;
-
-    #[test]
-    fn test_header_unmarshal() {
-        let tests = vec![
-            (
-                "valid",
-                Bytes::from_static(&[
-                    // v=2, p=0, count=1, RR, len=7
-                    0x81UInt8, 0xc9, 0x00, 0x07,
-                ]),
-                Header {
-                    padding: false,
-                    count: 1,
-                    packet_type: PacketType::ReceiverReport,
-                    length: 7,
-                },
-                None,
-            ),
-            (
-                "also valid",
-                Bytes::from_static(&[
-                    // v=2, p=1, count=1, BYE, len=7
-                    0xa1, 0xcc, 0x00, 0x07,
-                ]),
-                Header {
-                    padding: true,
-                    count: 1,
-                    packet_type: PacketType::ApplicationDefined,
-                    length: 7,
-                },
-                None,
-            ),
-            (
-                "bad version",
-                Bytes::from_static(&[
-                    // v=0, p=0, count=0, RR, len=4
-                    0x00, 0xc9, 0x00, 0x04,
-                ]),
-                Header {
-                    padding: false,
-                    count: 0,
-                    packet_type: PacketType::Unsupported,
-                    length: 0,
-                },
-                Some(Error::BadVersion),
-            ),
-        ];
-
-        for (name, data, want, want_error) in tests {
-            let buf = &mut data.clone();
-            let got = Header::unmarshal(buf);
-
-            assert_eq!(
-                got.is_err(),
-                want_error.is_some(),
-                "Unmarshal {name}: err = {got:?}, want {want_error:?}"
-            );
-
-            if let Some(want_error) = want_error {
-                let got_err = got.err().unwrap();
-                assert_eq!(
-                    want_error, got_err,
-                    "Unmarshal {name}: err = {got_err:?}, want {want_error:?}",
-                );
-            } else {
-                let actual = got.unwrap();
-                assert_eq!(
-                    actual, want,
-                    "Unmarshal {name}: got {actual:?}, want {want:?}"
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn test_header_roundtrip() {
-        let tests = vec![
-            (
-                "valid",
-                Header {
-                    padding: true,
-                    count: 31,
-                    packet_type: PacketType::SenderReport,
-                    length: 4,
-                },
-                None,
-            ),
-            (
-                "also valid",
-                Header {
-                    padding: false,
-                    count: 28,
-                    packet_type: PacketType::ReceiverReport,
-                    length: 65535,
-                },
-                None,
-            ),
-            (
-                "invalid count",
-                Header {
-                    padding: false,
-                    count: 40,
-                    packet_type: PacketType::Unsupported,
-                    length: 0,
-                },
-                Some(Error::InvalidHeader),
-            ),
-        ];
-
-        for (name, want, want_error) in tests {
-            let got = want.marshal();
-
-            assert_eq!(
-                got.is_ok(),
-                want_error.is_none(),
-                "Marshal {name}: err = {got:?}, want {want_error:?}"
-            );
-
-            if let Some(err) = want_error {
-                let got_err = got.err().unwrap();
-                assert_eq!(
-                    err, got_err,
-                    "Unmarshal {name} rr: err = {got_err:?}, want {err:?}",
-                );
-            } else {
-                let data = got.ok().unwrap();
-                let buf = &mut data.clone();
-                let actual = Header::unmarshal(buf).unwrap_or_else(|_| panic!("Unmarshal {name}"));
-
-                assert_eq!(
-                    actual, want,
-                    "{name} round trip: got {actual:?}, want {want:?}"
-                )
-            }
-        }
+/// Marshal encodes the Header in binary
+extension Header: MarshalSize {
+    public func marshalSize() -> Int {
+        return headerLength
     }
 }
-*/
+
+extension Header: Marshal {
+    public func marshalTo(_ buf: inout ByteBuffer) throws -> Int {
+        if self.count > 31 {
+            throw RtcpError.errInvalidHeader
+        }
+        /*
+         *  0                   1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * |V=2|P|    RC   |   PT=SR=200   |             length            |
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        let b0: UInt8 =
+            (rtpVersion << versionShift)
+            | (UInt8(self.padding ? 1 : 0) << paddingShift)
+            | (self.count << countShift)
+
+        buf.writeInteger(b0)
+        buf.writeInteger(self.packetType.rawValue)
+        buf.writeInteger(self.length)
+
+        return headerLength
+    }
+}
