@@ -14,7 +14,7 @@
 import NIOCore
 import Shared
 
-let recptionReportLength: Int = 24
+let receptionReportLength: Int = 24
 let fractionLostOffset: Int = 4
 let totalLostOffset: Int = 5
 let lastSeqOffset: Int = 8
@@ -51,6 +51,29 @@ public struct ReceptionReport: Equatable {
     /// last SR packet from source SSRC and sending this reception report block.
     /// If no SR packet has been received yet from SSRC, the field is set to zero.
     public var delay: UInt32
+
+    public init() {
+        self.ssrc = 0
+        self.fractionLost = 0
+        self.totalLost = 0
+        self.lastSequenceNumber = 0
+        self.jitter = 0
+        self.lastSenderReport = 0
+        self.delay = 0
+    }
+
+    public init(
+        ssrc: UInt32, fractionLost: UInt8, totalLost: UInt32, lastSequenceNumber: UInt32,
+        jitter: UInt32, lastSenderReport: UInt32, delay: UInt32
+    ) {
+        self.ssrc = ssrc
+        self.fractionLost = fractionLost
+        self.totalLost = totalLost
+        self.lastSequenceNumber = lastSequenceNumber
+        self.jitter = jitter
+        self.lastSenderReport = lastSenderReport
+        self.delay = delay
+    }
 }
 
 extension ReceptionReport: Packet {
@@ -63,14 +86,14 @@ extension ReceptionReport: Packet {
     }
 
     public func rawSize() -> Int {
-        recptionReportLength
+        receptionReportLength
     }
 }
 
 extension ReceptionReport: Unmarshal {
     /// unmarshal decodes the ReceptionReport from binary
     public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
-        if buf.readableBytes < recptionReportLength {
+        if buf.readableBytes < receptionReportLength {
             throw RtcpError.errPacketTooShort
         }
 
