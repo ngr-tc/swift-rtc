@@ -142,7 +142,7 @@ final class GoodbyeTests: XCTestCase {
     }
 
     func testGoodbyeRoundtrip() throws {
-        let tooManySources: [uint32] = Array(repeating: 0, count: 1 << 5)
+        let tooManySources: [UInt32] = Array(repeating: 0, count: 1 << 5)
 
         var tooLongText = String()
         for _ in 0..<1 << 8 {
