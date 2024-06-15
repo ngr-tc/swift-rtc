@@ -85,6 +85,7 @@ extension Goodbye: Unmarshal {
         }
 
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         reader.moveReaderIndex(forwardBy: headerLen)
         let reasonOffset = headerLength + Int(header.count) * ssrcLength
 
@@ -122,7 +123,7 @@ extension Goodbye: Unmarshal {
             reader.moveReaderIndex(forwardBy: reader.readableBytes)
         }
 
-        return (Goodbye(sources: sources, reason: reason), reader.readerIndex)
+        return (Goodbye(sources: sources, reason: reason), reader.readerIndex - readerStartIndex)
     }
 }
 

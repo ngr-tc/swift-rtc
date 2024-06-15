@@ -48,6 +48,7 @@ extension AbsSendTimeExtension: Unmarshal {
     /// Unmarshal parses the passed byte slice and stores the result in the members.
     public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let b0: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
@@ -59,7 +60,7 @@ extension AbsSendTimeExtension: Unmarshal {
         }
 
         let timestamp = UInt64(b0) << 16 | UInt64(b1) << 8 | UInt64(b2)
-        return (AbsSendTimeExtension(timestamp: timestamp), reader.readerIndex)
+        return (AbsSendTimeExtension(timestamp: timestamp), reader.readerIndex - readerStartIndex)
     }
 }
 

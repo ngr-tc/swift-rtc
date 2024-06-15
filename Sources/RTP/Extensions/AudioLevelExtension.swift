@@ -48,13 +48,16 @@ extension AudioLevelExtension: Unmarshal {
             throw RtpError.errBufferTooSmall
         }
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let b: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
 
         let level = b & 0x7F
         let voice = (b & 0x80) != 0
-        return (AudioLevelExtension(level: level, voice: voice), reader.readerIndex)
+        return (
+            AudioLevelExtension(level: level, voice: voice), reader.readerIndex - readerStartIndex
+        )
     }
 }
 

@@ -192,6 +192,7 @@ extension Header: Unmarshal {
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let b0: UInt8 = reader.readInteger() else {
             throw RtpError.errHeaderSizeInsufficient
         }
@@ -351,7 +352,7 @@ extension Header: Unmarshal {
                 csrcs: csrcs,
                 extensionProfile: extensionProfile,
                 extensions: extensions
-            ), reader.readerIndex
+            ), reader.readerIndex - readerStartIndex
         )
     }
 }

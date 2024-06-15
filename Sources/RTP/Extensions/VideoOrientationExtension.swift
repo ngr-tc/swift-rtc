@@ -90,6 +90,7 @@ extension VideoOrientationExtension: Unmarshal {
             throw RtpError.errBufferTooSmall
         }
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let b: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
@@ -103,7 +104,7 @@ extension VideoOrientationExtension: Unmarshal {
         let rotation = try VideoRotation(value: r)
         return (
             VideoOrientationExtension(direction: direction, flip: flip, rotation: rotation),
-            reader.readerIndex
+            reader.readerIndex - readerStartIndex
         )
     }
 }

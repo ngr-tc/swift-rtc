@@ -81,6 +81,16 @@ public struct SourceDescriptionChunk: Equatable {
     public var source: UInt32
     public var items: [SourceDescriptionItem]
 
+    public init() {
+        self.source = 0
+        self.items = []
+    }
+
+    public init(source: UInt32, items: [SourceDescriptionItem]) {
+        self.source = source
+        self.items = items
+    }
+
     func rawSize() -> Int {
         var len = sdesSourceLen
         for it in self.items {
@@ -143,6 +153,7 @@ extension SourceDescriptionChunk: Unmarshal {
         }
 
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let source: UInt32 = reader.readInteger() else {
             throw RtcpError.errPacketTooShort
         }
@@ -158,13 +169,14 @@ extension SourceDescriptionChunk: Unmarshal {
                 if reader.readableBytes >= paddingLen {
                     reader.moveReaderIndex(forwardBy: paddingLen)
                     return (
-                        SourceDescriptionChunk(source: source, items: items), reader.readerIndex
+                        SourceDescriptionChunk(source: source, items: items),
+                        reader.readerIndex - readerStartIndex
                     )
                 } else {
                     throw RtcpError.errPacketTooShort
                 }
             }
-            offset += item.marshalSize()
+            offset += itemLen
             items.append(item)
         }
 
@@ -239,6 +251,7 @@ extension SourceDescriptionItem: Unmarshal {
         }
 
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let b0: UInt8 = reader.readInteger() else {
             throw RtcpError.errPacketTooShort
         }
@@ -265,13 +278,20 @@ extension SourceDescriptionItem: Unmarshal {
 
         let text = reader.readSlice(length: Int(octetCount)) ?? ByteBuffer()
 
-        return (SourceDescriptionItem(sdesType: sdesType, text: text), reader.readerIndex)
+        return (
+            SourceDescriptionItem(sdesType: sdesType, text: text),
+            reader.readerIndex - readerStartIndex
+        )
     }
 }
 
 /// A SourceDescription (SDES) packet describes the sources in an RTP stream.
 public struct SourceDescription: Equatable {
     public var chunks: [SourceDescriptionChunk]
+
+    public init(chunks: [SourceDescriptionChunk] = []) {
+        self.chunks = chunks
+    }
 }
 
 extension SourceDescription: CustomStringConvertible {
@@ -389,12 +409,14 @@ extension SourceDescription: Unmarshal {
         }
 
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         reader.moveReaderIndex(forwardBy: headerLen)
 
         var offset = headerLength
         var chunks: [SourceDescriptionChunk] = []
         while offset < rawPacketLen {
             let (chunk, chunkLen) = try SourceDescriptionChunk.unmarshal(reader)
+            reader.moveReaderIndex(forwardBy: chunkLen)
             offset += chunkLen
             chunks.append(chunk)
         }
@@ -408,6 +430,6 @@ extension SourceDescription: Unmarshal {
             reader.moveReaderIndex(forwardBy: reader.readableBytes)
         }
 
-        return (SourceDescription(chunks: chunks), reader.readerIndex)
+        return (SourceDescription(chunks: chunks), reader.readerIndex - readerStartIndex)
     }
 }

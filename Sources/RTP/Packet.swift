@@ -42,6 +42,7 @@ extension Packet: Unmarshal {
     public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
         let (header, headerLen) = try Header.unmarshal(buf)
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         reader.moveReaderIndex(forwardBy: headerLen)
         let payloadLen = reader.readableBytes
         guard var payload = reader.readSlice(length: payloadLen) else {
@@ -67,7 +68,7 @@ extension Packet: Unmarshal {
             }
         }
 
-        return (Packet(header: header, payload: payload), reader.readerIndex)
+        return (Packet(header: header, payload: payload), reader.readerIndex - readerStartIndex)
     }
 }
 

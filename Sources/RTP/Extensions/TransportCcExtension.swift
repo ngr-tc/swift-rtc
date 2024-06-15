@@ -37,6 +37,7 @@ extension TransportCcExtension: Unmarshal {
             throw RtpError.errBufferTooSmall
         }
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let b0: UInt8 = reader.readInteger() else {
             throw RtpError.errBufferTooSmall
         }
@@ -45,7 +46,10 @@ extension TransportCcExtension: Unmarshal {
         }
 
         let transportSequence = (UInt16(b0) << 8) | UInt16(b1)
-        return (TransportCcExtension(transportSequence: transportSequence), reader.readerIndex)
+        return (
+            TransportCcExtension(transportSequence: transportSequence),
+            reader.readerIndex - readerStartIndex
+        )
     }
 }
 

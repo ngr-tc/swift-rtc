@@ -149,6 +149,7 @@ extension Header: Unmarshal {
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let b0: UInt8 = reader.readInteger() else {
             throw RtcpError.errPacketTooShort
         }
@@ -169,7 +170,7 @@ extension Header: Unmarshal {
 
         return (
             Header(padding: padding, count: count, packetType: packetType, length: length),
-            reader.readerIndex
+            reader.readerIndex - readerStartIndex
         )
     }
 }

@@ -115,6 +115,7 @@ extension ReceptionReport: Unmarshal {
          * +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
          */
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         guard let ssrc: UInt32 = reader.readInteger() else {
             throw RtcpError.errPacketTooShort
         }
@@ -166,7 +167,7 @@ extension ReceptionReport: Unmarshal {
                 jitter: jitter,
                 lastSenderReport: lastSenderReport,
                 delay: delay
-            ), reader.readerIndex
+            ), reader.readerIndex - readerStartIndex
         )
     }
 }

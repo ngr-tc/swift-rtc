@@ -182,6 +182,7 @@ extension SenderReport: Unmarshal {
         }
 
         var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
         reader.moveReaderIndex(forwardBy: headerLen)
 
         guard let ssrc: UInt32 = reader.readInteger() else {
@@ -228,7 +229,7 @@ extension SenderReport: Unmarshal {
                 octetCount: octetCount,
                 reports: reports,
                 profileExtensions: profileExtensions
-            ), reader.readerIndex
+            ), reader.readerIndex - readerStartIndex
         )
     }
 }
