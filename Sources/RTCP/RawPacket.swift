@@ -46,6 +46,14 @@ extension RawPacket: Packet {
     }
 }
 
+extension RawPacket: Unmarshal {
+    /// Unmarshal decodes the packet from binary.
+    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
+        let _ = try Header.unmarshal(buf)
+        return (RawPacket(raw: buf), buf.readableBytes)
+    }
+}
+
 extension RawPacket: MarshalSize {
     public func marshalSize() -> Int {
         let l = self.rawSize()
@@ -63,13 +71,5 @@ extension RawPacket: Marshal {
             putPadding(&buf, self.rawSize())
         }
         return self.marshalSize()
-    }
-}
-
-extension RawPacket: Unmarshal {
-    /// Unmarshal decodes the packet from binary.
-    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
-        let _ = try Header.unmarshal(buf)
-        return (RawPacket(raw: buf), buf.readableBytes)
     }
 }
