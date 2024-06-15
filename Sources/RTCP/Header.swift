@@ -103,7 +103,7 @@ public let countMask: UInt8 = 0x1f
 public let headerLength: Int = 4
 public let countMax: Int = (1 << 5) - 1
 public let ssrcLength: Int = 4
-public let sdesMaxOctetCount: Int = (1 << 8) - 1
+//public let sdesMaxOctetCount: Int = (1 << 8) - 1
 
 /// A Header is the common header shared by all RTCP packets
 public struct Header: Equatable {
