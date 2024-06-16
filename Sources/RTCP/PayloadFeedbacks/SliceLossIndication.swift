@@ -84,6 +84,14 @@ extension SliceLossIndication: Packet {
     public func rawSize() -> Int {
         headerLength + sliOffset + self.sliEntries.count * 4
     }
+
+    public func equal(other: Packet) -> Bool {
+        if let rhs = other as? Self {
+            return self == rhs
+        } else {
+            return false
+        }
+    }
 }
 
 extension SliceLossIndication: MarshalSize {

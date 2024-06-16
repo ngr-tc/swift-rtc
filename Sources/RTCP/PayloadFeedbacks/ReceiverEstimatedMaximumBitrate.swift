@@ -75,6 +75,14 @@ extension ReceiverEstimatedMaximumBitrate: Packet {
     public func rawSize() -> Int {
         headerLength + rembOffset + self.ssrcs.count * 4
     }
+
+    public func equal(other: Packet) -> Bool {
+        if let rhs = other as? Self {
+            return self == rhs
+        } else {
+            return false
+        }
+    }
 }
 
 extension ReceiverEstimatedMaximumBitrate: MarshalSize {

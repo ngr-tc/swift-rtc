@@ -62,6 +62,14 @@ extension PictureLossIndication: Packet {
     public func rawSize() -> Int {
         headerLength + ssrcLength * 2
     }
+
+    public func equal(other: Packet) -> Bool {
+        if let rhs = other as? Self {
+            return self == rhs
+        } else {
+            return false
+        }
+    }
 }
 
 extension PictureLossIndication: MarshalSize {

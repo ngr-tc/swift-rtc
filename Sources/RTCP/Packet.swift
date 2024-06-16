@@ -20,6 +20,7 @@ public protocol Packet: Marshal, Unmarshal, CustomStringConvertible {
     func header() -> Header
     func destinationSsrc() -> [UInt32]
     func rawSize() -> Int
+    func equal(other: Packet) -> Bool
 }
 
 /// marshal takes an array of Packets and serializes them to a single buffer

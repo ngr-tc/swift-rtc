@@ -124,6 +124,25 @@ extension CompoundPacket: Packet {
         }
         return l
     }
+
+    public func equal(other: Packet) -> Bool {
+        var isEqual = true
+        if let rhs = other as? Self {
+            if self.packets.count == rhs.packets.count {
+                for i in 0..<self.packets.count {
+                    if !self.packets[i].equal(other: rhs.packets[i]) {
+                        isEqual = false
+                        break
+                    }
+                }
+            } else {
+                isEqual = false
+            }
+        } else {
+            isEqual = false
+        }
+        return isEqual
+    }
 }
 
 extension CompoundPacket: MarshalSize {

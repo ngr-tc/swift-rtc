@@ -61,6 +61,14 @@ extension Goodbye: Packet {
 
         return headerLength + srcsLength + reasonLength
     }
+
+    public func equal(other: Packet) -> Bool {
+        if let rhs = other as? Self {
+            return self == rhs
+        } else {
+            return false
+        }
+    }
 }
 
 extension Goodbye: Unmarshal {

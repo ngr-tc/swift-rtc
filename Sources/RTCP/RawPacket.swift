@@ -44,6 +44,14 @@ extension RawPacket: Packet {
     public func rawSize() -> Int {
         self.raw.readableBytes
     }
+
+    public func equal(other: Packet) -> Bool {
+        if let rhs = other as? Self {
+            return self == rhs
+        } else {
+            return false
+        }
+    }
 }
 
 extension RawPacket: Unmarshal {

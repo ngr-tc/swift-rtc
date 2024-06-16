@@ -84,6 +84,14 @@ extension ReceiverReport: Packet {
 
         return headerLength + ssrcLength + repsLength + self.profileExtensions.readableBytes
     }
+
+    public func equal(other: Packet) -> Bool {
+        if let rhs = other as? Self {
+            return self == rhs
+        } else {
+            return false
+        }
+    }
 }
 
 extension ReceiverReport: Unmarshal {

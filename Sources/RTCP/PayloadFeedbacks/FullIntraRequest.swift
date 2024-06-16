@@ -71,6 +71,14 @@ extension FullIntraRequest: Packet {
     public func rawSize() -> Int {
         headerLength + firOffset + self.fir.count * 8
     }
+
+    public func equal(other: Packet) -> Bool {
+        if let rhs = other as? Self {
+            return self == rhs
+        } else {
+            return false
+        }
+    }
 }
 
 extension FullIntraRequest: MarshalSize {

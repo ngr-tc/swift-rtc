@@ -331,6 +331,14 @@ extension SourceDescription: Packet {
 
         return headerLength + chunksLength
     }
+
+    public func equal(other: Packet) -> Bool {
+        if let rhs = other as? Self {
+            return self == rhs
+        } else {
+            return false
+        }
+    }
 }
 
 extension SourceDescription: MarshalSize {
