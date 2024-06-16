@@ -20,6 +20,11 @@ public struct Goodbye: Equatable {
     public var sources: [UInt32]
     /// Optional text indicating the reason for leaving, e.g., "camera malfunction" or "RTP loop detected"
     public var reason: ByteBuffer
+
+    public init(sources: [UInt32] = [], reason: ByteBuffer = ByteBuffer()) {
+        self.sources = sources
+        self.reason = reason
+    }
 }
 
 extension Goodbye: CustomStringConvertible {

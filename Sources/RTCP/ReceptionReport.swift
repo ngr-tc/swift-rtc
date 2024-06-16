@@ -76,6 +76,12 @@ public struct ReceptionReport: Equatable {
     }
 }
 
+extension ReceptionReport: CustomStringConvertible {
+    public var description: String {
+        "\(self)"
+    }
+}
+
 extension ReceptionReport: Packet {
     public func header() -> Header {
         Header()

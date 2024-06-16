@@ -16,7 +16,7 @@ import Shared
 
 /// Packet represents an RTCP packet, a protocol used for out-of-band statistics and
 /// control information for an RTP session
-public protocol Packet: Marshal, Unmarshal {
+public protocol Packet: Marshal, Unmarshal, CustomStringConvertible {
     func header() -> Header
     func destinationSsrc() -> [UInt32]
     func rawSize() -> Int
@@ -31,71 +31,80 @@ public func marshal(packets: inout [Packet]) throws -> ByteBuffer {
     return out
 }
 
-/*
 /// Unmarshal takes an entire udp datagram (which may consist of multiple RTCP packets) and
 /// returns the unmarshaled packets it contains.
 ///
 /// If this is a reduced-size RTCP packet a feedback packet (Goodbye, SliceLossIndication, etc)
 /// will be returned. Otherwise, the underlying type of the returned packet will be
 /// CompoundPacket.
-pub fn unmarshal<B>(raw_data: &mut B) -> Result<Vec<Box<dyn Packet>>>
-where
-    B: Buf,
-{
-    let mut packets = vec![];
+public func unmarshal(_ buf: ByteBuffer) throws -> [Packet] {
+    var packets: [Packet] = []
 
-    while raw_data.has_remaining() {
-        let p = unmarshaller(raw_data)?;
-        packets.push(p);
+    var reader = buf.slice()
+    while reader.readableBytes > 0 {
+        let (p, l) = try unmarshaller(reader)
+        reader.moveReaderIndex(forwardBy: l)
+        packets.append(p)
     }
 
-    match packets.len() {
-        // Empty Packet
-        0 => Err(Error::InvalidHeader),
-
-        // Multiple Packet
-        _ => Ok(packets),
+    if packets.isEmpty {
+        throw RtcpError.errInvalidHeader
     }
+
+    return packets
 }
 
 /// unmarshaller is a factory which pulls the first RTCP packet from a bytestream,
 /// and returns it's parsed representation, and the amount of data that was processed.
-pub(crate) fn unmarshaller<B>(raw_data: &mut B) -> Result<Box<dyn Packet>>
-where
-    B: Buf,
-{
-    let h = Header::unmarshal(raw_data)?;
+func unmarshaller(_ buf: ByteBuffer) throws -> (Packet, Int) {
+    let (h, headerLen) = try Header.unmarshal(buf)
+    let length = Int(h.length) * 4
 
-    let length = (h.length as usize) * 4;
-    if length > raw_data.remaining() {
-        return Err(Error::PacketTooShort);
+    var reader = buf.slice()
+    guard let inPacket = reader.readSlice(length: headerLen + length) else {
+        throw RtcpError.errPacketTooShort
     }
 
-    let mut in_packet = h.marshal()?.chain(raw_data.take(length));
+    let packet: Packet
+    switch h.packetType {
+    case PacketType.senderReport:
+        (packet, _) = try SenderReport.unmarshal(inPacket)
+    case PacketType.receiverReport:
+        (packet, _) = try ReceiverReport.unmarshal(inPacket)
+    case PacketType.sourceDescription:
+        (packet, _) = try SourceDescription.unmarshal(inPacket)
+    case PacketType.goodbye:
+        (packet, _) = try Goodbye.unmarshal(inPacket)
 
-    let p: Box<dyn Packet> = match h.packet_type {
-        PacketType::SenderReport => Box::new(SenderReport::unmarshal(&mut in_packet)?),
-        PacketType::ReceiverReport => Box::new(ReceiverReport::unmarshal(&mut in_packet)?),
-        PacketType::SourceDescription => Box::new(SourceDescription::unmarshal(&mut in_packet)?),
-        PacketType::Goodbye => Box::new(Goodbye::unmarshal(&mut in_packet)?),
+    case PacketType.transportSpecificFeedback:
+        switch h.count {
+        case formatTln:
+            (packet, _) = try TransportLayerNack.unmarshal(inPacket)
+        case formatRrr:
+            (packet, _) = try RapidResynchronizationRequest.unmarshal(inPacket)
+        case formatTcc:
+            (packet, _) = try TransportLayerCc.unmarshal(inPacket)
+        default:
+            (packet, _) = try RawPacket.unmarshal(inPacket)
+        }
+    case PacketType.payloadSpecificFeedback:
+        switch h.count {
+        case formatPli:
+            (packet, _) = try PictureLossIndication.unmarshal(inPacket)
+        case formatSli:
+            (packet, _) = try SliceLossIndication.unmarshal(inPacket)
+        case formatRemb:
+            (packet, _) = try ReceiverEstimatedMaximumBitrate.unmarshal(inPacket)
+        case formatFir:
+            (packet, _) = try FullIntraRequest.unmarshal(inPacket)
+        default:
+            (packet, _) = try RawPacket.unmarshal(inPacket)
+        }
+    /*TODO:case PacketType.extendedReport:
+        (packet, _) = try ExtendedReport.unmarshal(inPacket),*/
+    default:
+        (packet, _) = try RawPacket.unmarshal(inPacket)
+    }
 
-        PacketType::TransportSpecificFeedback => match h.count {
-            FORMAT_TLN => Box::new(TransportLayerNack::unmarshal(&mut in_packet)?),
-            FORMAT_RRR => Box::new(RapidResynchronizationRequest::unmarshal(&mut in_packet)?),
-            FORMAT_TCC => Box::new(TransportLayerCc::unmarshal(&mut in_packet)?),
-            _ => Box::new(RawPacket::unmarshal(&mut in_packet)?),
-        },
-        PacketType::PayloadSpecificFeedback => match h.count {
-            FORMAT_PLI => Box::new(PictureLossIndication::unmarshal(&mut in_packet)?),
-            FORMAT_SLI => Box::new(SliceLossIndication::unmarshal(&mut in_packet)?),
-            FORMAT_REMB => Box::new(ReceiverEstimatedMaximumBitrate::unmarshal(&mut in_packet)?),
-            FORMAT_FIR => Box::new(FullIntraRequest::unmarshal(&mut in_packet)?),
-            _ => Box::new(RawPacket::unmarshal(&mut in_packet)?),
-        },
-        PacketType::ExtendedReport => Box::new(ExtendedReport::unmarshal(&mut in_packet)?),
-        _ => Box::new(RawPacket::unmarshal(&mut in_packet)?),
-    };
-
-    Ok(p)
+    return (packet, headerLen + length)
 }
-*/
