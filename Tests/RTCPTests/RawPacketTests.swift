@@ -48,7 +48,7 @@ final class RawPacketTests: XCTestCase {
             if unmarshalError == nil {
                 let result = try? pkt.marshal()
                 XCTAssertTrue(result != nil)
-                var buf = result!
+                let buf = result!
                 let p = try? RawPacket.unmarshal(buf)
                 XCTAssertTrue(result != nil)
                 let decoded = p!
