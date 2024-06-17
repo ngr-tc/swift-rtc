@@ -168,6 +168,8 @@ extension WrappedSlidingWindowDetector: ReplayDetector {
 }
 
 public struct NoOpReplayDetector {
+    public init() {
+    }
 }
 
 extension NoOpReplayDetector: ReplayDetector {
