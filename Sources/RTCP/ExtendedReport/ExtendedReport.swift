@@ -137,7 +137,7 @@ extension XRHeader: Unmarshal {
         )
     }
 }
-/*
+
 /// The ExtendedReport packet is an Implementation of RTCP Extended
 /// reports defined in RFC 3611. It is used to convey detailed
 /// information about an RTP stream. Each packet contains one or
@@ -153,150 +153,163 @@ extension XRHeader: Unmarshal {
 /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 /// :                         report blocks                         :
 /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-#[derive(Debug, PartialEq, Default, Clone)]
 public struct ExtendedReport {
-    public sender_ssrc: u32,
-    public reports: Vec<Box<dyn Packet>>,
+    public var senderSsrc: UInt32
+    public var reports: [Packet]
 }
 
-impl fmt::Display for ExtendedReport {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{self:?}")
+extension ExtendedReport: CustomStringConvertible {
+    public var description: String {
+        "\(self)"
     }
 }
 
-impl Packet for ExtendedReport {
+extension ExtendedReport: Packet {
     /// Header returns the Header associated with this packet.
-    fn header(&self) -> Header {
-        Header {
-            padding: get_padding_size(self.raw_size()) != 0,
+    public func header() -> Header {
+        Header(
+            padding: getPadding(self.rawSize()) != 0,
             count: 0,
-            packet_type: PacketType::ExtendedReport,
-            length: ((self.marshal_size() / 4) - 1) as u16,
-        }
+            packetType: PacketType.extendedReport,
+            length: UInt16((self.marshalSize() / 4) - 1)
+        )
     }
 
     /// destination_ssrc returns an array of ssrc values that this packet refers to.
-    fn destination_ssrc(&self) -> Vec<u32> {
-        let mut ssrc = vec![];
-        for p in &self.reports {
-            ssrc.extend(p.destination_ssrc());
+    public func destinationSsrc() -> [UInt32] {
+        var ssrcs: [UInt32] = []
+        for p in self.reports {
+            ssrcs.append(contentsOf: p.destinationSsrc())
         }
-        ssrc
+        return ssrcs
     }
 
-    fn raw_size(&self) -> usize {
-        let mut reps_length = 0;
-        for rep in &self.reports {
-            reps_length += rep.marshal_size();
+    public func rawSize() -> Int {
+        var repsLength = 0
+        for rep in self.reports {
+            repsLength += rep.marshalSize()
         }
-        HEADER_LENGTH + SSRC_LENGTH + reps_length
+        return headerLength + ssrcLength + repsLength
     }
 
-    fn as_any(&self) -> &(dyn Any) {
-        self
-    }
-
-    fn equal(&self, other: &(dyn Packet)) -> bool {
-        other
-            .as_any()
-            .downcast_ref::<ExtendedReport>()
-            .map_or(false, |a| self == a)
-    }
-
-    fn cloned(&self) -> Box<dyn Packet> {
-        Box::new(self.clone())
+    public func equal(other: Packet) -> Bool {
+        var isEqual = true
+        if let rhs = other as? Self {
+            if self.reports.count == rhs.reports.count && self.senderSsrc == rhs.senderSsrc {
+                for i in 0..<self.reports.count {
+                    if !self.reports[i].equal(other: rhs.reports[i]) {
+                        isEqual = false
+                        break
+                    }
+                }
+            } else {
+                isEqual = false
+            }
+        } else {
+            isEqual = false
+        }
+        return isEqual
     }
 }
 
-impl MarshalSize for ExtendedReport {
-    fn marshal_size(&self) -> usize {
-        let l = self.raw_size();
+extension ExtendedReport: MarshalSize {
+    public func marshalSize() -> Int {
+        let l = self.rawSize()
         // align to 32-bit boundary
-        l + get_padding_size(l)
+        return l + getPadding(l)
     }
 }
 
-impl Marshal for ExtendedReport {
+extension ExtendedReport: Marshal {
     /// marshal_to encodes the ExtendedReport in binary
-    fn marshal_to(&self, mut buf: &mut [u8]) -> Result<usize> {
-        if buf.remaining_mut() < self.marshal_size() {
-            return Err(Error::BufferTooShort);
-        }
+    public func marshalTo(_ buf: inout ByteBuffer) throws -> Int {
+        let h = self.header()
+        let _ = try h.marshalTo(&buf)
 
-        let h = self.header();
-        let n = h.marshal_to(buf)?;
-        buf = &mut buf[n..];
+        buf.writeInteger(self.senderSsrc)
 
-        buf.put_u32(self.sender_ssrc);
-
-        for report in &self.reports {
-            let n = report.marshal_to(buf)?;
-            buf = &mut buf[n..];
+        for report in self.reports {
+            let _ = try report.marshalTo(&buf)
         }
 
         if h.padding {
-            put_padding(buf, self.raw_size());
+            putPadding(&buf, self.rawSize())
         }
 
-        Ok(self.marshal_size())
+        return self.marshalSize()
     }
 }
 
-impl Unmarshal for ExtendedReport {
+extension ExtendedReport: Unmarshal {
     /// Unmarshal decodes the ExtendedReport from binary
-    fn unmarshal<B>(raw_packet: &mut B) -> Result<Self>
-    where
-        Self: Sized,
-        B: Buf,
-    {
-        let raw_packet_len = raw_packet.remaining();
-        if raw_packet_len < (HEADER_LENGTH + SSRC_LENGTH) {
-            return Err(Error::PacketTooShort);
+    public static func unmarshal(_ buf: ByteBuffer) throws -> (Self, Int) {
+        let rawPacketLen = buf.readableBytes
+        if rawPacketLen < (headerLength + ssrcLength) {
+            throw RtcpError.errPacketTooShort
         }
 
-        let header = Header::unmarshal(raw_packet)?;
-        if header.packet_type != PacketType::ExtendedReport {
-            return Err(Error::WrongType);
+        let (header, headerLen) = try Header.unmarshal(buf)
+        if header.packetType != PacketType.extendedReport {
+            throw RtcpError.errWrongType
         }
 
-        let sender_ssrc = raw_packet.get_u32();
+        var reader = buf.slice()
+        let readerStartIndex = reader.readerIndex
+        reader.moveReaderIndex(forwardBy: headerLen)
 
-        let mut offset = HEADER_LENGTH + SSRC_LENGTH;
-        let mut reports = vec![];
-        while raw_packet.remaining() > 0 {
-            if offset + XR_HEADER_LENGTH > raw_packet_len {
-                return Err(Error::PacketTooShort);
+        guard let senderSsrc: UInt32 = reader.readInteger() else {
+            throw RtcpError.errPacketTooShort
+        }
+
+        var offset = headerLength + ssrcLength
+        var reports: [Packet] = []
+        while reader.readableBytes > 0 {
+            if offset + xrHeaderLength > rawPacketLen {
+                throw RtcpError.errPacketTooShort
             }
 
-            let block_type: BlockType = raw_packet.chunk()[0].into();
-            let report: Box<dyn Packet> = match block_type {
-                BlockType::LossRLE => Box::new(LossRLEReportBlock::unmarshal(raw_packet)?),
-                BlockType::DuplicateRLE => {
-                    Box::new(DuplicateRLEReportBlock::unmarshal(raw_packet)?)
-                }
-                BlockType::PacketReceiptTimes => {
-                    Box::new(PacketReceiptTimesReportBlock::unmarshal(raw_packet)?)
-                }
-                BlockType::ReceiverReferenceTime => {
-                    Box::new(ReceiverReferenceTimeReportBlock::unmarshal(raw_packet)?)
-                }
-                BlockType::DLRR => Box::new(DLRRReportBlock::unmarshal(raw_packet)?),
-                BlockType::StatisticsSummary => {
-                    Box::new(StatisticsSummaryReportBlock::unmarshal(raw_packet)?)
-                }
-                BlockType::VoIPMetrics => Box::new(VoIPMetricsReportBlock::unmarshal(raw_packet)?),
-                _ => Box::new(UnknownReportBlock::unmarshal(raw_packet)?),
-            };
+            guard let b = reader.getBytes(at: offset, length: 1) else {
+                throw RtcpError.errPacketTooShort
+            }
+            let blockType: BlockType = BlockType(rawValue: b[0])
+            let report: Packet
+            let reportLen: Int
+            switch blockType {
+            case BlockType.lossRLE:
+                (report, reportLen) = try LossRLEReportBlock.unmarshal(reader)
+                reader.moveReaderIndex(forwardBy: reportLen)
+            case BlockType.duplicateRLE:
+                (report, reportLen) = try DuplicateRLEReportBlock.unmarshal(reader)
+                reader.moveReaderIndex(forwardBy: reportLen)
+            case BlockType.packetReceiptTimes:
+                (report, reportLen) = try PacketReceiptTimesReportBlock.unmarshal(reader)
+                reader.moveReaderIndex(forwardBy: reportLen)
+            case BlockType.receiverReferenceTime:
+                (report, reportLen) = try ReceiverReferenceTimeReportBlock.unmarshal(reader)
+                reader.moveReaderIndex(forwardBy: reportLen)
+            case BlockType.dlrr:
+                (report, reportLen) = try DLRRReportBlock.unmarshal(reader)
+                reader.moveReaderIndex(forwardBy: reportLen)
+            case BlockType.statisticsSummary:
+                (report, reportLen) = try StatisticsSummaryReportBlock.unmarshal(reader)
+                reader.moveReaderIndex(forwardBy: reportLen)
+            case BlockType.voipMetrics:
+                (report, reportLen) = try VoIPMetricsReportBlock.unmarshal(reader)
+                reader.moveReaderIndex(forwardBy: reportLen)
+            default:
+                (report, reportLen) = try UnknownReportBlock.unmarshal(reader)
+                reader.moveReaderIndex(forwardBy: reportLen)
+            }
 
-            offset += report.marshal_size();
-            reports.push(report);
+            offset += reportLen
+            reports.append(report)
         }
 
-        Ok(ExtendedReport {
-            sender_ssrc,
-            reports,
-        })
+        return (
+            ExtendedReport(
+                senderSsrc: senderSsrc,
+                reports: reports
+            ), reader.readerIndex - readerStartIndex
+        )
     }
 }
-*/
