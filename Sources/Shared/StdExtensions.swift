@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
+import Foundation  // To fix String(format:) usage error
 
 extension UTF8.CodeUnit {
     var isASCIIWhitespace: Bool {

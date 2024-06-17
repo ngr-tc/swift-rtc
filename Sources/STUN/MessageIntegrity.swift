@@ -13,6 +13,7 @@ import Crypto
 //
 //===----------------------------------------------------------------------===//
 import NIOCore
+import NIOFoundationCompat
 
 /// separator for credentials.
 let credentialsSep: String = ":"
