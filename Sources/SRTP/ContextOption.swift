@@ -16,7 +16,7 @@ import Shared
 public typealias ContextOption = () -> ReplayDetector
 
 let maxSequenceNumber: UInt16 = 65535
-let maxSrtcpIndex: Int = 0x7FFF_FFFF
+let maxSrtcpIndex: UInt32 = 0x7FFF_FFFF
 
 /// srtp_replay_protection sets SRTP replay protection window size.
 public func srtpReplayProtection(windowSize: UInt) -> ContextOption {
