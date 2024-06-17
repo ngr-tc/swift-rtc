@@ -146,7 +146,7 @@ extension ReceptionReport: Unmarshal {
         guard let t2: UInt8 = reader.readInteger() else {
             throw RtcpError.errPacketTooShort
         }
-        // TODO: The type of `total_lost` should be `i32`, per the RFC:
+        // The type of `total_lost` should be `i32`, per the RFC:
         // The total number of RTP data packets from source SSRC_n that have
         // been lost since the beginning of reception.  This number is
         // defined to be the number of packets expected less the number of

@@ -101,8 +101,8 @@ func unmarshaller(_ buf: ByteBuffer) throws -> (Packet, Int) {
         default:
             (packet, _) = try RawPacket.unmarshal(inPacket)
         }
-    /*TODO:case PacketType.extendedReport:
-        (packet, _) = try ExtendedReport.unmarshal(inPacket),*/
+    case PacketType.extendedReport:
+        (packet, _) = try ExtendedReport.unmarshal(inPacket)
     default:
         (packet, _) = try RawPacket.unmarshal(inPacket)
     }
