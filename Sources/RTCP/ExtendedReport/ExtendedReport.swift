@@ -160,7 +160,7 @@ public struct ExtendedReport {
 
 extension ExtendedReport: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        "\(self.senderSsrc) " + self.reports.map { $0.description }.joined(separator: ",")
     }
 }
 

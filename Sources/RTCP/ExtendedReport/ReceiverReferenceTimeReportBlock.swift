@@ -42,7 +42,7 @@ public struct ReceiverReferenceTimeReportBlock: Equatable {
 
 extension ReceiverReferenceTimeReportBlock: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        "\(self.ntpTimestamp)"
     }
 }
 

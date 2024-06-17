@@ -25,7 +25,7 @@ public struct DLRRReport: Equatable {
 
 extension DLRRReport: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        "(\(self.ssrc) \(self.lastRr) \(self.dlrr))"
     }
 }
 
@@ -61,7 +61,7 @@ public struct DLRRReportBlock: Equatable {
 
 extension DLRRReportBlock: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        self.reports.map { $0.description }.joined(separator: ",")
     }
 }
 

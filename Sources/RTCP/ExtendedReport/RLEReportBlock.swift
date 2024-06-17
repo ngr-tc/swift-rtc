@@ -153,7 +153,8 @@ public typealias DuplicateRLEReportBlock = RLEReportBlock
 
 extension RLEReportBlock: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        "\(self.isLossRLE) \(self.t) \(self.ssrc) \(self.beginSeq) \(self.endSeq) "
+            + self.chunks.map { $0.description }.joined(separator: ",")
     }
 }
 

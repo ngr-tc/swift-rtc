@@ -119,7 +119,10 @@ public struct StatisticsSummaryReportBlock: Equatable {
 
 extension StatisticsSummaryReportBlock: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        "\(self.lossReports) \(self.duplicateReports) \(self.jitterReports) \(self.ttlOrHopLimit) "
+            + "\(self.ssrc) \(self.beginSeq) \(self.endSeq) \(self.lostPackets) \(self.dupPackets) "
+            + "\(self.minJitter) \(self.maxJitter) \(self.meanJitter) \(self.devJitter) \(self.minTtlOrHl) "
+            + "\(self.maxTtlOrHl) \(self.meanTtlOrHl) \(self.devTtlOrHl)"
     }
 }
 

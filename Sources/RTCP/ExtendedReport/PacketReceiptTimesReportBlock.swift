@@ -57,7 +57,8 @@ public struct PacketReceiptTimesReportBlock: Equatable {
 
 extension PacketReceiptTimesReportBlock: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        "\(self.t) \(self.ssrc) \(self.beginSeq) \(self.endSeq) "
+            + self.receiptTime.map { $0.description }.joined(separator: ",")
     }
 }
 

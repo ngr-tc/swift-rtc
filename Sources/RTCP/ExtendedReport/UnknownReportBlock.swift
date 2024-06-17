@@ -30,7 +30,7 @@ public struct UnknownReportBlock: Equatable {
 
 extension UnknownReportBlock: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        "\(self.bytes)"
     }
 }
 

@@ -75,7 +75,11 @@ public struct VoIPMetricsReportBlock: Equatable {
 
 extension VoIPMetricsReportBlock: CustomStringConvertible {
     public var description: String {
-        "\(self)"
+        "\(self.ssrc) \(self.lossRate) \(self.discardRate) \(self.burstDensity) "
+            + "\(self.gapDensity) \(self.burstDuration) \(self.gapDuration) \(self.roundTripDelay) "
+            + "\(self.endSystemDelay) \(self.signalLevel) \(self.noiseLevel) \(self.rerl) \(self.gmin) "
+            + "\(self.rfactor) \(self.extRfactor) \(self.mosLq) \(self.mosCq) \(self.rxConfig) "
+            + "\(self.reserved) \(self.jbNominal) \(self.jbMaximum) \(self.jbAbsMax)"
     }
 }
 
