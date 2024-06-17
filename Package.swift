@@ -83,6 +83,7 @@ let package = Package(
                 "RTP",
                 "Shared",
                 .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "Crypto", package: "swift-crypto"),
             ]),
         .target(name: "STUN",
             dependencies: [
