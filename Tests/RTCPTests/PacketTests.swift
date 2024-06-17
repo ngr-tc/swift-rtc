@@ -107,68 +107,61 @@ final class PacketTests: XCTestCase {
             XCTAssertTrue(expected[i].equal(other: packet[i]), "Invalid packets")
         }
     }
-    /*
-         #[test]
-         fn test_packet_unmarshal_empty() -> Result<()> {
-             let result = unmarshal(&mut Bytes::new());
-             if let Err(got) = result {
-                 let want = Error::InvalidHeader;
-                 assert_eq!(got, want, "Unmarshal(nil) err = {got}, want {want}");
-             } else {
-                 panic!("want error");
-             }
 
-             Ok(())
-         }
+    func testPacketUnmarshalEmpty() throws {
+        do {
+            let _ = try unmarshal(ByteBuffer())
+            XCTFail("should error")
+        } catch let got as RtcpError {
+            let want = RtcpError.errInvalidHeader
+            XCTAssertEqual(got, want)
+        } catch {
+            XCTFail("should errInvalidHeader")
+        }
+    }
 
-         #[test]
-         fn test_packet_invalid_header_length() -> Result<()> {
-             let mut data = ByteBuffer(bytes:[
-                 // Goodbye (offset=84)
-                 // v=2, p=0, count=1, BYE, len=100
-                 0x81, 0xcb, 0x0, 0x64,
-             ]);
+    func testPacketInvalidHeaderLength() throws {
+        let data = ByteBuffer(bytes: [
+            // Goodbye (offset=84)
+            // v=2, p=0, count=1, BYE, len=100
+            0x81, 0xcb, 0x0, 0x64,
+        ])
 
-             let result = unmarshal(&mut data);
-             if let Err(got) = result {
-                 let want = Error::PacketTooShort;
-                 assert_eq!(
-                     got, want,
-                     "Unmarshal(invalid_header_length) err = {got}, want {want}"
-                 );
-             } else {
-                 panic!("want error");
-             }
+        do {
+            let _ = try unmarshal(data)
+            XCTFail("should error")
+        } catch let got as RtcpError {
+            let want = RtcpError.errPacketTooShort
+            XCTAssertEqual(got, want)
+        } catch {
+            XCTFail("should errInvalidHeader")
+        }
+    }
 
-             Ok(())
-         }
-         #[test]
-         fn test_packet_unmarshal_firefox() -> Result<()> {
-             // issue report from https://github.com/webrtc-rs/srtp/issues/7
-             let tests = vec![
-     ByteBuffer(bytes:[
-                     143, 205, 0, 6, 65, 227, 184, 49, 118, 243, 78, 96, 42, 63, 0, 5, 12, 162, 166, 0,
-                     32, 5, 200, 4, 0, 4, 0, 0,
-                 ]),
-                 Bytes::from_static(&[
-                     143, 205, 0, 9, 65, 227, 184, 49, 118, 243, 78, 96, 42, 68, 0, 17, 12, 162, 167, 1,
-                     32, 17, 88, 0, 4, 0, 4, 8, 108, 0, 4, 0, 4, 12, 0, 4, 0, 4, 4, 0,
-                 ]),
-                 Bytes::from_static(&[
-                     143, 205, 0, 8, 65, 227, 184, 49, 118, 243, 78, 96, 42, 91, 0, 12, 12, 162, 168, 3,
-                     32, 12, 220, 4, 0, 4, 0, 8, 128, 4, 0, 4, 0, 8, 0, 0,
-                 ]),
-                 Bytes::from_static(&[
-                     143, 205, 0, 7, 65, 227, 184, 49, 118, 243, 78, 96, 42, 103, 0, 8, 12, 162, 169, 4,
-                     32, 8, 232, 4, 0, 4, 0, 4, 4, 0, 0, 0,
-                 ]),
-             ];
+    func testPacketUnmarshalFirefox() throws {
+        // issue report from https://github.com/webrtc-rs/srtp/issues/7
+        let tests = [
+            ByteBuffer(bytes: [
+                143, 205, 0, 6, 65, 227, 184, 49, 118, 243, 78, 96, 42, 63, 0, 5, 12, 162, 166, 0,
+                32, 5, 200, 4, 0, 4, 0, 0,
+            ]),
+            ByteBuffer(bytes: [
+                143, 205, 0, 9, 65, 227, 184, 49, 118, 243, 78, 96, 42, 68, 0, 17, 12, 162, 167, 1,
+                32, 17, 88, 0, 4, 0, 4, 8, 108, 0, 4, 0, 4, 12, 0, 4, 0, 4, 4, 0,
+            ]),
+            ByteBuffer(bytes: [
+                143, 205, 0, 8, 65, 227, 184, 49, 118, 243, 78, 96, 42, 91, 0, 12, 12, 162, 168, 3,
+                32, 12, 220, 4, 0, 4, 0, 8, 128, 4, 0, 4, 0, 8, 0, 0,
+            ]),
+            ByteBuffer(bytes: [
+                143, 205, 0, 7, 65, 227, 184, 49, 118, 243, 78, 96, 42, 103, 0, 8, 12, 162, 169, 4,
+                32, 8, 232, 4, 0, 4, 0, 4, 4, 0, 0, 0,
+            ]),
+        ]
 
-             for mut test in tests {
-                 unmarshal(&mut test)?;
-             }
+        for test in tests {
+            let _ = try unmarshal(test)
+        }
+    }
 
-             Ok(())
-         }
-     */
 }
