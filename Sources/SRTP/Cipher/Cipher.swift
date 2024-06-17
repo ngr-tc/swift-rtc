@@ -44,7 +44,7 @@ protocol Cipher {
     func authTagLen() -> Int
 
     /// Retrieved RTCP index.
-    func getRtcpIndex(payload: ByteBuffer) -> UInt
+    func getRtcpIndex(payload: ByteBuffer) throws -> UInt32
 
     /// Encrypt RTP payload.
     mutating func encryptRtp(
@@ -61,10 +61,10 @@ protocol Cipher {
     ) throws -> ByteBuffer
 
     /// Encrypt RTCP payload.
-    mutating func encryptRtcp(payload: ByteBuffer, srtcpIndex: UInt, ssrc: UInt32) throws
+    mutating func encryptRtcp(payload: ByteBuffer, srtcpIndex: UInt32, ssrc: UInt32) throws
         -> ByteBuffer
 
     /// Decrypt RTCP payload.
-    mutating func decryptRtcp(payload: ByteBuffer, srtcpIndex: UInt, ssrc: UInt32) throws
+    mutating func decryptRtcp(payload: ByteBuffer, srtcpIndex: UInt32, ssrc: UInt32) throws
         -> ByteBuffer
 }
