@@ -23,6 +23,7 @@ let rtcpEncryptionFlag: UInt8 = 0x80
 
 /// AEAD Cipher based on AES.
 struct CipherAeadAesGcm {
+    var profile: ProtectionProfile
     var srtpSessionKey: SymmetricKey
     var srtcpSessionKey: SymmetricKey
     var srtpSessionSalt: [UInt8]
@@ -30,7 +31,9 @@ struct CipherAeadAesGcm {
     var allocator: ByteBufferAllocator
 
     /// Create a new AEAD instance.
-    init(masterKey: ByteBufferView, masterSalt: ByteBufferView) throws {
+    init(profile: ProtectionProfile, masterKey: ByteBufferView, masterSalt: ByteBufferView) throws {
+        self.profile = profile
+
         self.srtpSessionKey = SymmetricKey(
             data: try aesCmKeyDerivation(
                 label: labelSrtpEncryption,
@@ -132,8 +135,19 @@ struct CipherAeadAesGcm {
 }
 
 extension CipherAeadAesGcm: Cipher {
-    func authTagLen() -> Int {
-        cipherAeadAesGcmAuthTagLen
+    /// Get RTP authenticated tag length.
+    func rtpAuthTagLen() -> Int {
+        return profile.rtpAuthTagLen()
+    }
+
+    /// Get RTCP authenticated tag length.
+    func rtcpAuthTagLen() -> Int {
+        return profile.rtcpAuthTagLen()
+    }
+
+    /// Get AEAD auth key length of the cipher.
+    func aeadAuthTagLen() -> Int {
+        return profile.aeadAuthTagLen()
     }
 
     func getRtcpIndex(payload: ByteBufferView) throws -> UInt32 {
@@ -157,7 +171,7 @@ extension CipherAeadAesGcm: Cipher {
     ) throws -> ByteBuffer {
         // Grow the given buffer to fit the output.
         var writer = ByteBuffer()
-        writer.reserveCapacity(header.marshalSize() + plaintext.count + self.authTagLen())
+        writer.reserveCapacity(header.marshalSize() + plaintext.count + self.aeadAuthTagLen())
 
         let data = try header.marshal()
         writer.writeImmutableBuffer(data)
@@ -170,30 +184,6 @@ extension CipherAeadAesGcm: Cipher {
             authenticating: writer.readableBytesView)
 
         writer.writeImmutableBuffer(self.allocator.buffer(data: encrypted.ciphertext))
-        return writer
-    }
-
-    mutating func decryptRtp(
-        ciphertext: ByteBufferView,
-        header: RTP.Header,
-        roc: UInt32
-    ) throws -> ByteBuffer {
-        if ciphertext.count < self.authTagLen() {
-            throw SrtpError.errFailedToVerifyAuthTag
-        }
-
-        let payloadOffset = header.marshalSize()
-
-        let nonce = try AES.GCM.Nonce(data: self.rtpInitializationVector(header: header, roc: roc))
-        let sealedBox = try AES.GCM.SealedBox(
-            nonce: nonce, ciphertext: ciphertext, tag: ciphertext[..<payloadOffset])
-        let decrypted = try AES.GCM.open(sealedBox, using: self.srtpSessionKey)
-
-        var writer = ByteBuffer()
-        writer.reserveCapacity(payloadOffset + decrypted.count)
-        writer.writeImmutableBuffer(ByteBuffer(ciphertext[..<payloadOffset]))
-        writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
-
         return writer
     }
 
@@ -223,12 +213,36 @@ extension CipherAeadAesGcm: Cipher {
         return writer
     }
 
+    mutating func decryptRtp(
+        ciphertext: ByteBufferView,
+        header: RTP.Header,
+        roc: UInt32
+    ) throws -> ByteBuffer {
+        if ciphertext.count < self.aeadAuthTagLen() {
+            throw SrtpError.errFailedToVerifyAuthTag
+        }
+
+        let payloadOffset = header.marshalSize()
+
+        let nonce = try AES.GCM.Nonce(data: self.rtpInitializationVector(header: header, roc: roc))
+        let sealedBox = try AES.GCM.SealedBox(
+            nonce: nonce, ciphertext: ciphertext, tag: ciphertext[..<payloadOffset])
+        let decrypted = try AES.GCM.open(sealedBox, using: self.srtpSessionKey)
+
+        var writer = ByteBuffer()
+        writer.reserveCapacity(payloadOffset + decrypted.count)
+        writer.writeImmutableBuffer(ByteBuffer(ciphertext[..<payloadOffset]))
+        writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
+
+        return writer
+    }
+
     mutating func decryptRtcp(
         ciphertext: ByteBufferView,
         srtcpIndex: UInt32,
         ssrc: UInt32
     ) throws -> ByteBuffer {
-        if ciphertext.count < self.authTagLen() + srtcpIndexSize {
+        if ciphertext.count < self.aeadAuthTagLen() + srtcpIndexSize {
             throw SrtpError.errFailedToVerifyAuthTag
         }
 

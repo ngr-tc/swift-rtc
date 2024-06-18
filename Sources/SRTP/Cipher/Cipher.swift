@@ -40,8 +40,14 @@ import RTP
 /// Cipher represents a implementation of one
 /// of the SRTP Specific ciphers.
 protocol Cipher {
-    /// Get authenticated tag length.
-    func authTagLen() -> Int
+    /// Get RTP authenticated tag length.
+    func rtpAuthTagLen() -> Int
+
+    /// Get RTCP authenticated tag length.
+    func rtcpAuthTagLen() -> Int
+
+    /// Get AEAD auth key length of the cipher.
+    func aeadAuthTagLen() -> Int
 
     /// Retrieved RTCP index.
     func getRtcpIndex(payload: ByteBufferView) throws -> UInt32
@@ -53,18 +59,18 @@ protocol Cipher {
         roc: UInt32
     ) throws -> ByteBuffer
 
-    /// Decrypt RTP payload.
-    mutating func decryptRtp(
-        ciphertext: ByteBufferView,
-        header: RTP.Header,
-        roc: UInt32
-    ) throws -> ByteBuffer
-
     /// Encrypt RTCP payload.
     mutating func encryptRtcp(
         plaintext: ByteBufferView,
         srtcpIndex: UInt32,
         ssrc: UInt32
+    ) throws -> ByteBuffer
+
+    /// Decrypt RTP payload.
+    mutating func decryptRtp(
+        ciphertext: ByteBufferView,
+        header: RTP.Header,
+        roc: UInt32
     ) throws -> ByteBuffer
 
     /// Decrypt RTCP payload.
