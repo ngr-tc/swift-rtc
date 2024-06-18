@@ -23,7 +23,7 @@ let labelSrtcpEncryption: UInt8 = 0x03
 let labelSrtcpAuthenticationTag: UInt8 = 0x04
 let labelSrtcpSalt: UInt8 = 0x05
 
-let srctpIndexSize: UInt32 = 4
+let srtcpIndexSize: Int = 4
 
 func aesCmKeyDerivation(
     label: UInt8,

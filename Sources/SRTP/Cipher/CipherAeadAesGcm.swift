@@ -163,7 +163,6 @@ extension CipherAeadAesGcm: Cipher {
         writer.writeImmutableBuffer(data)
 
         let nonce = try AES.GCM.Nonce(data: self.rtpInitializationVector(header: header, roc: roc))
-
         let encrypted = try AES.GCM.seal(
             plaintext,
             using: self.srtpSessionKey,
@@ -179,26 +178,23 @@ extension CipherAeadAesGcm: Cipher {
         header: RTP.Header,
         roc: UInt32
     ) throws -> ByteBuffer {
-        /*if ciphertext.len() < self.auth_tag_len() {
-            return Err(Error::ErrFailedToVerifyAuthTag);
+        if ciphertext.count < self.authTagLen() {
+            throw SrtpError.errFailedToVerifyAuthTag
         }
 
-        let nonce = self.rtp_initialization_vector(header, roc);
-        let payload_offset = header.marshal_size();
-        let decrypted_msg: Vec<u8> = self.srtp_cipher.decrypt(
-            Nonce::from_slice(&nonce),
-            Payload {
-                msg: &ciphertext[payload_offset..],
-                aad: &ciphertext[..payload_offset],
-            },
-        )?;
+        let payloadOffset = header.marshalSize()
 
-        let mut writer = BytesMut::with_capacity(payload_offset + decrypted_msg.len());
-        writer.extend_from_slice(&ciphertext[..payload_offset]);
-        writer.extend(decrypted_msg);
+        let nonce = try AES.GCM.Nonce(data: self.rtpInitializationVector(header: header, roc: roc))
+        let sealedBox = try AES.GCM.SealedBox(
+            nonce: nonce, ciphertext: ciphertext, tag: ciphertext[..<payloadOffset])
+        let decrypted = try AES.GCM.open(sealedBox, using: self.srtpSessionKey)
 
-        Ok(writer)*/
-        return ByteBuffer()
+        var writer = ByteBuffer()
+        writer.reserveCapacity(payloadOffset + decrypted.count)
+        writer.writeImmutableBuffer(ByteBuffer(ciphertext[..<payloadOffset]))
+        writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
+
+        return writer
     }
 
     mutating func encryptRtcp(
@@ -232,26 +228,22 @@ extension CipherAeadAesGcm: Cipher {
         srtcpIndex: UInt32,
         ssrc: UInt32
     ) throws -> ByteBuffer {
-        /*if encrypted.len() < self.auth_tag_len() + SRTCP_INDEX_SIZE {
-            return Err(Error::ErrFailedToVerifyAuthTag);
+        if ciphertext.count < self.authTagLen() + srtcpIndexSize {
+            throw SrtpError.errFailedToVerifyAuthTag
         }
 
-        let nonce = self.rtcp_initialization_vector(srtcp_index, ssrc);
-        let aad = self.rtcp_additional_authenticated_data(encrypted, srtcp_index);
+        let nonce = try AES.GCM.Nonce(
+            data: self.rtcpInitializationVector(srtcpIndex: srtcpIndex, ssrc: ssrc))
+        let aad = self.rtcpAdditionalAuthenticatedData(
+            rtcpPacket: ciphertext, srtcpIndex: srtcpIndex)
+        let sealedBox = try AES.GCM.SealedBox(nonce: nonce, ciphertext: ciphertext, tag: aad)
+        let decrypted = try AES.GCM.open(sealedBox, using: self.srtcpSessionKey)
 
-        let decrypted_data = self.srtcp_cipher.decrypt(
-            Nonce::from_slice(&nonce),
-            Payload {
-                msg: &encrypted[8..(encrypted.len() - SRTCP_INDEX_SIZE)],
-                aad: &aad,
-            },
-        )?;
+        var writer = ByteBuffer()
+        writer.reserveCapacity(8 + decrypted.count)
+        writer.writeImmutableBuffer(ByteBuffer(ciphertext[..<8]))
+        writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
 
-        let mut writer = BytesMut::with_capacity(8 + decrypted_data.len());
-        writer.extend_from_slice(&encrypted[..8]);
-        writer.extend(decrypted_data);
-
-        Ok(writer)*/
-        return ByteBuffer()
+        return writer
     }
 }
