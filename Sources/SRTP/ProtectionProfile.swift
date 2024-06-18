@@ -14,39 +14,63 @@
 
 /// ProtectionProfile specifies Cipher and AuthTag details, similar to TLS cipher suite
 public enum ProtectionProfile: UInt16, Equatable {
-    case aes128CmHmacSha180 = 0x0001
+    case aes128CmHmacSha1Tag80 = 0x0001
+    case aes128CmHmacSha1Tag32 = 0x0002
     case aeadAes128Gcm = 0x0007
+    case aeadAes256Gcm = 0x0008
 
     func keyLen() -> Int {
         switch self {
-        case ProtectionProfile.aes128CmHmacSha180, ProtectionProfile.aeadAes128Gcm:
+        case .aes128CmHmacSha1Tag32, .aes128CmHmacSha1Tag80, .aeadAes128Gcm:
             return 16
+        case .aeadAes256Gcm:
+            return 32
         }
     }
 
     func saltLen() -> Int {
         switch self {
-        case ProtectionProfile.aes128CmHmacSha180:
+        case .aes128CmHmacSha1Tag32, .aes128CmHmacSha1Tag80:
             return 14
-        case ProtectionProfile.aeadAes128Gcm:
+        case .aeadAes128Gcm, .aeadAes256Gcm:
             return 12
         }
     }
 
-    func authTagLen() -> Int {
+    func rtpAuthTagLen() -> Int {
         switch self {
-        case ProtectionProfile.aes128CmHmacSha180:
-            return 10  //CIPHER_AES_CM_HMAC_SHA1AUTH_TAG_LEN,
-        case ProtectionProfile.aeadAes128Gcm:
-            return 16  //CIPHER_AEAD_AES_GCM_AUTH_TAG_LEN,
+        case .aes128CmHmacSha1Tag80:
+            return 10
+        case .aes128CmHmacSha1Tag32:
+            return 4
+        case .aeadAes128Gcm, .aeadAes256Gcm:
+            return 0
+        }
+    }
+
+    func rtcpAuthTagLen() -> Int {
+        switch self {
+        case .aes128CmHmacSha1Tag32, .aes128CmHmacSha1Tag80:
+            return 10
+        case .aeadAes128Gcm, .aeadAes256Gcm:
+            return 0
+        }
+    }
+
+    func aeadAuthTagLen() -> Int {
+        switch self {
+        case .aes128CmHmacSha1Tag32, .aes128CmHmacSha1Tag80:
+            return 0
+        case .aeadAes128Gcm, .aeadAes256Gcm:
+            return 16
         }
     }
 
     func authKeyLen() -> Int {
         switch self {
-        case ProtectionProfile.aes128CmHmacSha180:
+        case .aes128CmHmacSha1Tag32, .aes128CmHmacSha1Tag80:
             return 20
-        case ProtectionProfile.aeadAes128Gcm:
+        case .aeadAes128Gcm, .aeadAes256Gcm:
             return 0
         }
     }

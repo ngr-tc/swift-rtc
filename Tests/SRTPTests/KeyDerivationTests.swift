@@ -57,7 +57,7 @@ final class KeyDerivationTests: XCTestCase {
         )
         XCTAssertEqual(ByteBuffer(bytes: sessionSalt), expectedSessionSalt)
 
-        let authKeyLen = ProtectionProfile.aes128CmHmacSha180.authKeyLen()
+        let authKeyLen = ProtectionProfile.aes128CmHmacSha1Tag80.authKeyLen()
         let sessionAuthTag = try aesCmKeyDerivation(
             label: lableSrtpAuthenticationTag,
             masterKey: masterKey.readableBytesView,
