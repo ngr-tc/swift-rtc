@@ -23,61 +23,50 @@ let rtcpEncryptionFlag: UInt8 = 0x80
 
 /// AEAD Cipher based on AES.
 struct CipherAeadAesGcm {
-    var srtpCipherKey: SymmetricKey
-    var srtcpCipherKey: SymmetricKey
+    var srtpSessionKey: SymmetricKey
+    var srtcpSessionKey: SymmetricKey
     var srtpSessionSalt: [UInt8]
     var srtcpSessionSalt: [UInt8]
     var allocator: ByteBufferAllocator
 
     /// Create a new AEAD instance.
-    /*init(master_key: ByteBuffer, master_salt: ByteBuffer) throws {
-        let srtp_session_key = aes_cm_key_derivation(
-            LABEL_SRTP_ENCRYPTION,
-            master_key,
-            master_salt,
-            0,
-            master_key.len(),
-        )?;
+    init(masterKey: ByteBufferView, masterSalt: ByteBufferView) throws {
+        self.srtpSessionKey = SymmetricKey(
+            data: try aesCmKeyDerivation(
+                label: labelSrtpEncryption,
+                masterKey: masterKey,
+                masterSalt: masterSalt,
+                indexOverKdr: 0,
+                outLen: masterKey.count
+            ))
 
-        let srtp_block = GenericArray::from_slice(&srtp_session_key);
+        self.srtcpSessionKey = SymmetricKey(
+            data: try aesCmKeyDerivation(
+                label: labelSrtcpEncryption,
+                masterKey: masterKey,
+                masterSalt: masterSalt,
+                indexOverKdr: 0,
+                outLen: masterKey.count
+            ))
 
-        let srtp_cipher = Aes128Gcm::new(srtp_block);
+        self.srtpSessionSalt = try aesCmKeyDerivation(
+            label: labelSrtpSalt,
+            masterKey: masterKey,
+            masterSalt: masterSalt,
+            indexOverKdr: 0,
+            outLen: masterKey.count
+        )
 
-        let srtcp_session_key = aes_cm_key_derivation(
-            LABEL_SRTCP_ENCRYPTION,
-            master_key,
-            master_salt,
-            0,
-            master_key.len(),
-        )?;
+        self.srtcpSessionSalt = try aesCmKeyDerivation(
+            label: labelSrtcpSalt,
+            masterKey: masterKey,
+            masterSalt: masterSalt,
+            indexOverKdr: 0,
+            outLen: masterKey.count
+        )
 
-        let srtcp_block = GenericArray::from_slice(&srtcp_session_key);
-
-        let srtcp_cipher = Aes128Gcm::new(srtcp_block);
-
-        let srtp_session_salt = aes_cm_key_derivation(
-            LABEL_SRTP_SALT,
-            master_key,
-            master_salt,
-            0,
-            master_key.len(),
-        )?;
-
-        let srtcp_session_salt = aes_cm_key_derivation(
-            LABEL_SRTCP_SALT,
-            master_key,
-            master_salt,
-            0,
-            master_key.len(),
-        )?;
-
-        Ok(CipherAeadAesGcm {
-            srtp_cipher,
-            srtcp_cipher,
-            srtp_session_salt,
-            srtcp_session_salt,
-        })
-    }*/
+        self.allocator = ByteBufferAllocator()
+    }
 
     /// The 12-octet IV used by AES-GCM SRTP is formed by first concatenating
     /// 2 octets of zeroes, the 4-octet SSRC, the 4-octet rollover counter
@@ -147,25 +136,28 @@ extension CipherAeadAesGcm: Cipher {
         cipherAeadAesGcmAuthTagLen
     }
 
-    func getRtcpIndex(payload: ByteBuffer) throws -> UInt32 {
-        var reader = payload.slice()
-        let pos = payload.readableBytes - 4
-        reader.moveReaderIndex(forwardBy: pos)
-        guard let val: UInt32 = reader.readInteger() else {
+    func getRtcpIndex(payload: ByteBufferView) throws -> UInt32 {
+        if payload.count < 4 {
             throw SrtpError.errTooShortRtcp
         }
+        let pos = payload.count - 4
+        let val: UInt32 = UInt32.fromBeBytes(
+            payload[pos],
+            payload[pos + 1],
+            payload[pos + 2],
+            payload[pos + 3])
 
         return val & ~(UInt32(rtcpEncryptionFlag) << 24)
     }
 
     mutating func encryptRtp(
-        payload: ByteBuffer,
+        plaintext: ByteBufferView,
         header: RTP.Header,
         roc: UInt32
     ) throws -> ByteBuffer {
         // Grow the given buffer to fit the output.
         var writer = ByteBuffer()
-        writer.reserveCapacity(header.marshalSize() + payload.readableBytes + self.authTagLen())
+        writer.reserveCapacity(header.marshalSize() + plaintext.count + self.authTagLen())
 
         let data = try header.marshal()
         writer.writeImmutableBuffer(data)
@@ -173,8 +165,8 @@ extension CipherAeadAesGcm: Cipher {
         let nonce = try AES.GCM.Nonce(data: self.rtpInitializationVector(header: header, roc: roc))
 
         let encrypted = try AES.GCM.seal(
-            payload.readableBytesView,
-            using: self.srtpCipherKey,
+            plaintext,
+            using: self.srtpSessionKey,
             nonce: nonce,
             authenticating: writer.readableBytesView)
 
@@ -183,7 +175,7 @@ extension CipherAeadAesGcm: Cipher {
     }
 
     mutating func decryptRtp(
-        payload: ByteBuffer,
+        ciphertext: ByteBufferView,
         header: RTP.Header,
         roc: UInt32
     ) throws -> ByteBuffer {
@@ -209,32 +201,37 @@ extension CipherAeadAesGcm: Cipher {
         return ByteBuffer()
     }
 
-    mutating func encryptRtcp(payload: ByteBuffer, srtcpIndex: UInt32, ssrc: UInt32) throws
-        -> ByteBuffer
-    {
-        /*let iv = self.rtcp_initialization_vector(srtcp_index, ssrc);
-        let aad = self.rtcp_additional_authenticated_data(decrypted, srtcp_index);
+    mutating func encryptRtcp(
+        plaintext: ByteBufferView,
+        srtcpIndex: UInt32,
+        ssrc: UInt32
+    ) throws -> ByteBuffer {
+        let nonce = try AES.GCM.Nonce(
+            data: self.rtcpInitializationVector(srtcpIndex: srtcpIndex, ssrc: ssrc))
+        let aad = self.rtcpAdditionalAuthenticatedData(
+            rtcpPacket: plaintext, srtcpIndex: srtcpIndex)
 
-        let encrypted_data = self.srtcp_cipher.encrypt(
-            Nonce::from_slice(&iv),
-            Payload {
-                msg: &decrypted[8..],
-                aad: &aad,
-            },
-        )?;
+        let encrypted = try AES.GCM.seal(
+            plaintext[8...],
+            using: self.srtcpSessionKey,
+            nonce: nonce,
+            authenticating: aad
+        )
 
-        let mut writer = BytesMut::with_capacity(encrypted_data.len() + aad.len());
-        writer.extend_from_slice(&decrypted[..8]);
-        writer.extend(encrypted_data);
-        writer.extend_from_slice(&aad[8..]);
+        var writer = ByteBuffer()
+        writer.reserveCapacity(encrypted.ciphertext.count + aad.count)
+        writer.writeImmutableBuffer(ByteBuffer(plaintext[..<8]))
+        writer.writeImmutableBuffer(self.allocator.buffer(data: encrypted.ciphertext))
+        writer.writeBytes(aad[8...])
 
-        Ok(writer)*/
-        return ByteBuffer()
+        return writer
     }
 
-    mutating func decryptRtcp(payload: ByteBuffer, srtcpIndex: UInt32, ssrc: UInt32) throws
-        -> ByteBuffer
-    {
+    mutating func decryptRtcp(
+        ciphertext: ByteBufferView,
+        srtcpIndex: UInt32,
+        ssrc: UInt32
+    ) throws -> ByteBuffer {
         /*if encrypted.len() < self.auth_tag_len() + SRTCP_INDEX_SIZE {
             return Err(Error::ErrFailedToVerifyAuthTag);
         }
