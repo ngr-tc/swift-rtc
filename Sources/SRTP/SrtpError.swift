@@ -23,6 +23,7 @@ public enum SrtpError: Error, Equatable {
     case errNoConfig
     case errNoConn
     case errFailedToVerifyAuthTag
+    case errTooShortRtp
     case errTooShortRtcp
     case errPayloadDiffers
     case errStartedChannelUsedIncorrectly
@@ -49,6 +50,8 @@ public enum SrtpError: Error, Equatable {
     case errSessionSrtpAlreadyClosed
     case errInvalidRtpStream
     case errInvalidRtcpStream
+    case errTooShortRtpAuthTag
+    case errTooShortRtcpAuthTag
 }
 
 extension SrtpError: CustomStringConvertible {
@@ -72,6 +75,8 @@ extension SrtpError: CustomStringConvertible {
             return "no conn provided"
         case .errFailedToVerifyAuthTag:
             return "failed to verify auth tag"
+        case .errTooShortRtp:
+            return "packet is too short to be rtp packet"
         case .errTooShortRtcp:
             return "packet is too short to be rtcp packet"
         case .errPayloadDiffers:
@@ -123,6 +128,10 @@ extension SrtpError: CustomStringConvertible {
             return "this stream is not a RTPStream"
         case .errInvalidRtcpStream:
             return "this stream is not a RTCPStream"
+        case .errTooShortRtpAuthTag:
+            return "too short RTP auth tag"
+        case .errTooShortRtcpAuthTag:
+            return "too short RTCP auth tag"
         }
     }
 }

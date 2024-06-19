@@ -17,7 +17,7 @@ import NIOFoundationCompat
 import _CryptoExtras
 
 let labelSrtpEncryption: UInt8 = 0x00
-let lableSrtpAuthenticationTag: UInt8 = 0x01
+let labelSrtpAuthenticationTag: UInt8 = 0x01
 let labelSrtpSalt: UInt8 = 0x02
 let labelSrtcpEncryption: UInt8 = 0x03
 let labelSrtcpAuthenticationTag: UInt8 = 0x04
@@ -81,7 +81,7 @@ func generateCounter(
     sequenceNumber: UInt16,
     rolloverCounter: UInt32,
     ssrc: UInt32,
-    sessionSalt: ByteBufferView
+    sessionSalt: [UInt8]
 ) throws -> [UInt8] {
     assert(sessionSalt.count <= 16)
 

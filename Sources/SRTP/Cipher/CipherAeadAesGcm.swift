@@ -24,10 +24,13 @@ let rtcpEncryptionFlag: UInt8 = 0x80
 /// AEAD Cipher based on AES.
 struct CipherAeadAesGcm {
     var profile: ProtectionProfile
+
     var srtpSessionKey: SymmetricKey
     var srtcpSessionKey: SymmetricKey
+
     var srtpSessionSalt: [UInt8]
     var srtcpSessionSalt: [UInt8]
+
     var allocator: ByteBufferAllocator
 
     /// Create a new AEAD instance.
@@ -165,20 +168,20 @@ extension CipherAeadAesGcm: Cipher {
     }
 
     mutating func encryptRtp(
-        plaintext: ByteBufferView,
+        payload: ByteBufferView,
         header: RTP.Header,
         roc: UInt32
     ) throws -> ByteBuffer {
         // Grow the given buffer to fit the output.
         var writer = ByteBuffer()
-        writer.reserveCapacity(header.marshalSize() + plaintext.count + self.aeadAuthTagLen())
+        writer.reserveCapacity(header.marshalSize() + payload.count + self.aeadAuthTagLen())
 
         let data = try header.marshal()
         writer.writeImmutableBuffer(data)
 
         let nonce = try AES.GCM.Nonce(data: self.rtpInitializationVector(header: header, roc: roc))
         let encrypted = try AES.GCM.seal(
-            plaintext,
+            payload,
             using: self.srtpSessionKey,
             nonce: nonce,
             authenticating: writer.readableBytesView)

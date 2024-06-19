@@ -59,7 +59,7 @@ final class KeyDerivationTests: XCTestCase {
 
         let authKeyLen = ProtectionProfile.aes128CmHmacSha1Tag80.authKeyLen()
         let sessionAuthTag = try aesCmKeyDerivation(
-            label: lableSrtpAuthenticationTag,
+            label: labelSrtpAuthenticationTag,
             masterKey: masterKey.readableBytesView,
             masterSalt: masterSalt.readableBytesView,
             indexOverKdr: 0,
@@ -72,7 +72,7 @@ final class KeyDerivationTests: XCTestCase {
     // Currently this isn't supported, but the API makes sure we can add this in the future
     func testIndexOverKdr() throws {
         let result = try? aesCmKeyDerivation(
-            label: lableSrtpAuthenticationTag,
+            label: labelSrtpAuthenticationTag,
             masterKey: ByteBuffer().readableBytesView,
             masterSalt: ByteBuffer().readableBytesView,
             indexOverKdr: 1,

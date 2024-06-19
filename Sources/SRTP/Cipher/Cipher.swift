@@ -54,7 +54,7 @@ protocol Cipher {
 
     /// Encrypt RTP payload.
     mutating func encryptRtp(
-        plaintext: ByteBufferView,
+        payload: ByteBufferView,
         header: RTP.Header,
         roc: UInt32
     ) throws -> ByteBuffer
