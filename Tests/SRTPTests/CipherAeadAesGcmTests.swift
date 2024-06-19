@@ -55,7 +55,7 @@ final class CipherAeadAesGcmTests: XCTestCase {
 
         let gottenEncryptedRtpPacket =
             try ctx
-            .encryptRtp(plaintext: decryptedRtpPacket.readableBytesView)
+            .encryptRtp(decrypted: decryptedRtpPacket.readableBytesView)
 
         XCTAssertEqual(gottenEncryptedRtpPacket, encryptedRtpPacket)
     }

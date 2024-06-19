@@ -19,6 +19,11 @@ import Shared
 public struct Packet: Equatable {
     public var header: Header
     public var payload: ByteBuffer
+
+    public init(header: Header, payload: ByteBuffer) {
+        self.header = header
+        self.payload = payload
+    }
 }
 
 extension Packet: CustomStringConvertible {

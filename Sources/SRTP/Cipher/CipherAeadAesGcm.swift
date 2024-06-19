@@ -62,7 +62,7 @@ struct CipherAeadAesGcm {
             masterKey: masterKey,
             masterSalt: masterSalt,
             indexOverKdr: 0,
-            outLen: masterKey.count
+            outLen: masterSalt.count
         )
 
         self.srtcpSessionSalt = try aesCmKeyDerivation(
@@ -70,7 +70,7 @@ struct CipherAeadAesGcm {
             masterKey: masterKey,
             masterSalt: masterSalt,
             indexOverKdr: 0,
-            outLen: masterKey.count
+            outLen: masterSalt.count
         )
 
         self.allocator = ByteBufferAllocator()

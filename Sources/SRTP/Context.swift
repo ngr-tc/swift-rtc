@@ -295,8 +295,8 @@ public struct Context {
 
     /// EncryptRTP marshals and encrypts an RTP packet, writing to the dst buffer provided.
     /// If the dst buffer does not have the capacity to hold `len(plaintext) + 10` bytes, a new one will be allocated and returned.
-    public mutating func encryptRtp(plaintext: ByteBufferView) throws -> ByteBuffer {
-        let (header, _) = try RTP.Header.unmarshal(ByteBuffer(plaintext))
-        return try self.encryptRtpWithHeader(plaintext: plaintext, header: header)
+    public mutating func encryptRtp(decrypted: ByteBufferView) throws -> ByteBuffer {
+        let (header, _) = try RTP.Header.unmarshal(ByteBuffer(decrypted))
+        return try self.encryptRtpWithHeader(plaintext: decrypted, header: header)
     }
 }

@@ -62,6 +62,24 @@ public struct Header: Equatable {
     public var extensionProfile: UInt16
     public var extensions: [Extension]
 
+    public init(
+        version: UInt8, padding: Bool, ext: Bool, marker: Bool, payloadType: UInt8,
+        sequenceNumber: UInt16, timestamp: UInt32, ssrc: UInt32, csrcs: [UInt32],
+        extensionProfile: UInt16, extensions: [Extension] = []
+    ) {
+        self.version = version
+        self.padding = padding
+        self.ext = ext
+        self.marker = marker
+        self.payloadType = payloadType
+        self.sequenceNumber = sequenceNumber
+        self.timestamp = timestamp
+        self.ssrc = ssrc
+        self.csrcs = csrcs
+        self.extensionProfile = extensionProfile
+        self.extensions = extensions
+    }
+
     public func getExtensionPayloadLen() -> Int {
         let payloadLen: Int = self
             .extensions.reduce(

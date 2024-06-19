@@ -61,7 +61,7 @@ struct CipherAesCmHmacSha1 {
             masterKey: masterKey,
             masterSalt: masterSalt,
             indexOverKdr: 0,
-            outLen: masterKey.count
+            outLen: masterSalt.count
         )
 
         self.srtcpSessionSalt = try aesCmKeyDerivation(
@@ -69,7 +69,7 @@ struct CipherAesCmHmacSha1 {
             masterKey: masterKey,
             masterSalt: masterSalt,
             indexOverKdr: 0,
-            outLen: masterKey.count
+            outLen: masterSalt.count
         )
 
         let srtpSessionAuthTag = try aesCmKeyDerivation(
@@ -110,7 +110,7 @@ struct CipherAesCmHmacSha1 {
     /// - k_a is the session message authentication key
     /// - n_tag is the bit-length of the output authentication tag
     mutating func generateSrtpAuthTag(buf: ByteBufferView, roc: UInt32) throws -> ByteBuffer {
-        var srtpSessionAuth: HMAC<SHA256> = HMAC(key: self.srtpSessionAuthTag)
+        var srtpSessionAuth: HMAC<Insecure.SHA1> = HMAC(key: self.srtpSessionAuthTag)
 
         srtpSessionAuth.update(data: buf)
 
@@ -125,7 +125,7 @@ struct CipherAesCmHmacSha1 {
         }
 
         // Truncate the hash to the first AUTH_TAG_SIZE bytes.
-        guard let authTag = v.readSlice(length: self.profile.authKeyLen()) else {
+        guard let authTag = v.readSlice(length: self.profile.rtpAuthTagLen()) else {
             throw SrtpError.errTooShortRtpAuthTag
         }
 
@@ -144,7 +144,7 @@ struct CipherAesCmHmacSha1 {
     /// - k_a is the session message authentication key
     /// - n_tag is the bit-length of the output authentication tag
     mutating func generateSrtcpAuthTag(buf: ByteBufferView) throws -> ByteBuffer {
-        var srtcpSessionAuth: HMAC<SHA256> = HMAC(key: self.srtcpSessionAuthTag)
+        var srtcpSessionAuth: HMAC<Insecure.SHA1> = HMAC(key: self.srtcpSessionAuthTag)
 
         srtcpSessionAuth.update(data: buf)
 
@@ -156,7 +156,7 @@ struct CipherAesCmHmacSha1 {
         }
 
         // Truncate the hash to the first AUTH_TAG_SIZE bytes.
-        guard let authTag = v.readSlice(length: self.profile.authKeyLen()) else {
+        guard let authTag = v.readSlice(length: self.profile.rtcpAuthTagLen()) else {
             throw SrtpError.errTooShortRtcpAuthTag
         }
 
@@ -339,12 +339,12 @@ extension CipherAesCmHmacSha1: Cipher {
         // Split the auth tag and the cipher text into two parts.
         let actualTag = ciphertext[
             (ciphertext.startIndex + ciphertext.count - self.rtcpAuthTagLen())...]
-        let encrypted = ciphertext[
+        let encryptedWithTag = ciphertext[
             ciphertext.startIndex..<ciphertext.startIndex + ciphertext.count - self.rtcpAuthTagLen()
         ]
 
         // Generate the auth tag we expect to see from the ciphertext.
-        let expectedTag = try self.generateSrtcpAuthTag(buf: encrypted)
+        let expectedTag = try self.generateSrtcpAuthTag(buf: encryptedWithTag)
 
         // See if the auth tag actually matches.
         // FIXME: use a constant time comparison to prevent timing attacks.
@@ -352,13 +352,16 @@ extension CipherAesCmHmacSha1: Cipher {
             throw SrtpError.errRtcpFailedToVerifyAuthTag
         }
 
+        let encrypted = ciphertext[
+            ciphertext.startIndex..<ciphertext.startIndex + tailOffset
+        ]
+
         let counter = try generateCounter(
             sequenceNumber: UInt16(srtcpIndex & 0xFFFF),
             rolloverCounter: (srtcpIndex >> 16),
             ssrc: ssrc,
             sessionSalt: self.srtcpSessionSalt.readableBytesView
         )
-
         let nonce = try AES._CTR.Nonce(nonceBytes: counter.readableBytesView)
         let decrypted = try AES._CTR.decrypt(
             encrypted[(encrypted.startIndex + RTCP.headerLength + RTCP.ssrcLength)...],

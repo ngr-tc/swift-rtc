@@ -106,7 +106,11 @@ let package = Package(
         .testTarget(name: "SCTPTests", dependencies: ["SCTP"]),
         .testTarget(name: "SDPTests", dependencies: ["SDP"]),
         .testTarget(name: "SharedTests", dependencies: ["Shared"]),
-        .testTarget(name: "SRTPTests", dependencies: ["SRTP"]),
+        .testTarget(name: "SRTPTests",
+            dependencies: [
+                "SRTP",
+                "RTP",
+            ]),
         .testTarget(name: "STUNTests",
             dependencies: [
                 "STUN",
