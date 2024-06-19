@@ -25,6 +25,7 @@ public enum SrtpError: Error, Equatable {
     case errFailedToVerifyAuthTag
     case errTooShortRtp
     case errTooShortRtcp
+    case errTooShortKeyingMaterial
     case errPayloadDiffers
     case errStartedChannelUsedIncorrectly
     case errStreamNotInited
@@ -79,6 +80,8 @@ extension SrtpError: CustomStringConvertible {
             return "packet is too short to be rtp packet"
         case .errTooShortRtcp:
             return "packet is too short to be rtcp packet"
+        case .errTooShortKeyingMaterial:
+            return "key material is too short"
         case .errPayloadDiffers:
             return "payload differs"
         case .errStartedChannelUsedIncorrectly:
