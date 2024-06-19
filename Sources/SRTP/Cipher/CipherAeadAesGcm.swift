@@ -28,8 +28,8 @@ struct CipherAeadAesGcm {
     var srtpSessionKey: SymmetricKey
     var srtcpSessionKey: SymmetricKey
 
-    var srtpSessionSalt: [UInt8]
-    var srtcpSessionSalt: [UInt8]
+    var srtpSessionSalt: ByteBuffer
+    var srtcpSessionSalt: ByteBuffer
 
     var allocator: ByteBufferAllocator
 
@@ -37,23 +37,25 @@ struct CipherAeadAesGcm {
     init(profile: ProtectionProfile, masterKey: ByteBufferView, masterSalt: ByteBufferView) throws {
         self.profile = profile
 
+        let srtpSessionKey = try aesCmKeyDerivation(
+            label: labelSrtpEncryption,
+            masterKey: masterKey,
+            masterSalt: masterSalt,
+            indexOverKdr: 0,
+            outLen: masterKey.count
+        )
         self.srtpSessionKey = SymmetricKey(
-            data: try aesCmKeyDerivation(
-                label: labelSrtpEncryption,
-                masterKey: masterKey,
-                masterSalt: masterSalt,
-                indexOverKdr: 0,
-                outLen: masterKey.count
-            ))
+            data: srtpSessionKey.readableBytesView)
 
+        let srtcpSessionKey = try aesCmKeyDerivation(
+            label: labelSrtcpEncryption,
+            masterKey: masterKey,
+            masterSalt: masterSalt,
+            indexOverKdr: 0,
+            outLen: masterKey.count
+        )
         self.srtcpSessionKey = SymmetricKey(
-            data: try aesCmKeyDerivation(
-                label: labelSrtcpEncryption,
-                masterKey: masterKey,
-                masterSalt: masterSalt,
-                indexOverKdr: 0,
-                outLen: masterKey.count
-            ))
+            data: srtcpSessionKey.readableBytesView)
 
         self.srtpSessionSalt = try aesCmKeyDerivation(
             label: labelSrtpSalt,
@@ -90,8 +92,9 @@ struct CipherAeadAesGcm {
         iv.append(contentsOf: roc.toBeBytes())  // 6..<10
         iv.append(contentsOf: header.sequenceNumber.toBeBytes())  // 10..<12
 
+        let srtpSessionSalt = self.srtpSessionSalt.readableBytesView
         for i in 0..<iv.count {
-            iv[i] ^= self.srtpSessionSalt[i]
+            iv[i] ^= srtpSessionSalt[i]
         }
 
         return iv
@@ -111,8 +114,9 @@ struct CipherAeadAesGcm {
         iv.append(contentsOf: [0, 0])  // 6..<8
         iv.append(contentsOf: srtcpIndex.toBeBytes())  // 8..<12
 
+        let srtcpSessionSalt = self.srtcpSessionSalt.readableBytesView
         for i in 0..<iv.count {
-            iv[i] ^= self.srtcpSessionSalt[i]
+            iv[i] ^= srtcpSessionSalt[i]
         }
 
         return iv
@@ -157,7 +161,7 @@ extension CipherAeadAesGcm: Cipher {
         if payload.count < 4 {
             throw SrtpError.errTooShortRtcp
         }
-        let pos = payload.count - 4
+        let pos = payload.startIndex + payload.count - 4
         let val: UInt32 = UInt32.fromBeBytes(
             payload[pos],
             payload[pos + 1],
@@ -187,6 +191,8 @@ extension CipherAeadAesGcm: Cipher {
             authenticating: writer.readableBytesView)
 
         writer.writeImmutableBuffer(self.allocator.buffer(data: encrypted.ciphertext))
+        writer.writeImmutableBuffer(self.allocator.buffer(data: encrypted.tag))
+
         return writer
     }
 
@@ -201,7 +207,7 @@ extension CipherAeadAesGcm: Cipher {
             rtcpPacket: plaintext, srtcpIndex: srtcpIndex)
 
         let encrypted = try AES.GCM.seal(
-            plaintext[8...],
+            plaintext[(plaintext.startIndex + 8)...],
             using: self.srtcpSessionKey,
             nonce: nonce,
             authenticating: aad
@@ -209,9 +215,11 @@ extension CipherAeadAesGcm: Cipher {
 
         var writer = ByteBuffer()
         writer.reserveCapacity(encrypted.ciphertext.count + aad.count)
-        writer.writeImmutableBuffer(ByteBuffer(plaintext[..<8]))
+        writer.writeImmutableBuffer(
+            ByteBuffer(plaintext[plaintext.startIndex..<plaintext.startIndex + 8]))
         writer.writeImmutableBuffer(self.allocator.buffer(data: encrypted.ciphertext))
-        writer.writeBytes(aad[8...])
+        writer.writeImmutableBuffer(self.allocator.buffer(data: encrypted.tag))
+        writer.writeBytes(aad[(aad.startIndex + 8)...])
 
         return writer
     }
@@ -229,12 +237,20 @@ extension CipherAeadAesGcm: Cipher {
 
         let nonce = try AES.GCM.Nonce(data: self.rtpInitializationVector(header: header, roc: roc))
         let sealedBox = try AES.GCM.SealedBox(
-            nonce: nonce, ciphertext: ciphertext, tag: ciphertext[..<payloadOffset])
-        let decrypted = try AES.GCM.open(sealedBox, using: self.srtpSessionKey)
+            nonce: nonce,
+            ciphertext: ciphertext[
+                (ciphertext.startIndex + payloadOffset)..<(ciphertext.startIndex + ciphertext.count
+                    - self.aeadAuthTagLen())],
+            tag: ciphertext[(ciphertext.startIndex + ciphertext.count - self.aeadAuthTagLen())...])
+        let decrypted = try AES.GCM.open(
+            sealedBox, using: self.srtpSessionKey,
+            authenticating: ciphertext[
+                ciphertext.startIndex..<ciphertext.startIndex + payloadOffset])
 
         var writer = ByteBuffer()
         writer.reserveCapacity(payloadOffset + decrypted.count)
-        writer.writeImmutableBuffer(ByteBuffer(ciphertext[..<payloadOffset]))
+        writer.writeImmutableBuffer(
+            ByteBuffer(ciphertext[ciphertext.startIndex..<ciphertext.startIndex + payloadOffset]))
         writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
 
         return writer
@@ -253,12 +269,21 @@ extension CipherAeadAesGcm: Cipher {
             data: self.rtcpInitializationVector(srtcpIndex: srtcpIndex, ssrc: ssrc))
         let aad = self.rtcpAdditionalAuthenticatedData(
             rtcpPacket: ciphertext, srtcpIndex: srtcpIndex)
-        let sealedBox = try AES.GCM.SealedBox(nonce: nonce, ciphertext: ciphertext, tag: aad)
-        let decrypted = try AES.GCM.open(sealedBox, using: self.srtcpSessionKey)
+        let sealedBox = try AES.GCM.SealedBox(
+            nonce: nonce,
+            ciphertext: ciphertext[
+                (ciphertext.startIndex + 8)..<(ciphertext.startIndex + ciphertext.count
+                    - self.aeadAuthTagLen() - srtcpIndexSize)],
+            tag: ciphertext[
+                (ciphertext.startIndex + ciphertext.count - self.aeadAuthTagLen() - srtcpIndexSize)..<(ciphertext
+                    .startIndex + ciphertext.count - srtcpIndexSize)])
+        let decrypted = try AES.GCM.open(
+            sealedBox, using: self.srtcpSessionKey, authenticating: aad)
 
         var writer = ByteBuffer()
         writer.reserveCapacity(8 + decrypted.count)
-        writer.writeImmutableBuffer(ByteBuffer(ciphertext[..<8]))
+        writer.writeImmutableBuffer(
+            ByteBuffer(ciphertext[ciphertext.startIndex..<ciphertext.startIndex + 8]))
         writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
 
         return writer

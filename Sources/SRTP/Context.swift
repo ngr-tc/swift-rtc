@@ -153,6 +153,11 @@ public struct Context {
 
     /// set_roc sets SRTP rollover counter value of specified SSRC.
     mutating func setRoc(ssrc: UInt32, roc: UInt32) {
+        if self.srtpSsrcStates[ssrc] == nil {
+            self.srtpSsrcStates[ssrc] = SrtpSsrcState(
+                ssrc: ssrc, rolloverCounter: 0, rolloverHasProcessed: false,
+                lastSequenceNumber: 0, replayDetector: (self.newSrtcpReplayDetector)())
+        }
         self.srtpSsrcStates[ssrc]?.rolloverCounter = roc
     }
 
@@ -163,6 +168,10 @@ public struct Context {
 
     /// set_index sets SRTCP index value of specified SSRC.
     mutating func setIndex(ssrc: UInt32, index: UInt32) {
+        if self.srtcpSsrcStates[ssrc] == nil {
+            self.srtcpSsrcStates[ssrc] = SrtcpSsrcState(
+                srtcpIndex: 0, ssrc: ssrc, replayDetector: (self.newSrtcpReplayDetector)())
+        }
         self.srtcpSsrcStates[ssrc]?.srtcpIndex = index
     }
 
@@ -178,8 +187,8 @@ public struct Context {
                 srtcpIndex: 0, ssrc: ssrc, replayDetector: (self.newSrtcpReplayDetector)())
         }
 
-        if let duplicated = self.srtcpSsrcStates[ssrc]?.replayDetector?.check(seq: UInt64(index)),
-            duplicated
+        if let check = self.srtcpSsrcStates[ssrc]?.replayDetector?.check(seq: UInt64(index)),
+            !check
         {
             throw SrtpError.errSrtcpSsrcDuplicated(ssrc, index)
         }
@@ -227,9 +236,9 @@ public struct Context {
                 lastSequenceNumber: 0, replayDetector: (self.newSrtcpReplayDetector)())
         }
 
-        if let duplicated = self.srtpSsrcStates[header.ssrc]?.replayDetector?.check(
+        if let check = self.srtpSsrcStates[header.ssrc]?.replayDetector?.check(
             seq: UInt64(header.sequenceNumber)),
-            duplicated
+            !check
         {
             throw SrtpError.errSrtpSsrcDuplicated(
                 header.ssrc,

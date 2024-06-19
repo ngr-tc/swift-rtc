@@ -22,11 +22,11 @@ struct CipherAesCmHmacSha1 {
     var profile: ProtectionProfile
 
     var srtpSessionKey: SymmetricKey
-    var srtpSessionSalt: [UInt8]
+    var srtpSessionSalt: ByteBuffer
     var srtpSessionAuthTag: SymmetricKey
 
     var srtcpSessionKey: SymmetricKey
-    var srtcpSessionSalt: [UInt8]
+    var srtcpSessionSalt: ByteBuffer
     var srtcpSessionAuthTag: SymmetricKey
 
     var allocator: ByteBufferAllocator
@@ -36,23 +36,25 @@ struct CipherAesCmHmacSha1 {
     {
         self.profile = profile
 
+        let srtpSessionKey = try aesCmKeyDerivation(
+            label: labelSrtpEncryption,
+            masterKey: masterKey,
+            masterSalt: masterSalt,
+            indexOverKdr: 0,
+            outLen: masterKey.count
+        )
         self.srtpSessionKey = SymmetricKey(
-            data: try aesCmKeyDerivation(
-                label: labelSrtpEncryption,
-                masterKey: masterKey,
-                masterSalt: masterSalt,
-                indexOverKdr: 0,
-                outLen: masterKey.count
-            ))
+            data: srtpSessionKey.readableBytesView)
 
+        let srtcpSessionKey = try aesCmKeyDerivation(
+            label: labelSrtcpEncryption,
+            masterKey: masterKey,
+            masterSalt: masterSalt,
+            indexOverKdr: 0,
+            outLen: masterKey.count
+        )
         self.srtcpSessionKey = SymmetricKey(
-            data: try aesCmKeyDerivation(
-                label: labelSrtcpEncryption,
-                masterKey: masterKey,
-                masterSalt: masterSalt,
-                indexOverKdr: 0,
-                outLen: masterKey.count
-            ))
+            data: srtcpSessionKey.readableBytesView)
 
         self.srtpSessionSalt = try aesCmKeyDerivation(
             label: labelSrtpSalt,
@@ -70,23 +72,25 @@ struct CipherAesCmHmacSha1 {
             outLen: masterKey.count
         )
 
+        let srtpSessionAuthTag = try aesCmKeyDerivation(
+            label: labelSrtpAuthenticationTag,
+            masterKey: masterKey,
+            masterSalt: masterSalt,
+            indexOverKdr: 0,
+            outLen: profile.authKeyLen()
+        )
         self.srtpSessionAuthTag = SymmetricKey(
-            data: try aesCmKeyDerivation(
-                label: labelSrtpAuthenticationTag,
-                masterKey: masterKey,
-                masterSalt: masterSalt,
-                indexOverKdr: 0,
-                outLen: profile.authKeyLen()
-            ))
+            data: srtpSessionAuthTag.readableBytesView)
 
+        let srtcpSessionAuthTag = try aesCmKeyDerivation(
+            label: labelSrtcpAuthenticationTag,
+            masterKey: masterKey,
+            masterSalt: masterSalt,
+            indexOverKdr: 0,
+            outLen: profile.authKeyLen()
+        )
         self.srtcpSessionAuthTag = SymmetricKey(
-            data: try aesCmKeyDerivation(
-                label: labelSrtcpAuthenticationTag,
-                masterKey: masterKey,
-                masterSalt: masterSalt,
-                indexOverKdr: 0,
-                outLen: profile.authKeyLen()
-            ))
+            data: srtcpSessionAuthTag.readableBytesView)
 
         self.allocator = ByteBufferAllocator()
     }
@@ -196,9 +200,9 @@ extension CipherAesCmHmacSha1: Cipher {
             sequenceNumber: header.sequenceNumber,
             rolloverCounter: roc,
             ssrc: header.ssrc,
-            sessionSalt: self.srtpSessionSalt
+            sessionSalt: self.srtpSessionSalt.readableBytesView
         )
-        let nonce = try AES._CTR.Nonce(nonceBytes: counter)
+        let nonce = try AES._CTR.Nonce(nonceBytes: counter.readableBytesView)
         let encrypted = try AES._CTR.encrypt(payload, using: self.srtpSessionKey, nonce: nonce)
 
         var writer = ByteBuffer()
@@ -228,10 +232,10 @@ extension CipherAesCmHmacSha1: Cipher {
             sequenceNumber: UInt16(srtcpIndex & 0xFFFF),
             rolloverCounter: (srtcpIndex >> 16),
             ssrc: ssrc,
-            sessionSalt: self.srtcpSessionSalt
+            sessionSalt: self.srtcpSessionSalt.readableBytesView
         )
 
-        let nonce = try AES._CTR.Nonce(nonceBytes: counter)
+        let nonce = try AES._CTR.Nonce(nonceBytes: counter.readableBytesView)
         let encrypted = try AES._CTR.encrypt(
             plaintext[(plaintext.startIndex + RTCP.headerLength + RTCP.ssrcLength)...],
             using: self.srtcpSessionKey, nonce: nonce)
@@ -289,12 +293,12 @@ extension CipherAesCmHmacSha1: Cipher {
             sequenceNumber: header.sequenceNumber,
             rolloverCounter: roc,
             ssrc: header.ssrc,
-            sessionSalt: self.srtpSessionSalt
+            sessionSalt: self.srtpSessionSalt.readableBytesView
         )
 
         let payloadOffset = header.marshalSize()
 
-        let nonce = try AES._CTR.Nonce(nonceBytes: counter)
+        let nonce = try AES._CTR.Nonce(nonceBytes: counter.readableBytesView)
         let decrypted = try AES._CTR.decrypt(
             encrypted[(encrypted.startIndex + payloadOffset)...], using: self.srtpSessionKey,
             nonce: nonce)
@@ -352,10 +356,10 @@ extension CipherAesCmHmacSha1: Cipher {
             sequenceNumber: UInt16(srtcpIndex & 0xFFFF),
             rolloverCounter: (srtcpIndex >> 16),
             ssrc: ssrc,
-            sessionSalt: self.srtcpSessionSalt
+            sessionSalt: self.srtcpSessionSalt.readableBytesView
         )
 
-        let nonce = try AES._CTR.Nonce(nonceBytes: counter)
+        let nonce = try AES._CTR.Nonce(nonceBytes: counter.readableBytesView)
         let decrypted = try AES._CTR.decrypt(
             encrypted[(encrypted.startIndex + RTCP.headerLength + RTCP.ssrcLength)...],
             using: self.srtcpSessionKey, nonce: nonce)

@@ -46,7 +46,7 @@ final class KeyDerivationTests: XCTestCase {
             indexOverKdr: 0,
             outLen: masterKey.readableBytes
         )
-        XCTAssertEqual(ByteBuffer(bytes: sessionKey), expectedSessionKey)
+        XCTAssertEqual(sessionKey, expectedSessionKey)
 
         let sessionSalt = try aesCmKeyDerivation(
             label: labelSrtpSalt,
@@ -55,7 +55,7 @@ final class KeyDerivationTests: XCTestCase {
             indexOverKdr: 0,
             outLen: masterSalt.readableBytes
         )
-        XCTAssertEqual(ByteBuffer(bytes: sessionSalt), expectedSessionSalt)
+        XCTAssertEqual(sessionSalt, expectedSessionSalt)
 
         let authKeyLen = ProtectionProfile.aes128CmHmacSha1Tag80.authKeyLen()
         let sessionAuthTag = try aesCmKeyDerivation(
@@ -65,7 +65,7 @@ final class KeyDerivationTests: XCTestCase {
             indexOverKdr: 0,
             outLen: authKeyLen
         )
-        XCTAssertEqual(ByteBuffer(bytes: sessionAuthTag), expectedSessionAuthTag)
+        XCTAssertEqual(sessionAuthTag, expectedSessionAuthTag)
     }
 
     // This test asserts that calling aesCmKeyDerivation with a non-zero indexOverKdr fails

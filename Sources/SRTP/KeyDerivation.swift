@@ -31,7 +31,7 @@ func aesCmKeyDerivation(
     masterSalt: ByteBufferView,
     indexOverKdr: UInt32,
     outLen: Int
-) throws -> [UInt8] {
+) throws -> ByteBuffer {
     if indexOverKdr != 0 {
         // 24-bit "index DIV kdr" must be xored to prf input.
         throw SrtpError.errUnsupportedIndexOverKdr
@@ -64,7 +64,7 @@ func aesCmKeyDerivation(
         try AES.permute(&out[n..<n + nMasterKey], key: key)
     }
 
-    return Array(out[..<outLen])
+    return ByteBuffer(bytes: out[..<outLen])
 }
 
 /// Generate IV https://tools.ietf.org/html/rfc3711#section-4.1.1
@@ -81,8 +81,8 @@ func generateCounter(
     sequenceNumber: UInt16,
     rolloverCounter: UInt32,
     ssrc: UInt32,
-    sessionSalt: [UInt8]
-) throws -> [UInt8] {
+    sessionSalt: ByteBufferView
+) throws -> ByteBuffer {
     assert(sessionSalt.count <= 16)
 
     var counter: [UInt8] = Array(repeating: 0, count: 4)  // 0:4
@@ -94,5 +94,5 @@ func generateCounter(
         counter[i] ^= sessionSalt[i]
     }
 
-    return counter
+    return ByteBuffer(bytes: counter)
 }
