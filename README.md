@@ -37,7 +37,7 @@
     <br>
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/check.png">RTP
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/check.png">RTCP
-    <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/uncheck.png">SRTP
+    <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/check.png">SRTP
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/uncheck.png">SCTP
     <br>
     <img src="https://raw.githubusercontent.com/webrtc-rs/webrtc/master/doc/uncheck.png">DTLS
