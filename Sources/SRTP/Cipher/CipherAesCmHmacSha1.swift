@@ -237,7 +237,7 @@ extension CipherAesCmHmacSha1: Cipher {
 
         let nonce = try AES._CTR.Nonce(nonceBytes: counter.readableBytesView)
         let encrypted = try AES._CTR.encrypt(
-            plaintext[(plaintext.startIndex + RTCP.headerLength + RTCP.ssrcLength)...],
+            plaintext.slice((RTCP.headerLength + RTCP.ssrcLength)...),
             using: self.srtcpSessionKey, nonce: nonce)
 
         var writer = ByteBuffer()
@@ -246,9 +246,7 @@ extension CipherAesCmHmacSha1: Cipher {
         // Write RTCP header part
         writer.writeImmutableBuffer(
             ByteBuffer(
-                plaintext[
-                    plaintext
-                        .startIndex..<(plaintext.startIndex + RTCP.headerLength + RTCP.ssrcLength)])
+                plaintext.slice(..<(RTCP.headerLength + RTCP.ssrcLength)))
         )
 
         // Write RTCP encrypted part
@@ -274,10 +272,8 @@ extension CipherAesCmHmacSha1: Cipher {
         }
 
         // Split the auth tag and the cipher text into two parts.
-        let actualTag = ciphertext[
-            (ciphertext.startIndex + ciphertext.count - self.rtpAuthTagLen())...]
-        let encrypted = ciphertext[
-            ciphertext.startIndex..<ciphertext.startIndex + ciphertext.count - self.rtpAuthTagLen()]
+        let actualTag = ciphertext.slice((ciphertext.count - self.rtpAuthTagLen())...)
+        let encrypted = ciphertext.slice(..<(ciphertext.count - self.rtpAuthTagLen()))
 
         // Generate the auth tag we expect to see from the ciphertext.
         let expectedTag = try self.generateSrtpAuthTag(buf: encrypted, roc: roc)
@@ -300,7 +296,7 @@ extension CipherAesCmHmacSha1: Cipher {
 
         let nonce = try AES._CTR.Nonce(nonceBytes: counter.readableBytesView)
         let decrypted = try AES._CTR.decrypt(
-            encrypted[(encrypted.startIndex + payloadOffset)...], using: self.srtpSessionKey,
+            encrypted.slice((payloadOffset)...), using: self.srtpSessionKey,
             nonce: nonce)
 
         var writer = ByteBuffer()
@@ -308,7 +304,7 @@ extension CipherAesCmHmacSha1: Cipher {
 
         // Write RTP header
         writer.writeImmutableBuffer(
-            ByteBuffer(encrypted[encrypted.startIndex..<(encrypted.startIndex + payloadOffset)]))
+            ByteBuffer(encrypted.slice(..<payloadOffset)))
 
         // Write cipher_text to the destination buffer.
         writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
@@ -330,18 +326,14 @@ extension CipherAesCmHmacSha1: Cipher {
 
         let tailOffset = ciphertext.count - (self.rtcpAuthTagLen() + srtcpIndexSize)
 
-        let isEncrypted = ciphertext[ciphertext.startIndex + tailOffset] >> 7
+        let isEncrypted = ciphertext.byte(tailOffset) >> 7
         if isEncrypted == 0 {
-            return ByteBuffer(
-                ciphertext[ciphertext.startIndex..<ciphertext.startIndex + tailOffset])
+            return ByteBuffer(ciphertext.slice(..<tailOffset))
         }
 
         // Split the auth tag and the cipher text into two parts.
-        let actualTag = ciphertext[
-            (ciphertext.startIndex + ciphertext.count - self.rtcpAuthTagLen())...]
-        let encryptedWithTag = ciphertext[
-            ciphertext.startIndex..<ciphertext.startIndex + ciphertext.count - self.rtcpAuthTagLen()
-        ]
+        let actualTag = ciphertext.slice((ciphertext.count - self.rtcpAuthTagLen())...)
+        let encryptedWithTag = ciphertext.slice(..<(ciphertext.count - self.rtcpAuthTagLen()))
 
         // Generate the auth tag we expect to see from the ciphertext.
         let expectedTag = try self.generateSrtcpAuthTag(buf: encryptedWithTag)
@@ -352,9 +344,7 @@ extension CipherAesCmHmacSha1: Cipher {
             throw SrtpError.errRtcpFailedToVerifyAuthTag
         }
 
-        let encrypted = ciphertext[
-            ciphertext.startIndex..<ciphertext.startIndex + tailOffset
-        ]
+        let encrypted = ciphertext.slice(..<tailOffset)
 
         let counter = try generateCounter(
             sequenceNumber: UInt16(srtcpIndex & 0xFFFF),
@@ -364,7 +354,7 @@ extension CipherAesCmHmacSha1: Cipher {
         )
         let nonce = try AES._CTR.Nonce(nonceBytes: counter.readableBytesView)
         let decrypted = try AES._CTR.decrypt(
-            encrypted[(encrypted.startIndex + RTCP.headerLength + RTCP.ssrcLength)...],
+            encrypted.slice((RTCP.headerLength + RTCP.ssrcLength)...),
             using: self.srtcpSessionKey, nonce: nonce)
 
         var writer = ByteBuffer()
@@ -373,9 +363,7 @@ extension CipherAesCmHmacSha1: Cipher {
         // Write RTCP header
         writer.writeImmutableBuffer(
             ByteBuffer(
-                encrypted[
-                    encrypted
-                        .startIndex..<(encrypted.startIndex + RTCP.headerLength + RTCP.ssrcLength)])
+                encrypted.slice(..<(RTCP.headerLength + RTCP.ssrcLength)))
         )
 
         // Write RTCP decrypted part

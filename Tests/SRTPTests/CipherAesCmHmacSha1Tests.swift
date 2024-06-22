@@ -18,12 +18,12 @@ import XCTest
 @testable import SRTP
 
 func getRtcpIndex(encrypted: ByteBufferView, authTagLen: Int) -> UInt32 {
-    let tailOffset = encrypted.startIndex + encrypted.count - (authTagLen + srtcpIndexSize)
+    let tailOffset = encrypted.count - (authTagLen + srtcpIndexSize)
     let rtcpIndex = UInt32.fromBeBytes(
-        encrypted[tailOffset],
-        encrypted[tailOffset + 1],
-        encrypted[tailOffset + 2],
-        encrypted[tailOffset + 3])
+        encrypted.byte(tailOffset),
+        encrypted.byte(tailOffset + 1),
+        encrypted.byte(tailOffset + 2),
+        encrypted.byte(tailOffset + 3))
     return rtcpIndex & 0x7FFF_FFFF  //^(1 << 31)
 }
 

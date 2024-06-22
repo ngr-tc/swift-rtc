@@ -285,7 +285,7 @@ public struct Context {
             try self
             .cipher
             .encryptRtp(
-                payload: plaintext[(plaintext.startIndex + header.marshalSize())...],
+                payload: plaintext.slice(header.marshalSize()...),
                 header: header, roc: roc)
 
         self.srtpSsrcStates[header.ssrc]?.updateRolloverCount(sequenceNumber: header.sequenceNumber)

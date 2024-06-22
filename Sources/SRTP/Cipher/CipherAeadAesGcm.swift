@@ -161,12 +161,12 @@ extension CipherAeadAesGcm: Cipher {
         if payload.count < 4 {
             throw SrtpError.errTooShortRtcp
         }
-        let pos = payload.startIndex + payload.count - 4
+        let pos = payload.count - 4
         let val: UInt32 = UInt32.fromBeBytes(
-            payload[pos],
-            payload[pos + 1],
-            payload[pos + 2],
-            payload[pos + 3])
+            payload.byte(pos),
+            payload.byte(pos + 1),
+            payload.byte(pos + 2),
+            payload.byte(pos + 3))
 
         return val & ~(UInt32(rtcpEncryptionFlag) << 24)
     }
@@ -207,7 +207,7 @@ extension CipherAeadAesGcm: Cipher {
             rtcpPacket: plaintext, srtcpIndex: srtcpIndex)
 
         let encrypted = try AES.GCM.seal(
-            plaintext[(plaintext.startIndex + 8)...],
+            plaintext.slice(8...),
             using: self.srtcpSessionKey,
             nonce: nonce,
             authenticating: aad
@@ -216,10 +216,10 @@ extension CipherAeadAesGcm: Cipher {
         var writer = ByteBuffer()
         writer.reserveCapacity(encrypted.ciphertext.count + aad.count)
         writer.writeImmutableBuffer(
-            ByteBuffer(plaintext[plaintext.startIndex..<plaintext.startIndex + 8]))
+            ByteBuffer(plaintext.slice(..<8)))
         writer.writeImmutableBuffer(self.allocator.buffer(data: encrypted.ciphertext))
         writer.writeImmutableBuffer(self.allocator.buffer(data: encrypted.tag))
-        writer.writeBytes(aad[(aad.startIndex + 8)...])
+        writer.writeBytes(aad[8...])
 
         return writer
     }
@@ -238,19 +238,16 @@ extension CipherAeadAesGcm: Cipher {
         let nonce = try AES.GCM.Nonce(data: self.rtpInitializationVector(header: header, roc: roc))
         let sealedBox = try AES.GCM.SealedBox(
             nonce: nonce,
-            ciphertext: ciphertext[
-                (ciphertext.startIndex + payloadOffset)..<(ciphertext.startIndex + ciphertext.count
-                    - self.aeadAuthTagLen())],
-            tag: ciphertext[(ciphertext.startIndex + ciphertext.count - self.aeadAuthTagLen())...])
+            ciphertext: ciphertext.slice(
+                payloadOffset..<(ciphertext.count - self.aeadAuthTagLen())),
+            tag: ciphertext.slice((ciphertext.count - self.aeadAuthTagLen())...))
         let decrypted = try AES.GCM.open(
             sealedBox, using: self.srtpSessionKey,
-            authenticating: ciphertext[
-                ciphertext.startIndex..<ciphertext.startIndex + payloadOffset])
+            authenticating: ciphertext.slice(..<payloadOffset))
 
         var writer = ByteBuffer()
         writer.reserveCapacity(payloadOffset + decrypted.count)
-        writer.writeImmutableBuffer(
-            ByteBuffer(ciphertext[ciphertext.startIndex..<ciphertext.startIndex + payloadOffset]))
+        writer.writeImmutableBuffer(ByteBuffer(ciphertext.slice(..<payloadOffset)))
         writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
 
         return writer
@@ -271,19 +268,17 @@ extension CipherAeadAesGcm: Cipher {
             rtcpPacket: ciphertext, srtcpIndex: srtcpIndex)
         let sealedBox = try AES.GCM.SealedBox(
             nonce: nonce,
-            ciphertext: ciphertext[
-                (ciphertext.startIndex + 8)..<(ciphertext.startIndex + ciphertext.count
-                    - self.aeadAuthTagLen() - srtcpIndexSize)],
-            tag: ciphertext[
-                (ciphertext.startIndex + ciphertext.count - self.aeadAuthTagLen() - srtcpIndexSize)..<(ciphertext
-                    .startIndex + ciphertext.count - srtcpIndexSize)])
+            ciphertext: ciphertext.slice(
+                8..<(ciphertext.count - self.aeadAuthTagLen() - srtcpIndexSize)),
+            tag: ciphertext.slice(
+                (ciphertext.count - self.aeadAuthTagLen() - srtcpIndexSize)..<(ciphertext.count
+                    - srtcpIndexSize)))
         let decrypted = try AES.GCM.open(
             sealedBox, using: self.srtcpSessionKey, authenticating: aad)
 
         var writer = ByteBuffer()
         writer.reserveCapacity(8 + decrypted.count)
-        writer.writeImmutableBuffer(
-            ByteBuffer(ciphertext[ciphertext.startIndex..<ciphertext.startIndex + 8]))
+        writer.writeImmutableBuffer(ByteBuffer(ciphertext.slice(..<8)))
         writer.writeImmutableBuffer(self.allocator.buffer(data: decrypted))
 
         return writer

@@ -89,7 +89,7 @@ extension TransactionId: Setter {
 /// that decoding will be successful.
 public func isMessage(b: ByteBufferView) -> Bool {
     b.count >= messageHeaderSize
-        && UInt32.fromBeBytes(b[4], b[5], b[6], b[7]) == magicCookie
+        && UInt32.fromBeBytes(b.byte(4), b.byte(5), b.byte(6), b.byte(7)) == magicCookie
 }
 
 /// Message represents a single STUN packet. It uses aggressive internal

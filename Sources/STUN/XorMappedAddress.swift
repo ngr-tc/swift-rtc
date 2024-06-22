@@ -22,7 +22,7 @@ func safeXorBytes(_ dst: inout ByteBuffer, _ a: ByteBufferView, _ b: ByteBufferV
         n = dst.writerIndex
     }
     for i in 0..<n {
-        let c = a[a.startIndex + i] ^ b[b.startIndex + i]
+        let c = a.byte(i) ^ b.byte(i)
         dst.setRepeatingByte(c, count: 1, at: i)
     }
     return n

@@ -15,7 +15,7 @@ import NIOCore
 
 extension ByteBufferView {
     @inlinable
-    public func byte(zeroBasedPosition: Index) -> UInt8 {
+    public func byte(_ zeroBasedPosition: Index) -> UInt8 {
         guard zeroBasedPosition >= 0 && zeroBasedPosition < self.count else {
             preconditionFailure("index \(zeroBasedPosition) out of range")
         }
@@ -23,9 +23,30 @@ extension ByteBufferView {
     }
 
     @inlinable
-    public func subview(zeroBasedRange: Range<Index>) -> ByteBufferView {
+    public func slice(_ zeroBasedRange: Range<Index>) -> ByteBufferView {
         let lowerBound = Swift.min(self.startIndex + zeroBasedRange.lowerBound, self.endIndex)
         let upperBound = Swift.min(self.startIndex + zeroBasedRange.upperBound, self.endIndex)
+        return self[lowerBound..<upperBound]
+    }
+
+    @inlinable
+    public func slice(_ zeroBasedRange: PartialRangeFrom<Index>) -> ByteBufferView {
+        let lowerBound = Swift.min(self.startIndex + zeroBasedRange.lowerBound, self.endIndex)
+        let upperBound = self.endIndex
+        return self[lowerBound..<upperBound]
+    }
+
+    @inlinable
+    public func slice(_ zeroBasedRange: PartialRangeUpTo<Index>) -> ByteBufferView {
+        let lowerBound = self.startIndex
+        let upperBound = Swift.min(self.startIndex + zeroBasedRange.upperBound, self.endIndex)
+        return self[lowerBound..<upperBound]
+    }
+
+    @inlinable
+    public func slice(_ zeroBasedRange: PartialRangeThrough<Index>) -> ByteBufferView {
+        let lowerBound = self.startIndex
+        let upperBound = Swift.min(self.startIndex + zeroBasedRange.upperBound + 1, self.endIndex)
         return self[lowerBound..<upperBound]
     }
 }
