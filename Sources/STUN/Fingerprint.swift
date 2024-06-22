@@ -11,8 +11,8 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
-import CRC
 import NIOCore
+import Shared
 
 /// FingerprintAttr represents FINGERPRINT attribute.
 ///
