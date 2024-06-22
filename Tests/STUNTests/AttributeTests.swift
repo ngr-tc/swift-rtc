@@ -18,7 +18,7 @@ import XCTest
 
 final class AttributeTests: XCTestCase {
     func testRawAttributeAddTo() throws {
-        let v: ByteBuffer = ByteBuffer([1, 2, 3, 4])
+        let v: ByteBuffer = ByteBuffer(bytes: [1, 2, 3, 4])
         var m = Message()
         let ra = RawAttribute(
             typ: attrData,
