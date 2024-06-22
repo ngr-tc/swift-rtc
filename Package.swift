@@ -17,12 +17,12 @@ import PackageDescription
 
 let package = Package(
     name: "swift-rtc",
-    // minimal version align with swift-hash
+    // minimal version align with swift-crypto
     platforms: [
-        .macOS("13.3"),
-        .iOS("16.4"),
-        .watchOS("9.4"),
-        .tvOS("16.4"),
+        .macOS(.v10_15),
+        .iOS(.v13),
+        .watchOS(.v6),
+        .tvOS(.v13),
     ],
     products: [
         .library(name: "DataChannel", targets: ["DataChannel"]),
