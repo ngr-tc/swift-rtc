@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 public enum DtlsError: Error, Equatable {
+    case errTooShortBuffer
     case errConnClosed
     case errDeadlineExceeded
     case errContextUnsupported
@@ -90,6 +91,8 @@ public enum DtlsError: Error, Equatable {
 extension DtlsError: CustomStringConvertible {
     public var description: String {
         switch self {
+        case .errTooShortBuffer:
+            return "buffer is too short"
         case .errConnClosed:
             return "conn is closed"
         case .errDeadlineExceeded:
