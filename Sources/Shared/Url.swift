@@ -93,6 +93,7 @@ extension ProtoType: CustomStringConvertible {
 }
 
 public enum UrlError: Error, Equatable {
+    case errInvalidUrl
     case errUrlParse
     case errSchemeType
     case errHost
@@ -105,6 +106,8 @@ public enum UrlError: Error, Equatable {
 extension UrlError: CustomStringConvertible {
     public var description: String {
         switch self {
+        case .errInvalidUrl:
+            return "invalid url"
         case .errUrlParse:
             return "url parse fail"
         case .errSchemeType:
@@ -136,6 +139,10 @@ public struct Url: Equatable {
     /// [IETF rfc-7064](https://tools.ietf.org/html/rfc7064) and
     /// [IETF rfc-7065](https://tools.ietf.org/html/rfc7065) respectively.
     public init(_ raw: String) throws {
+        if raw.contains("//") {
+            throw UrlError.errInvalidUrl
+        }
+
         guard let schemePos = raw.firstIndex(of: ":") else {
             throw UrlError.errSchemeType
         }

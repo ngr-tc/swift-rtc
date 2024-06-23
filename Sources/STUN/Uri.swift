@@ -11,19 +11,15 @@
 // SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
-import WebURL
-
-/// SCHEME definitions from RFC 7064 Section 3.2.
-public let stunScheme: String = "stun"
-public let stunSchemeSecure: String = "stuns"
+import Shared
 
 /// URI as defined in RFC 7064.
 public struct Uri: Equatable {
-    var scheme: String
+    var scheme: SchemeType
     var host: String
     var port: UInt16?
 
-    public init(scheme: String, host: String, port: UInt16? = nil) {
+    public init(scheme: SchemeType, host: String, port: UInt16? = nil) {
         self.scheme = scheme
         self.host = host
         self.port = port
@@ -31,40 +27,12 @@ public struct Uri: Equatable {
 
     /// parse_uri parses URI from string.
     public static func parseUri(_ raw: String) throws -> Self {
-        // work around for url crate
-        if raw.contains("//") {
-            throw StunError.errInvalidUrl
-        }
-
-        var s = raw
-        if let p = s.firstIndex(of: ":") {
-            s.replaceSubrange(p..<s.index(after: p), with: "://")
-        } else {
+        let url = try Url(raw)
+        if url.scheme != SchemeType.stun && url.scheme != SchemeType.stuns {
             throw StunError.errSchemeType
         }
 
-        guard let url = WebURL(s) else {
-            throw StunError.errInvalidUrl
-        }
-
-        if url.scheme != stunScheme && url.scheme != stunSchemeSecure {
-            throw StunError.errSchemeType
-        }
-
-        guard let hostname = url.hostname else {
-            throw StunError.errHost
-        }
-
-        let host = hostname.trimmingWhitespace()
-            .trimmingPrefix("[")
-            .trimmingSuffix("]")
-
-        var port: UInt16? = nil
-        if let p = url.port {
-            port = UInt16(p)
-        }
-
-        return Uri(scheme: url.scheme, host: String(host), port: port)
+        return Uri(scheme: url.scheme, host: url.host, port: url.port)
     }
 }
 

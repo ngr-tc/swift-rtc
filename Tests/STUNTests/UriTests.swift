@@ -1,3 +1,4 @@
+import Shared
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the SwiftRTC open source project
@@ -22,27 +23,27 @@ final class UriTests: XCTestCase {
                 "default",
                 "stun:example.org",
                 Uri(
-                    scheme: stunScheme,
+                    scheme: SchemeType.stun,
                     host: "example.org",
-                    port: nil
+                    port: 3478
                 ),
-                "stun:example.org"
+                "stun:example.org:3478"
             ),
             (
                 "secure",
                 "stuns:example.org",
                 Uri(
-                    scheme: stunSchemeSecure,
+                    scheme: SchemeType.stuns,
                     host: "example.org",
-                    port: nil
+                    port: 5349
                 ),
-                "stuns:example.org"
+                "stuns:example.org:5349"
             ),
             (
                 "with port",
                 "stun:example.org:8000",
                 Uri(
-                    scheme: stunScheme,
+                    scheme: SchemeType.stun,
                     host: "example.org",
                     port: 8000
                 ),
@@ -52,7 +53,7 @@ final class UriTests: XCTestCase {
                 "ipv6 address",
                 "stun:[::1]:123",
                 Uri(
-                    scheme: stunScheme,
+                    scheme: SchemeType.stun,
                     host: "::1",
                     port: 123
                 ),
