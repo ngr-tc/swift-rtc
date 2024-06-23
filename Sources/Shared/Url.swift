@@ -247,12 +247,7 @@ public struct Url: Equatable {
 
 extension Url: CustomStringConvertible {
     public var description: String {
-        let host: String
-        if self.host.contains("::") {
-            host = "[" + self.host + "]"
-        } else {
-            host = self.host
-        }
+        let host = self.host.contains(":") ? "[\(self.host)]" : self.host
         if self.scheme == SchemeType.turn || self.scheme == SchemeType.turns {
             return "\(self.scheme):\(host):\(self.port)?transport=\(self.proto)"
         } else {
