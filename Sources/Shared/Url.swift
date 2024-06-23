@@ -92,6 +92,37 @@ extension ProtoType: CustomStringConvertible {
     }
 }
 
+public enum UrlError: Error, Equatable {
+    case errUrlParse
+    case errSchemeType
+    case errHost
+    case errPort
+    case errStunQuery
+    case errInvalidQuery
+    case errProtoType
+}
+
+extension UrlError: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .errUrlParse:
+            return "url parse fail"
+        case .errSchemeType:
+            return "invalid scheme type"
+        case .errHost:
+            return "invalid host"
+        case .errPort:
+            return "invalid port"
+        case .errStunQuery:
+            return "invalid stun query"
+        case .errInvalidQuery:
+            return "invalid query"
+        case .errProtoType:
+            return "invalid proto type"
+        }
+    }
+}
+
 /// Represents a STUN (rfc7064) or TURN (rfc7065) URL.
 public struct Url: Equatable {
     public var scheme: SchemeType
@@ -104,13 +135,13 @@ public struct Url: Equatable {
     /// Parses a STUN or TURN urls following the ABNF syntax described in
     /// [IETF rfc-7064](https://tools.ietf.org/html/rfc7064) and
     /// [IETF rfc-7065](https://tools.ietf.org/html/rfc7065) respectively.
-    public init?(_ raw: String) {
+    public init(_ raw: String) throws {
         guard let schemePos = raw.firstIndex(of: ":") else {
-            return nil
+            throw UrlError.errSchemeType
         }
 
         guard let scheme = SchemeType(rawValue: String(raw[raw.startIndex..<schemePos])) else {
-            return nil
+            throw UrlError.errSchemeType
         }
         self.scheme = scheme
 
@@ -119,7 +150,7 @@ public struct Url: Equatable {
         switch scheme {
         case .stun, .stuns:
             if transportPos != nil {
-                return nil
+                throw UrlError.errStunQuery
             }
             if scheme == .stun {
                 self.proto = ProtoType.udp
@@ -129,21 +160,21 @@ public struct Url: Equatable {
         case .turn, .turns:
             if let transportPos {
                 guard let protoPos = raw.lastIndex(of: "=") else {
-                    return nil
+                    throw UrlError.errInvalidQuery
                 }
 
                 guard
                     raw[raw.index(after: transportPos)..<protoPos]
                         == "transport"
                 else {
-                    return nil
+                    throw UrlError.errInvalidQuery
                 }
 
                 guard
                     let proto = ProtoType(
                         rawValue: String(raw[raw.index(after: protoPos)...]))
                 else {
-                    return nil
+                    throw UrlError.errProtoType
                 }
                 self.proto = proto
             } else if scheme == .turn {
@@ -162,13 +193,13 @@ public struct Url: Equatable {
 
         if let ipv6Start = hostport.firstIndex(of: "[") {
             guard let ipv6End = hostport.firstIndex(of: "]") else {
-                return nil
+                throw UrlError.errHost
             }
             self.host = String(hostport[hostport.index(after: ipv6Start)..<ipv6End])
             let portStr = hostport[hostport.index(after: ipv6End)...]
             if let portPos = portStr.lastIndex(of: ":") {
                 guard let port = UInt16(hostport[hostport.index(after: portPos)...]) else {
-                    return nil
+                    throw UrlError.errPort
                 }
                 self.port = port
             } else {
@@ -181,7 +212,7 @@ public struct Url: Equatable {
         } else if let portPos = hostport.lastIndex(of: ":") {
             self.host = String(hostport[..<portPos])
             guard let port = UInt16(hostport[hostport.index(after: portPos)...]) else {
-                return nil
+                throw UrlError.errPort
             }
             self.port = port
         } else {
@@ -191,6 +222,10 @@ public struct Url: Equatable {
             } else {
                 self.port = 5349
             }
+        }
+
+        if self.host.isEmpty {
+            throw UrlError.errHost
         }
 
         self.username = ""
