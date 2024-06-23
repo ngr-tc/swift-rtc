@@ -13,42 +13,42 @@
 //===----------------------------------------------------------------------===//
 
 public enum SdpError: Error, Equatable {
-    case codecNotFound
-    case missingWhitespace
-    case missingColon
-    case payloadTypeNotFound
-    case sdpInvalidSyntax(String)
-    case sdpInvalidValue(String)
-    case sdpEmptyTimeDescription
-    case parseExtMap(String)
-    case syntaxError(String, Int)
-    case parseInt(String, String)
+    case errCodecNotFound
+    case errMissingWhitespace
+    case errMissingColon
+    case errPayloadTypeNotFound
+    case errSdpInvalidSyntax(String)
+    case errSdpInvalidValue(String)
+    case errSdpEmptyTimeDescription
+    case errParseExtMap(String)
+    case errSyntaxError(String, Int)
+    case errParseInt(String, String)
 }
 
 extension SdpError: CustomStringConvertible {
     public var description: String {
         switch self {
-        case .codecNotFound:
+        case .errCodecNotFound:
             return "codec not found"
-        case .missingWhitespace:
+        case .errMissingWhitespace:
             return "missing whitespace"
-        case .missingColon:
+        case .errMissingColon:
             return "missing colon"
-        case .payloadTypeNotFound:
+        case .errPayloadTypeNotFound:
             return "payload type not found"
-        case .sdpInvalidSyntax(let syntax):
+        case .errSdpInvalidSyntax(let syntax):
             return "SdpInvalidSyntax: \(syntax)"
-        case .sdpInvalidValue(let value):
+        case .errSdpInvalidValue(let value):
             return "SdpInvalidValue: \(value)"
-        case .sdpEmptyTimeDescription:
+        case .errSdpEmptyTimeDescription:
             return "empty time descriptions"
-        case .parseExtMap(let extMap):
+        case .errParseExtMap(let extMap):
             return "parse extmap: \(extMap)"
-        case .syntaxError(let s, let p):
+        case .errSyntaxError(let s, let p):
             let startIndex = s.index(s.startIndex, offsetBy: p)
             let endIndex = s.index(startIndex, offsetBy: 1)
             return "\(s[..<startIndex]) --> \(s[startIndex..<endIndex]) <-- \(s[endIndex...])"
-        case .parseInt(let value, let s):
+        case .errParseInt(let value, let s):
             return "parse Int: \(value) in \(s)"
         }
     }

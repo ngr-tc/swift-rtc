@@ -65,7 +65,7 @@ struct Lexer {
             }
             let key = readUntil(delim: "=")
             if !(key.isEmpty || key.count == 2) {
-                throw SdpError.sdpInvalidSyntax(key)
+                throw SdpError.errSdpInvalidSyntax(key)
             }
             return key
         }

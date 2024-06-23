@@ -30,8 +30,19 @@ extension String {
 }
 
 public enum Base64Error: Error {
-    case invalidLength
-    case invalidCharacter
+    case errInvalidLength
+    case errInvalidCharacter
+}
+
+extension Base64Error: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .errInvalidLength:
+            return "invalid length"
+        case .errInvalidCharacter:
+            return "invalid character"
+        }
+    }
 }
 
 public struct Base64 {
@@ -70,7 +81,7 @@ public struct Base64 {
     @inlinable
     public static func decode(string: String) throws -> [UInt8] {
         guard string.count % 4 == 0 else {
-            throw Base64Error.invalidLength
+            throw Base64Error.errInvalidLength
         }
 
         let bytes = string.utf8.map { $0 }
@@ -82,7 +93,7 @@ public struct Base64 {
             guard let byte0Index = Base64.encodeTable.firstIndex(of: bytes[i]),
                 let byte1Index = Base64.encodeTable.firstIndex(of: bytes[i + 1])
             else {
-                throw Base64Error.invalidCharacter
+                throw Base64Error.errInvalidCharacter
             }
 
             let byte0 = (UInt8(byte0Index) << 2 | UInt8(byte1Index) >> 4)
@@ -91,7 +102,7 @@ public struct Base64 {
             // Check if the 3rd char is not a padding character, and decode the 2nd byte
             if bytes[i + 2] != Base64.encodePaddingCharacter {
                 guard let byte2Index = Base64.encodeTable.firstIndex(of: bytes[i + 2]) else {
-                    throw Base64Error.invalidCharacter
+                    throw Base64Error.errInvalidCharacter
                 }
 
                 let second = (UInt8(byte1Index) << 4 | UInt8(byte2Index) >> 2)
@@ -103,7 +114,7 @@ public struct Base64 {
                 guard let byte3Index = Base64.encodeTable.firstIndex(of: bytes[i + 3]),
                     let byte2Index = Base64.encodeTable.firstIndex(of: bytes[i + 2])
                 else {
-                    throw Base64Error.invalidCharacter
+                    throw Base64Error.errInvalidCharacter
                 }
                 let third = (UInt8(byte2Index) << 6 | UInt8(byte3Index))
                 decoded.append(third)

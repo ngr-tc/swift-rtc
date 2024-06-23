@@ -44,7 +44,14 @@ let package = Package(
     targets: [
         // MARK: - Targets
         .target(name: "DataChannel"),
-        .target(name: "DTLS"),
+        .target(name: "DTLS",
+            dependencies: [
+                "Shared",
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "_CryptoExtras", package: "swift-crypto"),
+            ]),
         .target(
             name: "RTC",
             dependencies: [
@@ -100,16 +107,8 @@ let package = Package(
         .testTarget(name: "SCTPTests", dependencies: ["SCTP"]),
         .testTarget(name: "SDPTests", dependencies: ["SDP"]),
         .testTarget(name: "SharedTests", dependencies: ["Shared"]),
-        .testTarget(name: "SRTPTests",
-            dependencies: [
-                "SRTP",
-                "RTP",
-            ]),
-        .testTarget(name: "STUNTests",
-            dependencies: [
-                "STUN",
-                "Shared",
-            ]),
+        .testTarget(name: "SRTPTests", dependencies: ["SRTP", "RTP"]),
+        .testTarget(name: "STUNTests", dependencies: ["STUN", "Shared"]),
 
         // MARK: - Examples
         // https://github.com/ngr-tc/swift-rtc-examples
