@@ -15,7 +15,7 @@ import NIOCore
 
 extension ByteBufferView {
     @inlinable
-    public func byte(_ zeroBasedPosition: Index) -> UInt8 {
+    public func at(_ zeroBasedPosition: Index) -> UInt8 {
         guard zeroBasedPosition >= 0 && zeroBasedPosition < self.count else {
             preconditionFailure("index \(zeroBasedPosition) out of range")
         }

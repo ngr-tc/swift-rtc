@@ -64,5 +64,5 @@ public func getNbitsFromByte(_ b: UInt8, _ begin: UInt16, _ n: UInt16) -> UInt16
 
 /// get24BitFromBytes get 24bits from `[3]byte` slice
 public func get24BitsFromBytes(_ b: ByteBufferView) -> UInt32 {
-    return (UInt32(b.byte(0)) << 16) + (UInt32(b.byte(1)) << 8) + UInt32(b.byte(2))
+    return (UInt32(b.at(0)) << 16) + (UInt32(b.at(1)) << 8) + UInt32(b.at(2))
 }

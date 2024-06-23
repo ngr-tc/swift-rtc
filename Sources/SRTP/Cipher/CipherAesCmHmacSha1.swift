@@ -326,7 +326,7 @@ extension CipherAesCmHmacSha1: Cipher {
 
         let tailOffset = ciphertext.count - (self.rtcpAuthTagLen() + srtcpIndexSize)
 
-        let isEncrypted = ciphertext.byte(tailOffset) >> 7
+        let isEncrypted = ciphertext.at(tailOffset) >> 7
         if isEncrypted == 0 {
             return ByteBuffer(ciphertext.slice(..<tailOffset))
         }

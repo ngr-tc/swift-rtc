@@ -163,10 +163,10 @@ extension CipherAeadAesGcm: Cipher {
         }
         let pos = payload.count - 4
         let val: UInt32 = UInt32.fromBeBytes(
-            payload.byte(pos),
-            payload.byte(pos + 1),
-            payload.byte(pos + 2),
-            payload.byte(pos + 3))
+            payload.at(pos),
+            payload.at(pos + 1),
+            payload.at(pos + 2),
+            payload.at(pos + 3))
 
         return val & ~(UInt32(rtcpEncryptionFlag) << 24)
     }

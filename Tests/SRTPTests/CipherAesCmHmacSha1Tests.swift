@@ -20,10 +20,10 @@ import XCTest
 func getRtcpIndex(encrypted: ByteBufferView, authTagLen: Int) -> UInt32 {
     let tailOffset = encrypted.count - (authTagLen + srtcpIndexSize)
     let rtcpIndex = UInt32.fromBeBytes(
-        encrypted.byte(tailOffset),
-        encrypted.byte(tailOffset + 1),
-        encrypted.byte(tailOffset + 2),
-        encrypted.byte(tailOffset + 3))
+        encrypted.at(tailOffset),
+        encrypted.at(tailOffset + 1),
+        encrypted.at(tailOffset + 2),
+        encrypted.at(tailOffset + 3))
     return rtcpIndex & 0x7FFF_FFFF  //^(1 << 31)
 }
 

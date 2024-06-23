@@ -19,7 +19,7 @@ func matchRange(_ lower: UInt8, _ upper: UInt8) -> (ByteBufferView) -> Bool {
         if buf.isEmpty {
             return false
         }
-        let b = buf.byte(0)
+        let b = buf.at(0)
         return b >= lower && b <= upper
     }
 }
@@ -55,7 +55,7 @@ public func isRtcp(_ buf: ByteBufferView) -> Bool {
         return false
     }
 
-    let rtcpPacketType = buf.byte(1)
+    let rtcpPacketType = buf.at(1)
     return (192...223).contains(rtcpPacketType)
 }
 
