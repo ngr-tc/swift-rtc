@@ -15,9 +15,6 @@
  <a href="https://swiftpackageindex.com/ngr-tc/swift-rtc">
   <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fngr-tc%2Fswift-rtc%2Fbadge%3Ftype%3Dplatforms">
  </a>
- <a href="https://codecov.io/gh/ngr-tc/swift-rtc">
-  <img src="https://codecov.io/gh/ngr-tc/swift-rtc/branch/master/graph/badge.svg">
- </a>
  <a href="https://opensource.org/licenses/MIT">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg">
  </a>
