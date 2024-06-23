@@ -1,4 +1,3 @@
-import ExtrasBase64
 import NIOCore
 //===----------------------------------------------------------------------===//
 //
@@ -72,7 +71,7 @@ public struct TransactionId: Equatable, Hashable {
 
 extension TransactionId: CustomStringConvertible {
     public var description: String {
-        return Base64.encodeToString(
+        return Base64.encode(
             bytes: self.rawValue.getBytes(at: 0, length: self.rawValue.readableBytes) ?? [])
     }
 }

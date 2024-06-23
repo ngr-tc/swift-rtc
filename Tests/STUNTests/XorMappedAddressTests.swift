@@ -1,5 +1,5 @@
-import ExtrasBase64
 import NIOCore
+import Shared
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the SwiftRTC open source project
